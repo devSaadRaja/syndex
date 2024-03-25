@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "forge-std/Test.sol";
-
 import "./tax/Taxable.sol";
 import "./BaseSynthetix.sol";
 
@@ -23,10 +21,15 @@ contract Synthetix is BaseSynthetix, Taxable {
 
     // // ----------------------------------------------------
 
+    bool public activeTrade = true;
     bool public deploymentSet = false; // make it true once all prerequisites are set
 
     function setDeploy(bool val) external onlyOwner {
         deploymentSet = val;
+    }
+
+    function setTrade(bool val) external onlyOwner {
+        activeTrade = val;
     }
 
     function distributeTax() external onlyOwner {
@@ -39,25 +42,17 @@ contract Synthetix is BaseSynthetix, Taxable {
     }
 
     function _distribute() internal {
-        console.log();
-        console.log("SENDING TAX");
-        
-        for (uint256 i = 0; i < taxReceiverList.length; i++) {
-            address account = taxReceiverList[i];
+        for (uint256 i = 0; i < feeTakers.length; i++) {
+            address account = feeTakers[i];
             uint256 toSendAmount = calculateFeeAmount(
-                currentTaxAmount,
-                taxPercentages[account]
+                currentFeeAmount,
+                feePercentage[account]
             );
-
-            console.log("account\n", account);
-            console.log("currentTaxAmount\n", currentTaxAmount);
-            console.log("taxPercentages[account]\n", taxPercentages[account]);
-            console.log("toSendAmount\n", toSendAmount);
 
             _swap(address(proxy), WETH, toSendAmount, account);
         }
 
-        currentTaxAmount = 0;
+        currentFeeAmount = 0;
     }
 
     function _internalTransfer(
@@ -72,14 +67,17 @@ contract Synthetix is BaseSynthetix, Taxable {
         );
 
         if (
-            (pool[from] || pool[to]) && (!taxExempts[from] && !taxExempts[to])
+            (pool[from] || pool[to]) &&
+            (!isExcludedFromFee[from] && !isExcludedFromFee[to])
         ) {
+            require(activeTrade, "Trade not active!");
+
             uint256 taxAmount = pool[from]
                 ? getTaxAmount(value, true)
                 : getTaxAmount(value, false);
             uint256 transferAmount = calculateTransferAmount(value, taxAmount);
 
-            currentTaxAmount += taxAmount;
+            currentFeeAmount += taxAmount;
             tokenState.setBalanceOf(
                 address(this),
                 tokenState.balanceOf(address(this)).add(taxAmount)
@@ -92,14 +90,17 @@ contract Synthetix is BaseSynthetix, Taxable {
         } else {
             tokenState.setBalanceOf(to, tokenState.balanceOf(to).add(value));
 
-            // make deploymentSet true once all prerequisites are set
-            if (deploymentSet && currentTaxAmount > 0) {
+            if (
+                deploymentSet &&
+                currentFeeAmount > 0 &&
+                (!isExcludedFromFee[from] && !isExcludedFromFee[to])
+            ) {
                 address[] memory path = new address[](2);
                 path[0] = address(proxy);
                 path[1] = WETH;
 
                 uint[] memory amounts = IUniswapV2Router02(routerAddress)
-                    .getAmountsOut(currentTaxAmount, path);
+                    .getAmountsOut(currentFeeAmount, path);
 
                 if (amounts[amounts.length - 1] >= threshold) _distributeTax();
             }

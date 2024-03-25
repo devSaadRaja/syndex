@@ -33,35 +33,25 @@ contract TokenTest is Setup {
         address pair = factory.getPair(address(proxySNX), WETH);
         synthetix.addPool(pair);
 
-        // synthetix.addTaxExempts(owner);
-        // synthetix.addTaxExempts(address(synthetix));
+        // synthetix.setExcludeFromFee(owner, true);
+        synthetix.setExcludeFromFee(address(synthetix), true);
 
-        synthetix.addTaxReceiver(user1, 50);
-        synthetix.addTaxReceiver(user2, 50);
+        synthetix.addFeeTaker(user1, 50);
+        synthetix.addFeeTaker(user2, 50);
 
         synthetix.setDeploy(true);
 
         vm.stopPrank();
     }
 
-    function testToken() public {
+    function testSwap() public {
         vm.startPrank(owner);
 
         console.log("BEFORE");
         console.log("SNX", proxySNX.balanceOf(owner));
         console.log("WETH", IERC20(WETH).balanceOf(owner));
 
-        proxySNX.approve(address(router), 50 * 10 ** 18);
-        address[] memory path = new address[](2);
-        path[0] = address(proxySNX);
-        path[1] = WETH;
-        router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
-            10 * 10 ** 18,
-            0,
-            path,
-            owner,
-            block.timestamp + 10 minutes
-        );
+        _swap(address(proxySNX), WETH, 10 * 10 ** 18, owner);
 
         console.log("AFTER");
         console.log("SNX", proxySNX.balanceOf(owner));
@@ -73,18 +63,16 @@ contract TokenTest is Setup {
     function testTax() public {
         vm.startPrank(owner);
 
-        // SELL
-        console.log("SELL");
-        _swap(address(proxySNX), WETH, 10 * 10 ** 18, owner);
-
-        // BUY
-        console.log("BUY");
-        _swap(WETH, address(proxySNX), 10 * 10 ** 18, owner);
+        _swap(address(proxySNX), WETH, 10 * 10 ** 18, owner); // SELL
+        _swap(WETH, address(proxySNX), 10 * 10 ** 18, owner); // BUY
 
         console.log();
         console.log("threshold\n", synthetix.threshold());
-        console.log("currentTaxAmount\n", synthetix.currentTaxAmount());
-        console.log("balanceOf synthetix\n", synthetix.balanceOf(address(synthetix)));
+        console.log("currentFeeAmount\n", synthetix.currentFeeAmount());
+        console.log(
+            "balanceOf synthetix\n",
+            synthetix.balanceOf(address(synthetix))
+        );
 
         proxySNX.transfer(user3, 1 * 10 ** 18);
 

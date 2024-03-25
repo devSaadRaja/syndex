@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "forge-std/Test.sol";
-
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./Proxyable.sol";
@@ -55,8 +53,6 @@ contract Proxy is Ownable {
 
     // solhint-disable no-complex-fallback
     fallback() external payable {
-        console.log("HERE\n", msg.sender);
-
         // Mutable call setting Proxyable.messageSender as this is using call not delegatecall
         target.setMessageSender(msg.sender);
 

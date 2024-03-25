@@ -65,10 +65,10 @@ import {AggregatorIssuedSynths} from "../src/contracts/AggregatorIssuedSynths.so
 import {DirectIntegrationManager} from "../src/contracts/DirectIntegrationManager.sol";
 
 contract Setup is Test, Utils {
-    address public owner = 0xE536B4D7cf1e346D985cEe807e16B1b11B019976;
-    address public user1 = 0x599A67bE30BF26e71c641de4fDc05Ac4c519949B;
-    address public user2 = 0x338E0c5371f1aA615d33254055d23698e635541e;
-    address public user3 = 0xc7610Cd97B0539FAA2E78d9c66C64c60ba3998Bf;
+    address public owner = vm.addr(1);
+    address public user1 = vm.addr(2);
+    address public user2 = vm.addr(3);
+    address public user3 = vm.addr(4);
 
     address WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 

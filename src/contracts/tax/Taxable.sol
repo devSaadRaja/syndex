@@ -12,14 +12,14 @@ abstract contract Taxable is Ownable {
     uint256 public sellFee = 2; // 2%
     uint256 public threshold = 0.1 * 1e18; // in WETH
 
-    uint256 public currentTaxAmount = 0;
+    uint256 public currentFeeAmount = 0;
 
-    mapping(address => bool) public taxExempts;
-    mapping(address => uint256) public taxPercentages;
-    address[] taxReceiverList;
+    mapping(address => bool) public isExcludedFromFee;
+    mapping(address => uint256) public feePercentage;
+    address[] feeTakers;
 
-    address public routerAddress = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D; // mainnet address
     address public WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // mainnet address
+    address public routerAddress = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D; // mainnet address
 
     mapping(address => bool) public pool;
     address[] pools;
@@ -29,13 +29,9 @@ abstract contract Taxable is Ownable {
     event AddPool(address poolAddress);
     event RemovePool(address poolAddress);
     event UpdateFee(uint256 oldPercentage, uint256 newPercentage);
-    event AddTaxReceiver(address receiver, uint256 percentage);
-    event RemoveTaxReceiver(address receiver);
-    event UpdateReceiverTax(
-        address receiver,
-        uint256 oldPercentage,
-        uint256 newPercentage
-    );
+    event AddFeeTaker(address addr, uint256 percentage);
+    event RemoveFeeTaker(address addr);
+    event UpdateFeeTaker(address addr, uint256 percentage);
 
     // ==================== MODIFIERS ==================== //
 
@@ -50,8 +46,8 @@ abstract contract Taxable is Ownable {
         return pools;
     }
 
-    function getAllTaxReceivers() external view returns (address[] memory) {
-        return taxReceiverList;
+    function getAllFeeTakers() external view returns (address[] memory) {
+        return feeTakers;
     }
 
     function addPool(address poolAddress) external onlyOwner {
@@ -71,36 +67,32 @@ abstract contract Taxable is Ownable {
         pools.pop();
     }
 
-    function addTaxReceiver(
-        address _receiver,
+    function addFeeTaker(
+        address _addr,
         uint256 _percentage
     ) external onlyOwner {
-        require(taxPercentages[_receiver] == 0, "Receiver already exists");
-        taxPercentages[_receiver] = _percentage;
-        taxReceiverList.push(_receiver);
+        require(feePercentage[_addr] == 0, "Receiver already exists");
+        feePercentage[_addr] = _percentage;
+        feeTakers.push(_addr);
 
-        emit AddTaxReceiver(_receiver, _percentage);
+        emit AddFeeTaker(_addr, _percentage);
     }
 
-    function updateReceiverTax(
-        address _receiver,
+    function updateFeeTaker(
+        address _addr,
         uint256 _percentage
     ) external onlyOwner {
-        require(taxPercentages[_receiver] > 0);
-        emit UpdateReceiverTax(
-            _receiver,
-            taxPercentages[_receiver],
-            _percentage
-        );
-        taxPercentages[_receiver] = _percentage;
+        require(feePercentage[_addr] > 0);
+        feePercentage[_addr] = _percentage;
+        emit UpdateFeeTaker(_addr, _percentage);
     }
 
-    function removeTaxReceiver(uint256 _index) external onlyOwner {
-        require(_index < taxReceiverList.length);
-        emit RemoveTaxReceiver(taxReceiverList[_index]);
-        taxPercentages[taxReceiverList[_index]] = 0;
-        taxReceiverList[_index] = taxReceiverList[taxReceiverList.length - 1];
-        taxReceiverList.pop();
+    function removeFeeTaker(uint256 _index) external onlyOwner {
+        require(_index < feeTakers.length);
+        emit RemoveFeeTaker(feeTakers[_index]);
+        feePercentage[feeTakers[_index]] = 0;
+        feeTakers[_index] = feeTakers[feeTakers.length - 1];
+        feeTakers.pop();
     }
 
     function updateThreshold(uint256 _threshold) external onlyOwner {
@@ -155,16 +147,11 @@ abstract contract Taxable is Ownable {
         routerAddress = _routerAddress;
     }
 
-    function addTaxExempts(
-        address _user
+    function setExcludeFromFee(
+        address _user,
+        bool _val
     ) external onlyOwner isValidAddress(_user) {
-        taxExempts[_user] = true;
-    }
-
-    function removeTaxExempts(
-        address _user
-    ) external onlyOwner isValidAddress(_user) {
-        taxExempts[_user] = false;
+        isExcludedFromFee[_user] = _val;
     }
 
     function _swap(
@@ -197,12 +184,11 @@ abstract contract Taxable is Ownable {
             );
     }
 
-
     function _taxEqualsHundred() internal view returns (bool) {
         uint256 sum = 0;
-        for (uint256 i = 0; i < taxReceiverList.length; i++) {
-            address account = taxReceiverList[i];
-            sum += taxPercentages[account];
+        for (uint256 i = 0; i < feeTakers.length; i++) {
+            address account = feeTakers[i];
+            sum += feePercentage[account];
         }
 
         return (sum == 100);
