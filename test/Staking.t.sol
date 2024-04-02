@@ -15,7 +15,7 @@ contract StakingTest is Setup {
         super.setUp();
 
         vm.startPrank(owner);
-        synthetix.mint();
+        synthetix.mint(owner, 100_000_000 ether);
         staking = new Staking(address(proxySNX), address(proxySNX));
         proxySNX.transfer(user1, 20 * 10 ** 18);
         proxySNX.transfer(user2, 20 * 10 ** 18);

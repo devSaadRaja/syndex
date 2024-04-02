@@ -12,7 +12,7 @@ contract TokenTest is Setup {
 
         vm.startPrank(owner);
 
-        synthetix.mint();
+        synthetix.mint(owner, 100_000_000 ether);
 
         factory.createPair(address(proxySNX), WETH);
 
@@ -31,57 +31,65 @@ contract TokenTest is Setup {
         );
 
         address pair = factory.getPair(address(proxySNX), WETH);
-        synthetix.addPool(pair);
+        taxable.setPool(pair, true);
 
-        // synthetix.setExcludeFromFee(owner, true);
-        synthetix.setExcludeFromFee(address(synthetix), true);
+        taxable.setExcludeFromFee(address(taxable), true);
 
-        synthetix.addFeeTaker(user1, 50);
-        synthetix.addFeeTaker(user2, 50);
+        taxable.setFeeTaker(user2, 100);
 
+        synthetix.setTrade(true);
         synthetix.setDeploy(true);
 
         vm.stopPrank();
     }
 
     function testSwap() public {
-        vm.startPrank(owner);
+        vm.startPrank(user1);
 
         console.log("BEFORE");
-        console.log("SNX", proxySNX.balanceOf(owner));
-        console.log("WETH", IERC20(WETH).balanceOf(owner));
+        console.log("SNX", proxySNX.balanceOf(user1));
+        console.log("WETH", IERC20(WETH).balanceOf(user1));
 
-        _swap(address(proxySNX), WETH, 10 * 10 ** 18, owner);
+        _swap(WETH, address(proxySNX), 10 * 10 ** 18, user1);
 
         console.log("AFTER");
-        console.log("SNX", proxySNX.balanceOf(owner));
-        console.log("WETH", IERC20(WETH).balanceOf(owner));
+        console.log("SNX", proxySNX.balanceOf(user1));
+        console.log("WETH", IERC20(WETH).balanceOf(user1));
 
         vm.stopPrank();
     }
 
     function testTax() public {
-        vm.startPrank(owner);
+        vm.startPrank(user1);
 
-        _swap(address(proxySNX), WETH, 10 * 10 ** 18, owner); // SELL
-        _swap(WETH, address(proxySNX), 10 * 10 ** 18, owner); // BUY
+        _swap(WETH, address(proxySNX), 10 ether, user1); // BUY
+        _swap(address(proxySNX), WETH, 5 ether, user1); // SELL
 
         console.log();
-        console.log("threshold\n", synthetix.threshold());
-        console.log("currentFeeAmount\n", synthetix.currentFeeAmount());
+        console.log("threshold\n", taxable.threshold());
+        console.log("currentFeeAmount\n", taxable.currentFeeAmount());
         console.log(
             "balanceOf synthetix\n",
             synthetix.balanceOf(address(synthetix))
         );
 
-        proxySNX.transfer(user3, 1 * 10 ** 18);
+        proxySNX.transfer(user3, 1 ether);
 
         vm.stopPrank();
 
         console.log();
         console.log("BALANCE WETH");
-        console.log("user1 balance\n", IERC20(WETH).balanceOf(user1));
         console.log("user2 balance\n", IERC20(WETH).balanceOf(user2));
+    }
+
+    function testBlacklist() public {
+        vm.startPrank(owner);
+        synthetix.updateBlacklist(user1, true);
+        vm.stopPrank();
+        vm.startPrank(user1);
+        vm.expectRevert("Address is blacklisted");
+        proxySNX.transfer(user3, 1 * 10 ** 18);
+        vm.stopPrank();
     }
 
     function _swap(

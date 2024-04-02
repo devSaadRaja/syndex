@@ -10,9 +10,9 @@ contract Proxy is Ownable {
 
     constructor(address _owner) Ownable(_owner) {}
 
-    function setTarget(Proxyable _target) external onlyOwner {
-        target = _target;
-        emit TargetUpdated(_target);
+    function setTarget(address _target) external onlyOwner {
+        target = Proxyable(_target);
+        emit TargetUpdated(Proxyable(_target));
     }
 
     function _emit(

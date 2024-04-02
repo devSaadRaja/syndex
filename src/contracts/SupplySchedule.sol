@@ -152,9 +152,9 @@ contract SupplySchedule is Ownable, ISupplySchedule {
      * SupplySchedule requires Synthetix address as it has the authority
      * to record mint event.
      * */
-    function setSynthetixProxy(ISynthetix _synthetixProxy) external onlyOwner {
-        require(address(_synthetixProxy) != address(0), "Address cannot be 0");
-        synthetixProxy = payable(address(_synthetixProxy));
+    function setSynthetixProxy(address _synthetixProxy) external onlyOwner {
+        require(_synthetixProxy != address(0), "Address cannot be 0");
+        synthetixProxy = payable(_synthetixProxy);
         emit SynthetixProxyUpdated(synthetixProxy);
     }
 

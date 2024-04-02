@@ -8,7 +8,7 @@ contract AggregatorCollateral is BaseAggregator {
 
     uint256 price = 1 * 10 ** 18;
 
-    constructor(AddressResolver _resolver) BaseAggregator(_resolver) {}
+    constructor(address _resolver) BaseAggregator(AddressResolver(_resolver)) {}
 
     function setPrice(uint256 _price) external {
         price = _price;

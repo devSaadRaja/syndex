@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
-abstract contract Taxable is Ownable {
+contract Taxable is Ownable {
     // ==================== STRUCTURE ==================== //
+
+    address internal immutable tokenProxy;
+    address internal immutable innerToken;
 
     uint256 public buyFee = 2; // 2%
     uint256 public sellFee = 2; // 2%
@@ -14,24 +17,21 @@ abstract contract Taxable is Ownable {
 
     uint256 public currentFeeAmount = 0;
 
+    mapping(address => bool) public pool;
     mapping(address => bool) public isExcludedFromFee;
     mapping(address => uint256) public feePercentage;
     address[] feeTakers;
 
-    address public WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // mainnet address
-    address public routerAddress = 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D; // mainnet address
-
-    mapping(address => bool) public pool;
-    address[] pools;
+    address public rewardAddr;
+    address public routerAddr;
 
     // ==================== EVENTS ==================== //
 
-    event AddPool(address poolAddress);
+    event SetPool(address poolAddress, bool val);
     event RemovePool(address poolAddress);
-    event UpdateFee(uint256 oldPercentage, uint256 newPercentage);
-    event AddFeeTaker(address addr, uint256 percentage);
+    event UpdateFee(uint256 percentage);
+    event SetFeeTaker(address addr, uint256 percentage);
     event RemoveFeeTaker(address addr);
-    event UpdateFeeTaker(address addr, uint256 percentage);
 
     // ==================== MODIFIERS ==================== //
 
@@ -40,51 +40,46 @@ abstract contract Taxable is Ownable {
         _;
     }
 
+    modifier onlyToken() {
+        require(innerToken == msg.sender, "Not associated token");
+        _;
+    }
+
     // ==================== FUNCTIONS ==================== //
 
-    function getAllPools() external view returns (address[] memory) {
-        return pools;
+    constructor(
+        address _proxy,
+        address _token,
+        address _rewardAddr,
+        address _router
+    ) Ownable(msg.sender) {
+        tokenProxy = _proxy;
+        innerToken = _token;
+        rewardAddr = _rewardAddr;
+        routerAddr = _router;
     }
 
     function getAllFeeTakers() external view returns (address[] memory) {
         return feeTakers;
     }
 
-    function addPool(address poolAddress) external onlyOwner {
-        require(poolAddress != address(0), "Invalid Pool address");
-        require(!pool[poolAddress], "Pool already exists");
-        pool[poolAddress] = true;
-        pools.push(poolAddress);
+    function setPool(
+        address poolAddress,
+        bool val
+    ) external onlyOwner isValidAddress(poolAddress) {
+        pool[poolAddress] = val;
 
-        emit AddPool(poolAddress);
+        emit SetPool(poolAddress, val);
     }
 
-    function removePool(uint _index) external onlyOwner {
-        require(_index < pools.length);
-        emit RemovePool(pools[_index]);
-        pool[pools[_index]] = false;
-        pools[_index] = pools[pools.length - 1];
-        pools.pop();
-    }
-
-    function addFeeTaker(
+    function setFeeTaker(
         address _addr,
         uint256 _percentage
     ) external onlyOwner {
-        require(feePercentage[_addr] == 0, "Receiver already exists");
+        if (feePercentage[_addr] == 0) feeTakers.push(_addr);
         feePercentage[_addr] = _percentage;
-        feeTakers.push(_addr);
 
-        emit AddFeeTaker(_addr, _percentage);
-    }
-
-    function updateFeeTaker(
-        address _addr,
-        uint256 _percentage
-    ) external onlyOwner {
-        require(feePercentage[_addr] > 0);
-        feePercentage[_addr] = _percentage;
-        emit UpdateFeeTaker(_addr, _percentage);
+        emit SetFeeTaker(_addr, _percentage);
     }
 
     function removeFeeTaker(uint256 _index) external onlyOwner {
@@ -107,8 +102,12 @@ abstract contract Taxable is Ownable {
             require(_fee <= sellFee, "Fee > sellFee");
         }
 
-        emit UpdateFee(buy ? buyFee : sellFee, _fee);
         buy ? buyFee = _fee : sellFee = _fee;
+        emit UpdateFee(_fee);
+    }
+
+    function addToCurrentFeeAmount(uint256 amount) external onlyToken {
+        currentFeeAmount += amount;
     }
 
     function calculateFeeAmount(
@@ -138,13 +137,13 @@ abstract contract Taxable is Ownable {
     function setRewardAddress(
         address _rewardAddress
     ) external onlyOwner isValidAddress(_rewardAddress) {
-        WETH = _rewardAddress;
+        rewardAddr = _rewardAddress;
     }
 
     function setRouter(
         address _routerAddress
     ) external onlyOwner isValidAddress(_routerAddress) {
-        routerAddress = _routerAddress;
+        routerAddr = _routerAddress;
     }
 
     function setExcludeFromFee(
@@ -154,34 +153,36 @@ abstract contract Taxable is Ownable {
         isExcludedFromFee[_user] = _val;
     }
 
-    function _swap(
-        address _tokenIn,
-        address _tokenOut,
-        uint256 _amountIn,
-        address _to
-    ) internal {
-        IERC20(_tokenIn).approve(routerAddress, _amountIn);
+    function distributeTax() external {
+        require(_taxEqualsHundred(), "Total tax percentage should be 100");
+        _distribute();
+    }
 
-        address[] memory path;
-        if (_tokenIn != address(WETH) && _tokenOut != address(WETH)) {
-            path = new address[](3);
-            path[0] = _tokenIn;
-            path[1] = WETH;
-            path[2] = _tokenOut;
-        } else {
-            path = new address[](2);
-            path[0] = _tokenIn;
-            path[1] = _tokenOut;
+    function _distribute() internal {
+        address[] memory path = new address[](2);
+        path[0] = tokenProxy;
+        path[1] = rewardAddr;
+
+        for (uint256 i = 0; i < feeTakers.length; i++) {
+            address account = feeTakers[i];
+            uint256 toSendAmount = calculateFeeAmount(
+                currentFeeAmount,
+                feePercentage[account]
+            );
+
+            IERC20(path[0]).approve(routerAddr, toSendAmount);
+
+            IUniswapV2Router02(routerAddr)
+                .swapExactTokensForTokensSupportingFeeOnTransferTokens(
+                    toSendAmount,
+                    0,
+                    path,
+                    account,
+                    block.timestamp + 10 minutes
+                );
         }
 
-        IUniswapV2Router02(routerAddress)
-            .swapExactTokensForTokensSupportingFeeOnTransferTokens(
-                _amountIn,
-                0,
-                path,
-                _to,
-                block.timestamp + 10 minutes
-            );
+        currentFeeAmount = 0;
     }
 
     function _taxEqualsHundred() internal view returns (bool) {

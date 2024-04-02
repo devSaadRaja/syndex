@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/interfaces/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-
-// import {intoUint256, ud} from "@prb/math/UD60x18.sol";
 
 /**
  * @title Staking Contract
@@ -25,10 +23,10 @@ contract Staking is Ownable, ReentrancyGuard {
     uint256 public APR = 14;
 
     uint256 public totalStaked;
-    uint256 public warmupPeriod = 4 days;
+    uint256 public warmupPeriod = 0;
 
-    address public TOKEN = 0x2eA6CC1ac06fdC01b568fcaD8D842DEc3F2CE1aD; // Staked Token
-    address public rewardToken = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // WETH | mainnet address
+    address public TOKEN; // Staked Token
+    address public rewardToken;
 
     // ==================== EVENTS ==================== //
 

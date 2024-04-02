@@ -17,9 +17,10 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IFeePool} from "../src/interfaces/IFeePool.sol";
 import {ISynthetix} from "../src/interfaces/ISynthetix.sol";
 
-import {Proxy} from "../src/contracts/Proxy.sol";
+// import {Proxy} from "../src/contracts/Proxy.sol";
 import {Issuer} from "../src/contracts/Issuer.sol";
 import {FeePool} from "../src/contracts/FeePool.sol";
+import {Taxable} from "../src/contracts/tax/Taxable.sol";
 import {Synthetix} from "../src/contracts/Synthetix.sol";
 import {Proxyable} from "../src/contracts/Proxyable.sol";
 import {DebtCache} from "../src/contracts/DebtCache.sol";
@@ -84,6 +85,7 @@ contract Setup is Test, Utils {
     address[] public addresses;
 
     Issuer public issuer;
+    Taxable public taxable;
     ProxyERC20 public proxySNX;
     ProxyERC20 public proxysUSD;
     ProxyERC20 public proxysETH;
@@ -235,10 +237,16 @@ contract Setup is Test, Utils {
         );
         synthetix = new Synthetix(
             payable(address(proxySNX)),
-            TokenState(address(tokenStateSNX)),
+            address(tokenStateSNX),
             owner,
             0,
             address(addressResolver)
+        );
+        taxable = new Taxable(
+            address(proxySNX),
+            address(synthetix),
+            0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2, // WETH mainnet address
+            0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D // Uniswap mainnet address
         );
         synthsUSD = new MultiCollateralSynth(
             payable(address(proxysUSD)),
@@ -294,7 +302,9 @@ contract Setup is Test, Utils {
         // exchangeRatesMainnet = 0x648280dD2db772CD018A0CEC72fab5bF8B7683AB;
 
         aggregatorETH = new AggregatorETH(addressResolver);
-        aggregatorCollateral = new AggregatorCollateral(addressResolver);
+        aggregatorCollateral = new AggregatorCollateral(
+            address(addressResolver)
+        );
 
         aggregatorIssuedSynths = new AggregatorIssuedSynths(addressResolver);
         // aggregatorIssuedSynthsMainnet = 0xcf1405b18dBCEA2893Abe635c88359C75878B9e1;
@@ -417,9 +427,9 @@ contract Setup is Test, Utils {
         issuer.addSynth(address(synthsUSD));
         issuer.addSynth(address(synthsETH));
 
-        proxySNX.setTarget(Proxyable(address(synthetix)));
-        proxysUSD.setTarget(Proxyable(address(synthsUSD)));
-        proxysETH.setTarget(Proxyable(address(synthsETH)));
+        proxySNX.setTarget(address(synthetix));
+        proxysUSD.setTarget(address(synthsUSD));
+        proxysETH.setTarget(address(synthsETH));
 
         tokenStateSNX.setAssociatedContract(address(synthetix));
         tokenStatesUSD.setAssociatedContract(address(synthsUSD));
@@ -474,8 +484,10 @@ contract Setup is Test, Utils {
         // systemSettings.setLiquidationDelay(28800); // 8 hours
         // systemSettings.setRateStalePeriod(86400); // 1 day
 
-        supplySchedule.setSynthetixProxy(ISynthetix(address(proxySNX)));
+        supplySchedule.setSynthetixProxy(address(proxySNX));
         supplySchedule.setInflationAmount(3000000 * 10 ** 18);
+
+        synthetix.setTaxable(address(taxable));
 
         vm.stopPrank(); // OWNER
     }
