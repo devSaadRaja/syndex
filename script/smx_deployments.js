@@ -1,8 +1,10 @@
 const { tenderly } = require("hardhat");
 
 const { readFileSync, writeFileSync } = require("fs");
-const outputFilePath = "./smx_tenderly_deployments.json";
+const outputFilePath = "./smx_test_tenderly_deployments.json";
+// const outputFilePath = "./smx_tenderly_deployments.json";
 
+const WETH = require("../abis/weth.json");
 const uniswapRouter = require("../abis/uniswap-router.json");
 const uniswapFactory = require("../abis/uniswap-factory.json");
 
@@ -25,7 +27,8 @@ async function main() {
 
   // * Second parameter is chainId, 1 for Ethereum mainnet
   const provider_tenderly = new ethers.providers.JsonRpcProvider(
-    `${process.env.TENDERLY_MAINNET_FORK_URL}`,
+    `${process.env.TENDERLY_MAINNET_FORK_URL_TEST}`,
+    // `${process.env.TENDERLY_MAINNET_FORK_URL}`,
     1
   );
   const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider_tenderly);
@@ -38,53 +41,63 @@ async function main() {
   // ! DEPLOYMENTS ------------------------------------------------------------
   // ! ------------------------------------------------------------------------
 
-  const PriceOracle = await contractDeploy("PriceOracle", [parseEth(1)]);
-  deployments["PriceOracle"] = PriceOracle.address;
-  await verify("PriceOracle", PriceOracle.address);
+  // // const PriceOracle = await contractDeploy("PriceOracle", [parseEth(1)]);
+  // // deployments["PriceOracle"] = PriceOracle.address;
+  // // await verify("PriceOracle", PriceOracle.address);
 
-  const SMX = await contractDeploy("SMX", [
-    "SMX",
-    "SMX",
-    deployer,
-    parseEth(100_000_000),
-  ]);
-  deployments["SMX"] = SMX.address;
-  await verify("SMX", SMX.address);
+  // const SMX = await contractDeploy("SMX", [
+  //   "SMX",
+  //   "SMX",
+  //   deployer,
+  //   parseEth(100_000_000),
+  // ]);
+  // deployments["SMX"] = SMX.address;
+  // await verify("SMX", SMX.address);
 
-  const Staking = await contractDeploy("Staking", [
+  // const Staking = await contractDeploy("Staking", [
+  //   deployments["SMX"],
+  //   deployments["SMX"],
+  // ]);
+  // deployments["Staking"] = Staking.address;
+  // await verify("Staking", Staking.address);
+
+  // const FactoryContract = new ethers.Contract(
+  //   deployments["UniswapFactory"],
+  //   uniswapFactory,
+  //   signer
+  // );
+  // await FactoryContract.createPair(deployments["SMX"], deployments["WETH"]);
+  // deployments["SMXWETH"] = await FactoryContract.getPair(
+  //   deployments["SMX"],
+  //   deployments["WETH"]
+  // );
+
+  const SynthSwap = await contractDeploy("SynthSwap", [
     deployments["SMX"],
     deployments["SMX"],
   ]);
-  deployments["Staking"] = Staking.address;
-  await verify("Staking", Staking.address);
+  deployments["SynthSwap"] = SynthSwap.address;
+  await verify("SynthSwap", SynthSwap.address);
 
-  //   const SupplySchedule = await contractDeploy("SupplySchedule", [
-  //     deployer,
-  //     1551830400,
-  //     4,
-  //   ]);
-  //   deployments["SupplySchedule"] = SupplySchedule.address;
-  //   await verify("SupplySchedule", SupplySchedule.address);
+  // //   const SupplySchedule = await contractDeploy("SupplySchedule", [
+  // //     deployer,
+  // //     1551830400,
+  // //     4,
+  // //   ]);
+  // //   deployments["SupplySchedule"] = SupplySchedule.address;
+  // //   await verify("SupplySchedule", SupplySchedule.address);
+
+  // // ============================================================ //
+
+  // * Write deployment addresses to file
+  writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+  console.log("Completed");
+
+  // // ============================================================ //
 
   // ! ------------------------------------------------------------------------
   // ! SETUP ------------------------------------------------------------------
   // ! ------------------------------------------------------------------------
-
-  const FactoryContract = new ethers.Contract(
-    deployments["UniswapFactory"],
-    uniswapFactory,
-    signer
-  );
-
-  const cTx = await FactoryContract.createPair(
-    deployments["SMX"],
-    deployments["WETH"]
-  );
-  // await cTx.wait(6);
-  deployments["SMXWETH"] = await FactoryContract.getPair(
-    deployments["SMX"],
-    deployments["WETH"]
-  );
 
   const smx = await ethers.getContractAt(
     contractsPath.SMX,
@@ -101,40 +114,33 @@ async function main() {
   await smx.setDeploy(true);
   await smx.setTrade(true);
 
-  // const supplySchedule = await ethers.getContractAt(
-  //   contractsPath.SupplySchedule,
-  //   deployments["SupplySchedule"],
-  //   signer
-  // );
-  // await supplySchedule.setSynthetixProxy(deployments["SMX"]);
-  // await supplySchedule.setInflationAmount(3000000 * 10 ** 18);
+  const WETHContract = new ethers.Contract(deployments["WETH"], WETH, signer);
+  const RouterContract = new ethers.Contract(
+    deployments["UniswapRouter"],
+    uniswapRouter,
+    signer
+  );
+  await smx.approve(deployments["UniswapRouter"], parseEth(1000));
+  await WETHContract.approve(deployments["UniswapRouter"], parseEth(1000));
+  await RouterContract.addLiquidity(
+    deployments["SMX"],
+    deployments["WETH"],
+    parseEth(1000),
+    parseEth(1000),
+    1,
+    1,
+    deployer,
+    Math.round(Date.now() / 1000) + 1000
+  );
+  console.log("ADDED LIQUIDITY");
 
-  // const RouterContract = new ethers.Contract(
-  //   deployments["UniswapRouter"],
-  //   uniswapRouter,
-  //   signer
-  // );
-  // await proxySNX.approve(deployments["UniswapRouter"], parseUnits(1800));
-  // await WETH.approve(deployments["UniswapRouter"], parseEth(81000000));
-  // delay(30000);
-  // console.log("APPROVED TOKENS TO ROUTER");
-  // await RouterContract.addLiquidity(
-  //   deployments["ProxySNX"],
-  //   deployments["WETH"],
-  //   parseEth(81000000),
-  //   parseEth(1800),
-  //   1,
-  //   1,
-  //   deployer,
-  //   Math.round(Date.now() / 1000) + 1000
-  // );
-  // console.log("ADDED LIQUIDITY");
-
-  // // ============================================================ //
-
-  // * Write deployment addresses to file
-  writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-  console.log("Completed");
+  // // const supplySchedule = await ethers.getContractAt(
+  // //   contractsPath.SupplySchedule,
+  // //   deployments["SupplySchedule"],
+  // //   signer
+  // // );
+  // // await supplySchedule.setSynthetixProxy(deployments["SMX"]);
+  // // await supplySchedule.setInflationAmount(3000000 * 10 ** 18);
 }
 
 const contractDeploy = async (name, args) => {

@@ -45,7 +45,8 @@ module.exports = {
     },
     tenderly: {
       // Tenderly Mainnet Fork RPC
-      url: `${process.env.TENDERLY_MAINNET_FORK_URL}`,
+      url: `${process.env.TENDERLY_MAINNET_FORK_URL_TEST}`,
+      // url: `${process.env.TENDERLY_MAINNET_FORK_URL}`,
       chainId: 1,
     },
     // mainnet: {
