@@ -8,12 +8,18 @@ import "@uniswap/core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 import {SMX} from "../src/contracts/SMX/SMX.sol";
+import {Staking} from "../src/contracts/staking/Staking.sol";
+import {RewardEscrow} from "../src/contracts/SMX/RewardEscrow.sol";
+import {vSMXRedeemer} from "../src/contracts/SMX/vSMXRedeemer.sol";
+import {SupplySchedule} from "../src/contracts/SMX/SupplySchedule.sol";
+import {MultipleMerkleDistributor} from "../src/contracts/SMX/MultipleMerkleDistributor.sol";
 
 contract SMXTest is Test {
     address public owner = vm.addr(1);
     address public user1 = vm.addr(2);
     address public user2 = vm.addr(3);
     address public user3 = vm.addr(4);
+    address public treasury = vm.addr(5);
 
     address WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     IUniswapV2Factory factory =
@@ -22,6 +28,11 @@ contract SMXTest is Test {
         IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
 
     SMX public smx;
+    Staking public staking;
+    RewardEscrow public rewardEscrow;
+    vSMXRedeemer public vSmxRedeemer;
+    SupplySchedule public supplySchedule;
+    MultipleMerkleDistributor public multipleMerkleDistributor;
 
     function setUp() public {
         deal(owner, 500 ether);
@@ -37,6 +48,15 @@ contract SMXTest is Test {
         vm.startPrank(owner);
 
         smx = new SMX("SMX", "SMX", owner, 100_000_000 ether);
+        staking = new Staking(address(smx), address(smx));
+        supplySchedule = new SupplySchedule(owner, treasury);
+        // vSmxRedeemer = new vSMXRedeemer(address(smx), address(smx));
+        rewardEscrow = new RewardEscrow(owner, address(smx));
+        multipleMerkleDistributor = new MultipleMerkleDistributor(
+            owner,
+            address(smx),
+            address(rewardEscrow)
+        );
 
         deal(address(smx), owner, 500 ether);
         deal(address(smx), user1, 500 ether);
@@ -52,6 +72,8 @@ contract SMXTest is Test {
         smx.setRewardAddress(address(WETH));
         smx.setExcludeFromFee(address(smx), true);
 
+        smx.transfer(address(staking), 100 * 10 ** 18);
+
         smx.approve(address(router), 50 ether);
         IERC20(WETH).approve(address(router), 50 ether);
         router.addLiquidity(
@@ -64,6 +86,12 @@ contract SMXTest is Test {
             owner,
             block.timestamp + 10 minutes
         );
+
+        supplySchedule.setSMX(address(smx));
+        supplySchedule.setStakingRewards(address(staking));
+        supplySchedule.setTradingRewards(address(multipleMerkleDistributor));
+
+        // multipleMerkleDistributor.setMerkleRootForEpoch();
 
         vm.stopPrank();
     }

@@ -19,7 +19,7 @@ const parseUnits = (eth) => ethers.utils.parseUnits(String(eth), 6);
 const contractsPath = {
   SMX: "src/contracts/SMX/SMX.sol:SMX",
   Staking: "src/contracts/staking/Staking.sol:Staking",
-  // SupplySchedule: "src/contracts/SupplySchedule.sol:SupplySchedule",
+  SupplySchedule: "src/contracts/SMX/SupplySchedule.sol:SupplySchedule",
 };
 
 async function main() {
@@ -72,26 +72,54 @@ async function main() {
   //   deployments["WETH"]
   // );
 
-  const SynthSwap = await contractDeploy("SynthSwap", [
-    deployments["SMX"],
-    deployments["SMX"],
-  ]);
-  deployments["SynthSwap"] = SynthSwap.address;
-  await verify("SynthSwap", SynthSwap.address);
+  // const SafeDecimalMath = await contractDeploy(
+  //   "src/contracts/SMX/libraries/SafeDecimalMath.sol:SafeDecimalMath",
+  //   []
+  // );
+  // deployments["SafeDecimalMath"] = SafeDecimalMath.address;
+  // await verify(
+  //   "src/contracts/SMX/libraries/SafeDecimalMath.sol:SafeDecimalMath",
+  //   SafeDecimalMath.address
+  // );
 
-  // //   const SupplySchedule = await contractDeploy("SupplySchedule", [
-  // //     deployer,
-  // //     1551830400,
-  // //     4,
-  // //   ]);
-  // //   deployments["SupplySchedule"] = SupplySchedule.address;
-  // //   await verify("SupplySchedule", SupplySchedule.address);
+  // const RewardEscrow = await contractDeploy(
+  //   "src/contracts/SMX/RewardEscrow.sol:RewardEscrow",
+  //   [deployer, deployments["SMX"]]
+  // );
+  // deployments["RewardEscrow"] = RewardEscrow.address;
+  // await verify(
+  //   "src/contracts/SMX/RewardEscrow.sol:RewardEscrow",
+  //   RewardEscrow.address
+  // );
+
+  // const MultipleMerkleDistributor = await contractDeploy(
+  //   "MultipleMerkleDistributor",
+  //   [deployer, deployments["SMX"], deployments["RewardEscrow"]]
+  // );
+  // deployments["MultipleMerkleDistributor"] = MultipleMerkleDistributor.address;
+  // await verify("MultipleMerkleDistributor", MultipleMerkleDistributor.address);
+
+  // const SupplySchedule = await contractDeploy(
+  //   "src/contracts/SMX/SupplySchedule.sol:SupplySchedule",
+  //   [deployer, treasury]
+  // );
+  // deployments["SupplySchedule"] = SupplySchedule.address;
+  // await verify(
+  //   "src/contracts/SMX/SupplySchedule.sol:SupplySchedule",
+  //   SupplySchedule.address,
+  //   {
+  //     "src/contracts/SMX/libraries/SafeDecimalMath.sol:SafeDecimalMath":
+  //       deployments["SafeDecimalMath"],
+  //   }
+  // );
+
+  // // vSmxRedeemer = new vSMXRedeemer(address(smx), address(smx));
 
   // // ============================================================ //
 
   // * Write deployment addresses to file
   writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-  console.log("Completed");
+  console.log("--- DEPLOYMENTS UPDATED ---");
 
   // // ============================================================ //
 
@@ -99,48 +127,55 @@ async function main() {
   // ! SETUP ------------------------------------------------------------------
   // ! ------------------------------------------------------------------------
 
-  const smx = await ethers.getContractAt(
-    contractsPath.SMX,
-    deployments["SMX"],
-    signer
-  );
-  await smx.transfer(deployments["Staking"], parseEth(100));
-  await smx.setExcludeFromFee(deployments["SMX"], true);
-  await smx.setRouter(deployments["UniswapRouter"]);
-  await smx.setRewardAddress(deployments["WETH"]);
-  await smx.setPool(deployments["SMXWETH"], true);
-  await smx.setFeeTaker(treasury, 50);
-  await smx.setFeeTaker(user, 50);
-  await smx.setDeploy(true);
-  await smx.setTrade(true);
+  // const smx = await ethers.getContractAt(
+  //   contractsPath.SMX,
+  //   deployments["SMX"],
+  //   signer
+  // );
+  // await smx.transfer(deployments["Staking"], parseEth(100));
+  // await smx.setExcludeFromFee(deployments["SMX"], true);
+  // await smx.setRouter(deployments["UniswapRouter"]);
+  // await smx.setRewardAddress(deployments["WETH"]);
+  // await smx.setPool(deployments["SMXWETH"], true);
+  // await smx.setFeeTaker(treasury, 50);
+  // await smx.setFeeTaker(user, 50);
+  // await smx.setDeploy(true);
+  // await smx.setTrade(true);
 
-  const WETHContract = new ethers.Contract(deployments["WETH"], WETH, signer);
-  const RouterContract = new ethers.Contract(
-    deployments["UniswapRouter"],
-    uniswapRouter,
-    signer
-  );
-  await smx.approve(deployments["UniswapRouter"], parseEth(1000));
-  await WETHContract.approve(deployments["UniswapRouter"], parseEth(1000));
-  await RouterContract.addLiquidity(
-    deployments["SMX"],
-    deployments["WETH"],
-    parseEth(1000),
-    parseEth(1000),
-    1,
-    1,
-    deployer,
-    Math.round(Date.now() / 1000) + 1000
-  );
-  console.log("ADDED LIQUIDITY");
+  // const WETHContract = new ethers.Contract(deployments["WETH"], WETH, signer);
+  // const RouterContract = new ethers.Contract(
+  //   deployments["UniswapRouter"],
+  //   uniswapRouter,
+  //   signer
+  // );
+  // await smx.approve(deployments["UniswapRouter"], parseEth(1000));
+  // await WETHContract.approve(deployments["UniswapRouter"], parseEth(1000));
+  // await RouterContract.addLiquidity(
+  //   deployments["SMX"],
+  //   deployments["WETH"],
+  //   parseEth(1000),
+  //   parseEth(1000),
+  //   1,
+  //   1,
+  //   deployer,
+  //   Math.round(Date.now() / 1000) + 1000
+  // );
+  // console.log("ADDED LIQUIDITY");
 
-  // // const supplySchedule = await ethers.getContractAt(
-  // //   contractsPath.SupplySchedule,
-  // //   deployments["SupplySchedule"],
-  // //   signer
-  // // );
-  // // await supplySchedule.setSynthetixProxy(deployments["SMX"]);
-  // // await supplySchedule.setInflationAmount(3000000 * 10 ** 18);
+  // const supplySchedule = await ethers.getContractAt(
+  //   contractsPath.SupplySchedule,
+  //   deployments["SupplySchedule"],
+  //   signer
+  // );
+  // await supplySchedule.setSMX(deployments["SMX"]);
+  // await supplySchedule.setStakingRewards(deployments["Staking"]);
+  // await supplySchedule.setTradingRewards(
+  //   deployments["MultipleMerkleDistributor"]
+  // );
+
+  // // multipleMerkleDistributor.setMerkleRootForEpoch();
+
+  console.log("--- COMPLETED ---");
 }
 
 const contractDeploy = async (name, args) => {
