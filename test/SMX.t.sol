@@ -2,60 +2,118 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
+import {Setup} from "./Setup.sol";
+import {Utils} from "./Utils.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
+// import {TokenState} from "../src/contracts/TokenState.sol";
+// import {ProxyERC20} from "../src/contracts/ProxyERC20.sol";
+// import {AddressResolver} from "../src/contracts/AddressResolver.sol";
+// import {MultiCollateralSynth} from "../src/contracts/MultiCollateralSynth.sol";
+
 import {SMX} from "../src/contracts/SMX/SMX.sol";
 import {Staking} from "../src/contracts/staking/Staking.sol";
+import {SynthSwap} from "../src/contracts/SMX/Synthswap.sol";
 import {RewardEscrow} from "../src/contracts/SMX/RewardEscrow.sol";
 import {vSMXRedeemer} from "../src/contracts/SMX/vSMXRedeemer.sol";
 import {SupplySchedule} from "../src/contracts/SMX/SupplySchedule.sol";
 import {MultipleMerkleDistributor} from "../src/contracts/SMX/MultipleMerkleDistributor.sol";
 
-contract SMXTest is Test {
-    address public owner = vm.addr(1);
-    address public user1 = vm.addr(2);
-    address public user2 = vm.addr(3);
-    address public user3 = vm.addr(4);
+contract SMXTest is Setup {
+    // address public deployerOnETH = 0xEb3107117FEAd7de89Cd14D463D340A2E6917769;
     address public treasury = vm.addr(5);
 
-    address WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-    IUniswapV2Factory factory =
-        IUniswapV2Factory(0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f);
-    IUniswapV2Router02 router =
-        IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+    // // ? OPTIMISM DEPLOYMENTS ---
+
+    // address WETH = 0x4200000000000000000000000000000000000006;
+    // IUniswapV2Factory factory =
+    //     IUniswapV2Factory(0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f);
+    // IUniswapV2Router02 router =
+    //     IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+
+    SynthSwap public synthSwap;
+    // ProxyERC20 public proxysUSD;
+    // TokenState public tokenStatesUSD;
+    // MultiCollateralSynth public synthsUSD;
+    // AddressResolver public addressResolver;
 
     SMX public smx;
     Staking public staking;
-    RewardEscrow public rewardEscrow;
+    RewardEscrow public rewardEscrow2;
     vSMXRedeemer public vSmxRedeemer;
-    SupplySchedule public supplySchedule;
+    SupplySchedule public supplySchedule2;
     MultipleMerkleDistributor public multipleMerkleDistributor;
 
-    function setUp() public {
-        deal(owner, 500 ether);
-        deal(user1, 500 ether);
-        deal(user2, 500 ether);
-        deal(user3, 500 ether);
+    function setUp() public override {
+        super.setUp();
 
-        deal(WETH, owner, 500 ether);
-        deal(WETH, user1, 500 ether);
-        deal(WETH, user2, 500 ether);
-        deal(WETH, user3, 500 ether);
+        // vm.startPrank(deployerOnETH);
+        // proxySNX.transfer(owner, 100 ether);
+        // proxySNX.transfer(user1, 100 ether);
+        // vm.stopPrank();
+
+        vm.startPrank(address(issuer));
+        synthsUSD.issue(owner, 1000 ether);
+        synthsUSD.issue(user1, 1000 ether);
+        vm.stopPrank();
 
         vm.startPrank(owner);
 
+        synthetix.exchange("sUSD", 500 ether, "sETH");
+
+        _passTime(400);
+
+        factory.createPair(address(proxysUSD), address(proxysETH));
+
+        IERC20(address(proxysUSD)).approve(address(router), 50 ether);
+        IERC20(address(proxysETH)).approve(address(router), 50 ether);
+        router.addLiquidity(
+            address(proxysUSD),
+            address(proxysETH),
+            50 ether,
+            50 ether,
+            0,
+            0,
+            owner,
+            block.timestamp + 10 minutes
+        );
+
+        // proxysUSD = new ProxyERC20(owner);
+        // addressResolver = new AddressResolver(owner);
+        // tokenStatesUSD = new TokenState(owner, address(synthsUSD));
+        // synthsUSD = new MultiCollateralSynth(
+        //     payable(address(proxysUSD)),
+        //     address(tokenStatesUSD),
+        //     "SynthsUSD",
+        //     "sUSD",
+        //     owner,
+        //     "sUSD",
+        //     0,
+        //     address(addressResolver)
+        // );
+        // synthSwap = new SynthSwap(
+        //     address(synthsUSD),
+        //     address(router),
+        //     address(addressResolver),
+        //     owner, // volumeRewards
+        //     treasury
+        // );
+
+        // proxysUSD.setTarget(address(synthsUSD));
+        // tokenStatesUSD.setAssociatedContract(address(synthsUSD));
+
         smx = new SMX("SMX", "SMX", owner, 100_000_000 ether);
         staking = new Staking(address(smx), address(smx));
-        supplySchedule = new SupplySchedule(owner, treasury);
+        supplySchedule2 = new SupplySchedule(owner, treasury);
         // vSmxRedeemer = new vSMXRedeemer(address(smx), address(smx));
-        rewardEscrow = new RewardEscrow(owner, address(smx));
+        rewardEscrow2 = new RewardEscrow(owner, address(smx));
         multipleMerkleDistributor = new MultipleMerkleDistributor(
             owner,
             address(smx),
-            address(rewardEscrow)
+            address(rewardEscrow2)
         );
 
         deal(address(smx), owner, 500 ether);
@@ -64,6 +122,7 @@ contract SMXTest is Test {
         factory.createPair(address(smx), WETH);
         address pair = factory.getPair(address(smx), WETH);
 
+        // ? SETUP
         smx.setTrade(true);
         smx.setDeploy(true);
         smx.setPool(pair, true);
@@ -87,11 +146,39 @@ contract SMXTest is Test {
             block.timestamp + 10 minutes
         );
 
-        supplySchedule.setSMX(address(smx));
-        supplySchedule.setStakingRewards(address(staking));
-        supplySchedule.setTradingRewards(address(multipleMerkleDistributor));
+        supplySchedule2.setSMX(address(smx));
+        supplySchedule2.setStakingRewards(address(staking));
+        supplySchedule2.setTradingRewards(address(multipleMerkleDistributor));
 
         // multipleMerkleDistributor.setMerkleRootForEpoch();
+
+        vm.stopPrank();
+    }
+
+    function testTradeSynths() public {
+        vm.startPrank(user1);
+
+        synthetix.issueMaxSynths();
+
+        IERC20(address(proxysUSD)).approve(address(router), 50 ether);
+        address[] memory path = new address[](2);
+        path[0] = address(proxysUSD);
+        path[1] = address(proxysETH);
+        router.swapExactTokensForTokens(
+            1 ether,
+            0,
+            path,
+            user1,
+            block.timestamp + 10 minutes
+        );
+
+        // IERC20(address(proxysUSD)).approve(address(synthSwap), 50 ether);
+        // synthSwap.uniswapSwapInto(
+        //     bytes32("sETH"), // "sETH", // bytes32(abi.encodePacked("sETH"))
+        //     address(proxysUSD),
+        //     50 ether,
+        //     _data
+        // );
 
         vm.stopPrank();
     }

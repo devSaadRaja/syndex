@@ -44,9 +44,10 @@ module.exports = {
       accounts: [process.env.PRIVATE_KEY],
     },
     tenderly: {
-      // Tenderly Mainnet Fork RPC
-      url: `${process.env.TENDERLY_MAINNET_FORK_URL_TEST}`,
-      // url: `${process.env.TENDERLY_MAINNET_FORK_URL}`,
+      url:
+        process.env.TENDERLY_MAIN === "true"
+          ? `${process.env.TENDERLY_MAINNET_FORK_URL}`
+          : `${process.env.TENDERLY_MAINNET_FORK_URL_TEST}`,
       chainId: 1,
     },
     // mainnet: {

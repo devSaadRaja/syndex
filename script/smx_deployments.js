@@ -1,8 +1,9 @@
 const { tenderly } = require("hardhat");
 
 const { readFileSync, writeFileSync } = require("fs");
-const outputFilePath = "./smx_test_tenderly_deployments.json";
-// const outputFilePath = "./smx_tenderly_deployments.json";
+const outputFilePath = process.env.TENDERLY_MAIN === "true"
+  ? "./smx_tenderly_deployments.json"
+  : "./smx_test_tenderly_deployments.json";
 
 const WETH = require("../abis/weth.json");
 const uniswapRouter = require("../abis/uniswap-router.json");
@@ -19,7 +20,10 @@ const parseUnits = (eth) => ethers.utils.parseUnits(String(eth), 6);
 const contractsPath = {
   SMX: "src/contracts/SMX/SMX.sol:SMX",
   Staking: "src/contracts/staking/Staking.sol:Staking",
-  SupplySchedule: "src/contracts/SMX/SupplySchedule.sol:SupplySchedule",
+  SMXRewardEscrow: "src/contracts/SMX/RewardEscrow.sol:RewardEscrow",
+  SMXSupplySchedule: "src/contracts/SMX/SupplySchedule.sol:SupplySchedule",
+  SMXSafeDecimalMath:
+    "src/contracts/SMX/libraries/SafeDecimalMath.sol:SafeDecimalMath",
 };
 
 async function main() {
@@ -27,8 +31,9 @@ async function main() {
 
   // * Second parameter is chainId, 1 for Ethereum mainnet
   const provider_tenderly = new ethers.providers.JsonRpcProvider(
-    `${process.env.TENDERLY_MAINNET_FORK_URL_TEST}`,
-    // `${process.env.TENDERLY_MAINNET_FORK_URL}`,
+    process.env.TENDERLY_MAIN === "true"
+      ? `${process.env.TENDERLY_MAINNET_FORK_URL}`
+      : `${process.env.TENDERLY_MAINNET_FORK_URL_TEST}`,
     1
   );
   const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider_tenderly);
@@ -73,24 +78,18 @@ async function main() {
   // );
 
   // const SafeDecimalMath = await contractDeploy(
-  //   "src/contracts/SMX/libraries/SafeDecimalMath.sol:SafeDecimalMath",
+  //   contractsPath.SMXSafeDecimalMath,
   //   []
   // );
   // deployments["SafeDecimalMath"] = SafeDecimalMath.address;
-  // await verify(
-  //   "src/contracts/SMX/libraries/SafeDecimalMath.sol:SafeDecimalMath",
-  //   SafeDecimalMath.address
-  // );
+  // await verify(contractsPath.SMXSafeDecimalMath, SafeDecimalMath.address);
 
-  // const RewardEscrow = await contractDeploy(
-  //   "src/contracts/SMX/RewardEscrow.sol:RewardEscrow",
-  //   [deployer, deployments["SMX"]]
-  // );
+  // const RewardEscrow = await contractDeploy(contractsPath.SMXRewardEscrow, [
+  //   deployer,
+  //   deployments["SMX"],
+  // ]);
   // deployments["RewardEscrow"] = RewardEscrow.address;
-  // await verify(
-  //   "src/contracts/SMX/RewardEscrow.sol:RewardEscrow",
-  //   RewardEscrow.address
-  // );
+  // await verify(contractsPath.SMXRewardEscrow, RewardEscrow.address);
 
   // const MultipleMerkleDistributor = await contractDeploy(
   //   "MultipleMerkleDistributor",
@@ -99,19 +98,15 @@ async function main() {
   // deployments["MultipleMerkleDistributor"] = MultipleMerkleDistributor.address;
   // await verify("MultipleMerkleDistributor", MultipleMerkleDistributor.address);
 
-  // const SupplySchedule = await contractDeploy(
-  //   "src/contracts/SMX/SupplySchedule.sol:SupplySchedule",
-  //   [deployer, treasury]
-  // );
+  // const SupplySchedule = await contractDeploy(contractsPath.SMXSupplySchedule, [
+  //   deployer,
+  //   treasury,
+  // ]);
   // deployments["SupplySchedule"] = SupplySchedule.address;
-  // await verify(
-  //   "src/contracts/SMX/SupplySchedule.sol:SupplySchedule",
-  //   SupplySchedule.address,
-  //   {
-  //     "src/contracts/SMX/libraries/SafeDecimalMath.sol:SafeDecimalMath":
-  //       deployments["SafeDecimalMath"],
-  //   }
-  // );
+  // await verify(contractsPath.SMXSupplySchedule, SupplySchedule.address, {
+  //   contractsPath.SMXSafeDecimalMath:
+  //     deployments["SafeDecimalMath"],
+  // });
 
   // // vSmxRedeemer = new vSMXRedeemer(address(smx), address(smx));
 

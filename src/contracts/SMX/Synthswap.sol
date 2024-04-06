@@ -4,14 +4,15 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
-import "../interfaces/ISynthSwap.sol";
-import "../interfaces/ISynthetix.sol";
-import "../interfaces/IAddressResolver.sol";
-import "../interfaces/IAggregationRouterV4.sol";
-import "../interfaces/IAggregationExecutor.sol";
+import "./interfaces/ISynthSwap.sol";
+// import "./interfaces/IAggregationRouterV4.sol";
+import "./interfaces/IAggregationExecutor.sol";
+import "../../interfaces/ISynthetix.sol";
+import "../../interfaces/IAddressResolver.sol";
 
-import "../libraries/RevertReasonParser.sol";
+import "./libraries/RevertReasonParser.sol";
 
 /// @title system to swap synths to/from many erc20 tokens
 /// @dev IAggregationRouterV4 relies on calldata generated off-chain
@@ -19,7 +20,7 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     IERC20 immutable sUSD;
-    IAggregationRouterV4 immutable router;
+    IUniswapV2Router02 immutable router; // IAggregationRouterV4
     IAddressResolver immutable addressResolver;
     address immutable volumeRewards;
     address immutable treasury;
@@ -41,7 +42,7 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
         address _treasury
     ) Ownable(msg.sender) {
         sUSD = IERC20(_sUSD);
-        router = IAggregationRouterV4(_aggregationRouterV4);
+        router = IUniswapV2Router02(_aggregationRouterV4); // IAggregationRouterV4
         addressResolver = IAddressResolver(_addressResolver);
         volumeRewards = _volumeRewards;
         treasury = _treasury;
@@ -55,79 +56,79 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
         emit Received(msg.sender, msg.value);
     }
 
-    /// @inheritdoc ISynthSwap
-    function swapInto(
-        bytes32 _destSynthCurrencyKey,
-        bytes calldata _data
-    ) external payable override returns (uint) {
-        (uint amountOut, ) = swapOn1inch(_data, false);
+    // /// @inheritdoc ISynthSwap
+    // function swapInto(
+    //     bytes32 _destSynthCurrencyKey,
+    //     bytes calldata _data
+    // ) external payable override returns (uint) {
+    //     (uint amountOut, ) = swapOn1inch(_data, false);
 
-        // if destination synth is NOT sUSD, swap on Synthetix is necessary
-        if (_destSynthCurrencyKey != sUSD_CURRENCY_KEY) {
-            amountOut = swapOnSynthetix(
-                amountOut,
-                sUSD_CURRENCY_KEY,
-                _destSynthCurrencyKey
-            );
-        }
+    //     // if destination synth is NOT sUSD, swap on Synthetix is necessary
+    //     if (_destSynthCurrencyKey != sUSD_CURRENCY_KEY) {
+    //         amountOut = swapOnSynthetix(
+    //             amountOut,
+    //             sUSD_CURRENCY_KEY,
+    //             _destSynthCurrencyKey
+    //         );
+    //     }
 
-        address destSynthAddress = proxyForSynth(
-            addressResolver.getSynth(_destSynthCurrencyKey)
-        );
-        IERC20(destSynthAddress).safeTransfer(msg.sender, amountOut);
+    //     address destSynthAddress = proxyForSynth(
+    //         addressResolver.getSynth(_destSynthCurrencyKey)
+    //     );
+    //     IERC20(destSynthAddress).safeTransfer(msg.sender, amountOut);
 
-        emit SwapInto(msg.sender, amountOut);
-        return amountOut;
-    }
+    //     emit SwapInto(msg.sender, amountOut);
+    //     return amountOut;
+    // }
 
-    /// @inheritdoc ISynthSwap
-    function swapOutOf(
-        bytes32 _sourceSynthCurrencyKey,
-        uint _sourceAmount,
-        bytes calldata _data
-    ) external override nonReentrant returns (uint) {
-        // transfer synth to this contract
-        address sourceSynthAddress = proxyForSynth(
-            addressResolver.getSynth(_sourceSynthCurrencyKey)
-        );
-        IERC20(sourceSynthAddress).safeTransferFrom(
-            msg.sender,
-            address(this),
-            _sourceAmount
-        );
+    // /// @inheritdoc ISynthSwap
+    // function swapOutOf(
+    //     bytes32 _sourceSynthCurrencyKey,
+    //     uint _sourceAmount,
+    //     bytes calldata _data
+    // ) external override nonReentrant returns (uint) {
+    //     // transfer synth to this contract
+    //     address sourceSynthAddress = proxyForSynth(
+    //         addressResolver.getSynth(_sourceSynthCurrencyKey)
+    //     );
+    //     IERC20(sourceSynthAddress).safeTransferFrom(
+    //         msg.sender,
+    //         address(this),
+    //         _sourceAmount
+    //     );
 
-        // if source synth is NOT sUSD, swap on Synthetix is necessary
-        if (_sourceSynthCurrencyKey != sUSD_CURRENCY_KEY) {
-            swapOnSynthetix(
-                _sourceAmount,
-                _sourceSynthCurrencyKey,
-                sUSD_CURRENCY_KEY
-            );
-        }
+    //     // if source synth is NOT sUSD, swap on Synthetix is necessary
+    //     if (_sourceSynthCurrencyKey != sUSD_CURRENCY_KEY) {
+    //         swapOnSynthetix(
+    //             _sourceAmount,
+    //             _sourceSynthCurrencyKey,
+    //             sUSD_CURRENCY_KEY
+    //         );
+    //     }
 
-        (uint amountOut, address dstToken) = swapOn1inch(_data, true);
+    //     (uint amountOut, address dstToken) = swapOn1inch(_data, true);
 
-        if (dstToken == ETH_ADDRESS) {
-            (bool success, bytes memory result) = msg.sender.call{
-                value: amountOut
-            }("");
-            if (!success) {
-                revert(RevertReasonParser.parse(result, "callBytes failed: "));
-            }
-        } else {
-            IERC20(dstToken).safeTransfer(msg.sender, amountOut);
-        }
+    //     if (dstToken == ETH_ADDRESS) {
+    //         (bool success, bytes memory result) = msg.sender.call{
+    //             value: amountOut
+    //         }("");
+    //         if (!success) {
+    //             revert(RevertReasonParser.parse(result, "callBytes failed: "));
+    //         }
+    //     } else {
+    //         IERC20(dstToken).safeTransfer(msg.sender, amountOut);
+    //     }
 
-        emit SwapOutOf(msg.sender, amountOut);
+    //     emit SwapOutOf(msg.sender, amountOut);
 
-        // any remaining sUSD in contract should be transferred to treasury
-        uint remainingBalanceSUSD = sUSD.balanceOf(address(this));
-        if (remainingBalanceSUSD > 0) {
-            sUSD.safeTransfer(treasury, remainingBalanceSUSD);
-        }
+    //     // any remaining sUSD in contract should be transferred to treasury
+    //     uint remainingBalanceSUSD = sUSD.balanceOf(address(this));
+    //     if (remainingBalanceSUSD > 0) {
+    //         sUSD.safeTransfer(treasury, remainingBalanceSUSD);
+    //     }
 
-        return amountOut;
-    }
+    //     return amountOut;
+    // }
 
     /// @inheritdoc ISynthSwap
     function uniswapSwapInto(
@@ -266,56 +267,56 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
             );
     }
 
-    /// @notice execute swap on 1inch
-    /// @dev token approval needed when source is not ETH
-    /// @dev either source or destination token will ALWAYS be sUSD
-    /// @param _data specifying swap data
-    /// @param _areTokensInContract TODO
-    /// @return amount received from 1inch swap
-    function swapOn1inch(
-        bytes calldata _data,
-        bool _areTokensInContract
-    ) internal returns (uint, address) {
-        // decode _data for 1inch swap
-        (
-            IAggregationExecutor executor,
-            IAggregationRouterV4.SwapDescription memory desc,
-            bytes memory routeData
-        ) = abi.decode(
-                _data,
-                (
-                    IAggregationExecutor,
-                    IAggregationRouterV4.SwapDescription,
-                    bytes
-                )
-            );
+    // /// @notice execute swap on 1inch
+    // /// @dev token approval needed when source is not ETH
+    // /// @dev either source or destination token will ALWAYS be sUSD
+    // /// @param _data specifying swap data
+    // /// @param _areTokensInContract TODO
+    // /// @return amount received from 1inch swap
+    // function swapOn1inch(
+    //     bytes calldata _data,
+    //     bool _areTokensInContract
+    // ) internal returns (uint, address) {
+    //     // decode _data for 1inch swap
+    //     (
+    //         IAggregationExecutor executor,
+    //         IAggregationRouterV4.SwapDescription memory desc,
+    //         bytes memory routeData
+    //     ) = abi.decode(
+    //             _data,
+    //             (
+    //                 IAggregationExecutor,
+    //                 IAggregationRouterV4.SwapDescription,
+    //                 bytes
+    //             )
+    //         );
 
-        // set swap description destination address to this contract
-        desc.dstReceiver = payable(address(this));
+    //     // set swap description destination address to this contract
+    //     desc.dstReceiver = payable(address(this));
 
-        if (desc.srcToken != ETH_ADDRESS) {
-            // if being called from swapInto, tokens have not been transfered to this contract
-            if (!_areTokensInContract) {
-                IERC20(desc.srcToken).safeTransferFrom(
-                    msg.sender,
-                    address(this),
-                    desc.amount
-                );
-            }
-            // approve AggregationRouterV4 to spend srcToken
-            IERC20(desc.srcToken).approve(address(router), desc.amount);
-        }
+    //     if (desc.srcToken != ETH_ADDRESS) {
+    //         // if being called from swapInto, tokens have not been transfered to this contract
+    //         if (!_areTokensInContract) {
+    //             IERC20(desc.srcToken).safeTransferFrom(
+    //                 msg.sender,
+    //                 address(this),
+    //                 desc.amount
+    //             );
+    //         }
+    //         // approve AggregationRouterV4 to spend srcToken
+    //         IERC20(desc.srcToken).approve(address(router), desc.amount);
+    //     }
 
-        // execute 1inch swap
-        (uint amountOut, ) = router.swap{value: msg.value}(
-            executor,
-            desc,
-            routeData
-        );
+    //     // execute 1inch swap
+    //     (uint amountOut, ) = router.swap{value: msg.value}(
+    //         executor,
+    //         desc,
+    //         routeData
+    //     );
 
-        require(amountOut > 0, "SynthSwap: swapOn1inch failed");
-        return (amountOut, desc.dstToken);
-    }
+    //     require(amountOut > 0, "SynthSwap: swapOn1inch failed");
+    //     return (amountOut, desc.dstToken);
+    // }
 
     /// @notice execute swap on Synthetix
     /// @dev token approval is always required

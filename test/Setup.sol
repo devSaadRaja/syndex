@@ -4,10 +4,6 @@ pragma solidity ^0.8.17;
 import "forge-std/Test.sol";
 import {Utils} from "./Utils.sol";
 
-// import "@uniswap/core/contracts/UniswapV2Pair.sol";
-// import "@uniswap/core/contracts/UniswapV2Factory.sol";
-// import "@uniswap/periphery/contracts/UniswapV2Router02.sol";
-
 import "@uniswap/core/contracts/interfaces/IUniswapV2Pair.sol";
 import "@uniswap/core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
@@ -17,7 +13,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IFeePool} from "../src/interfaces/IFeePool.sol";
 import {ISynthetix} from "../src/interfaces/ISynthetix.sol";
 
-// import {Proxy} from "../src/contracts/Proxy.sol";
 import {Issuer} from "../src/contracts/Issuer.sol";
 import {FeePool} from "../src/contracts/FeePool.sol";
 import {Taxable} from "../src/contracts/tax/Taxable.sol";
@@ -25,7 +20,6 @@ import {Synthetix} from "../src/contracts/Synthetix.sol";
 import {Proxyable} from "../src/contracts/Proxyable.sol";
 import {DebtCache} from "../src/contracts/DebtCache.sol";
 import {Exchanger} from "../src/contracts/Exchanger.sol";
-// import {SynthSwap} from "../src/contracts/Synthswap.sol";
 import {Liquidator} from "../src/contracts/Liquidator.sol";
 import {TokenState} from "../src/contracts/TokenState.sol";
 import {ProxyERC20} from "../src/contracts/ProxyERC20.sol";
@@ -71,15 +65,12 @@ contract Setup is Test, Utils {
     address public user2 = vm.addr(3);
     address public user3 = vm.addr(4);
 
-    address WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
+    address public WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
-    IUniswapV2Factory factory =
+    IUniswapV2Factory public factory =
         IUniswapV2Factory(0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f);
-    IUniswapV2Router02 router =
+    IUniswapV2Router02 public router =
         IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
-
-    // UniswapV2Factory factory = new UniswapV2Factory(owner);
-    // UniswapV2Router02 router = new UniswapV2Router02(address(factory), owner);
 
     bytes32[] public names;
     address[] public addresses;
@@ -91,7 +82,6 @@ contract Setup is Test, Utils {
     ProxyERC20 public proxysETH;
     FeePool public feePool;
     DebtCache public debtCache;
-    // SynthSwap public synthSwap;
     Synthetix public synthetix;
     Exchanger public exchanger;
     Liquidator public liquidator;
@@ -104,6 +94,7 @@ contract Setup is Test, Utils {
     ExchangeState public exchangeState;
     SynthRedeemer public synthRedeemer;
     MixinResolver public mixinResolver;
+    ExchangeRates public exchangeRates;
     SupplySchedule public supplySchedule;
     TradingRewards public tradingRewards;
     RewardEscrowV2 public rewardEscrowV2;
@@ -129,17 +120,10 @@ contract Setup is Test, Utils {
     CollateralManagerState public collateralManagerState;
     DirectIntegrationManager public directIntegrationManager;
 
-    ExchangeRates public exchangeRates;
-
-    // address public exchangeRatesMainnet;
-
-    // address public aggregatorDebtRatioMainnet;
-    AggregatorDebtRatio public aggregatorDebtRatio;
-    // address public aggregatorIssuedSynthsMainnet;
-    AggregatorIssuedSynths public aggregatorIssuedSynths;
-
     AggregatorETH public aggregatorETH;
+    AggregatorDebtRatio public aggregatorDebtRatio;
     AggregatorCollateral public aggregatorCollateral;
+    AggregatorIssuedSynths public aggregatorIssuedSynths;
 
     function setUp() public virtual {
         deal(owner, 500 ether);
@@ -250,7 +234,7 @@ contract Setup is Test, Utils {
         );
         synthsUSD = new MultiCollateralSynth(
             payable(address(proxysUSD)),
-            tokenStatesUSD,
+            address(tokenStatesUSD),
             "SynthsUSD",
             "sUSD",
             owner,
@@ -260,7 +244,7 @@ contract Setup is Test, Utils {
         );
         synthsETH = new MultiCollateralSynth(
             payable(address(proxysETH)),
-            tokenStatesETH,
+            address(tokenStatesETH),
             "SynthsETH",
             "sETH",
             owner,
@@ -268,13 +252,6 @@ contract Setup is Test, Utils {
             0,
             address(addressResolver)
         );
-        // synthSwap = new SynthSwap(
-        //     address(synthsUSD),
-        //     address(router),
-        //     address(addressResolver),
-        //     owner,
-        //     owner
-        // );
         rewardEscrowV2Storage = new RewardEscrowV2Storage(
             owner,
             address(rewardEscrowV2)
@@ -299,7 +276,6 @@ contract Setup is Test, Utils {
         delegateApprovals = new DelegateApprovals(owner, eternalStorage);
 
         exchangeRates = new ExchangeRates(owner, address(addressResolver));
-        // exchangeRatesMainnet = 0x648280dD2db772CD018A0CEC72fab5bF8B7683AB;
 
         aggregatorETH = new AggregatorETH(addressResolver);
         aggregatorCollateral = new AggregatorCollateral(
@@ -307,10 +283,8 @@ contract Setup is Test, Utils {
         );
 
         aggregatorIssuedSynths = new AggregatorIssuedSynths(addressResolver);
-        // aggregatorIssuedSynthsMainnet = 0xcf1405b18dBCEA2893Abe635c88359C75878B9e1;
 
         aggregatorDebtRatio = new AggregatorDebtRatio(addressResolver);
-        // aggregatorDebtRatioMainnet = 0x977d0DD7eA212E9ca1dcD4Ec15cd7Ceb135fa68D;
 
         // // ------------------------------
         // RESOLVER ADDRESSES ---
@@ -475,6 +449,7 @@ contract Setup is Test, Utils {
         systemSettings.setLiquidationDelay(28800);
         systemSettings.setRateStalePeriod(86400);
         systemSettings.setPriceDeviationThresholdFactor(100 * 10 ** 18);
+        systemSettings.setWaitingPeriodSecs(360);
 
         // // uint256 val = 100;
         // // uint256 minCratio = 150;

@@ -20,7 +20,7 @@ contract MultiCollateralSynth is Synth {
 
     constructor(
         address payable _proxy,
-        TokenState _tokenState,
+        address _tokenState,
         string memory _tokenName,
         string memory _tokenSymbol,
         address _owner,
@@ -30,7 +30,7 @@ contract MultiCollateralSynth is Synth {
     )
         Synth(
             _proxy,
-            _tokenState,
+            TokenState(_tokenState),
             _tokenName,
             _tokenSymbol,
             _owner,
