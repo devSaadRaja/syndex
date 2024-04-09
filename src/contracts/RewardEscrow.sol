@@ -42,11 +42,11 @@ contract RewardEscrow is Ownable, IRewardEscrow {
 
     constructor(
         address _owner,
-        ISynthetix _synthetix,
-        IFeePool _feePool
+        address _synthetix,
+        address _feePool
     ) Ownable(_owner) {
-        synthetix = _synthetix;
-        feePool = _feePool;
+        synthetix = ISynthetix(_synthetix);
+        feePool = IFeePool(_feePool);
     }
 
     /* ========== SETTERS ========== */

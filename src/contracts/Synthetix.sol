@@ -7,24 +7,16 @@ import "./BaseSynthetix.sol";
 import "../interfaces/ITaxable.sol";
 import "../interfaces/IRewardEscrow.sol";
 import "../interfaces/IRewardEscrowV2.sol";
-
-// import "../interfaces/ISupplySchedule.sol";
+import "../interfaces/ISupplySchedule.sol";
 
 contract Synthetix is BaseSynthetix {
     using SafeMath for uint;
 
     bytes32 public constant CONTRACT_NAME = "Synthetix";
 
-    ITaxable public taxable;
-
-    address public reserveAddr;
-    bool public activeTrade = false;
-    bool public deploymentSet = false; // make it true once all prerequisites are set
-
     // ========== ADDRESS RESOLVER CONFIGURATION ==========
     bytes32 private constant CONTRACT_REWARD_ESCROW = "RewardEscrow";
-
-    // bytes32 private constant CONTRACT_SUPPLYSCHEDULE = "SupplySchedule";
+    bytes32 private constant CONTRACT_SUPPLYSCHEDULE = "SupplySchedule";
 
     // ========== CONSTRUCTOR ==========
 
@@ -44,90 +36,6 @@ contract Synthetix is BaseSynthetix {
         )
     {}
 
-    modifier isValidAddress(address _address) {
-        require(_address != address(0), "Invalid address");
-        _;
-    }
-
-    function setDeploy(bool val) external onlyOwner {
-        deploymentSet = val;
-    }
-
-    function setTrade(bool val) external onlyOwner {
-        activeTrade = val;
-    }
-
-    function setTaxable(address addr) external onlyOwner {
-        taxable = ITaxable(addr);
-    }
-
-    function _internalTransfer(
-        address from,
-        address to,
-        uint value
-    ) internal override returns (bool) {
-        require(
-            to != address(0) && to != address(this) && to != address(proxy),
-            "Cannot transfer to this address"
-        );
-
-        if (
-            from != owner() &&
-            (taxable.pool(from) || taxable.pool(to)) &&
-            (!taxable.isExcludedFromFee(from) && !taxable.isExcludedFromFee(to))
-        ) {
-            require(activeTrade, "Trade not active!");
-
-            uint256 taxAmount = taxable.pool(from)
-                ? taxable.getTaxAmount(value, true)
-                : taxable.getTaxAmount(value, false);
-            uint256 transferAmount = taxable.calculateTransferAmount(
-                value,
-                taxAmount
-            );
-
-            taxable.addToCurrentFeeAmount(taxAmount);
-
-            tokenState.setBalanceOf(
-                address(taxable),
-                tokenState.balanceOf(address(taxable)).add(taxAmount)
-            );
-
-            tokenState.setBalanceOf(
-                to,
-                tokenState.balanceOf(to).add(transferAmount)
-            );
-        } else {
-            tokenState.setBalanceOf(to, tokenState.balanceOf(to).add(value));
-
-            if (
-                deploymentSet &&
-                taxable.currentFeeAmount() > 0 &&
-                (!taxable.isExcludedFromFee(from) &&
-                    !taxable.isExcludedFromFee(to))
-            ) {
-                address[] memory path = new address[](2);
-                path[0] = address(proxy);
-                path[1] = taxable.rewardAddr();
-
-                uint[] memory amounts = IUniswapV2Router02(taxable.routerAddr())
-                    .getAmountsOut(taxable.currentFeeAmount(), path);
-
-                if (amounts[amounts.length - 1] >= taxable.threshold()) {
-                    taxable.distributeTax();
-                }
-            }
-        }
-
-        tokenState.setBalanceOf(from, tokenState.balanceOf(from).sub(value));
-
-        emitTransfer(from, to, value);
-
-        return true;
-    }
-
-    // ! ----------------------------------------------------
-
     function resolverAddressesRequired()
         public
         view
@@ -136,9 +44,9 @@ contract Synthetix is BaseSynthetix {
     {
         bytes32[] memory existingAddresses = BaseSynthetix
             .resolverAddressesRequired();
-        bytes32[] memory newAddresses = new bytes32[](1);
+        bytes32[] memory newAddresses = new bytes32[](2);
         newAddresses[0] = CONTRACT_REWARD_ESCROW;
-        // newAddresses[1] = CONTRACT_SUPPLYSCHEDULE;
+        newAddresses[1] = CONTRACT_SUPPLYSCHEDULE;
         return combineArrays(existingAddresses, newAddresses);
     }
 
@@ -148,9 +56,9 @@ contract Synthetix is BaseSynthetix {
         return IRewardEscrow(requireAndGetAddress(CONTRACT_REWARD_ESCROW));
     }
 
-    // function supplySchedule() internal view returns (ISupplySchedule) {
-    //     return ISupplySchedule(requireAndGetAddress(CONTRACT_SUPPLYSCHEDULE));
-    // }
+    function supplySchedule() internal view returns (ISupplySchedule) {
+        return ISupplySchedule(requireAndGetAddress(CONTRACT_SUPPLYSCHEDULE));
+    }
 
     // ========== OVERRIDDEN FUNCTIONS ==========
 
@@ -246,102 +154,55 @@ contract Synthetix is BaseSynthetix {
         return exchanger().settle(messageSender, currencyKey);
     }
 
-    function mint(
-        address account,
-        uint amount
-    ) external onlyOwner isValidAddress(account) {
-        totalSupply = totalSupply.add(amount);
-        tokenState.setBalanceOf(
-            account,
-            tokenState.balanceOf(account).add(amount)
-        );
-        emitTransfer(address(0), account, amount);
-    }
-
-    function setReserveAddress(
-        address _reserveAddr
-    ) external onlyOwner isValidAddress(_reserveAddr) {
-        reserveAddr = _reserveAddr;
-    }
-
-    function burn() external onlyOwner isValidAddress(reserveAddr) {
-        uint256 amount = 100000 ether;
-
+    function mint() external override issuanceActive returns (bool) {
         require(
-            tokenState.balanceOf(reserveAddr) >= amount,
-            "ERC20: burn amount exceeds balance"
+            address(rewardsDistribution()) != address(0),
+            "RewardsDistribution not set"
         );
 
-        address spender = _msgSender();
-        if (reserveAddr != spender) {
-            uint256 currentAllowance = allowance(reserveAddr, spender);
-            if (currentAllowance != type(uint256).max) {
-                require(
-                    currentAllowance >= amount,
-                    "ERC20: insufficient allowance"
-                );
-                approve(spender, currentAllowance.sub(amount));
-            }
-        }
+        ISupplySchedule _supplySchedule = supplySchedule();
+        IRewardsDistribution _rewardsDistribution = rewardsDistribution();
 
-        totalSupply = totalSupply.sub(amount);
+        uint supplyToMint = _supplySchedule.mintableSupply();
+        require(supplyToMint > 0, "No supply is mintable");
+
+        emitTransfer(address(0), address(this), supplyToMint);
+
+        // record minting event before mutation to token supply
+        uint minterReward = _supplySchedule.recordMintEvent(supplyToMint);
+
+        // Set minted SNX balance to RewardEscrow's balance
+        // Minus the minterReward and set balance of minter to add reward
+        uint amountToDistribute = supplyToMint.sub(minterReward);
+
+        // Set the token balance to the RewardsDistribution contract
         tokenState.setBalanceOf(
-            reserveAddr,
-            tokenState.balanceOf(reserveAddr).sub(amount)
+            address(_rewardsDistribution),
+            tokenState.balanceOf(address(_rewardsDistribution)).add(
+                amountToDistribute
+            )
+        );
+        emitTransfer(
+            address(this),
+            address(_rewardsDistribution),
+            amountToDistribute
         );
 
-        emitTransfer(reserveAddr, address(0), amount);
+        // Kick off the distribution of rewards
+        _rewardsDistribution.distributeRewards(amountToDistribute);
+
+        // Assign the minters reward.
+        tokenState.setBalanceOf(
+            msg.sender,
+            tokenState.balanceOf(msg.sender).add(minterReward)
+        );
+        emitTransfer(address(this), msg.sender, minterReward);
+
+        // Increase total supply by minted amount
+        totalSupply = totalSupply.add(supplyToMint);
+
+        return true;
     }
-
-    // function mint() external override issuanceActive returns (bool) {
-    //     require(
-    //         address(rewardsDistribution()) != address(0),
-    //         "RewardsDistribution not set"
-    //     );
-
-    //     ISupplySchedule _supplySchedule = supplySchedule();
-    //     IRewardsDistribution _rewardsDistribution = rewardsDistribution();
-
-    //     uint supplyToMint = _supplySchedule.mintableSupply();
-    //     require(supplyToMint > 0, "No supply is mintable");
-
-    //     emitTransfer(address(0), address(this), supplyToMint);
-
-    //     // record minting event before mutation to token supply
-    //     uint minterReward = _supplySchedule.recordMintEvent(supplyToMint);
-
-    //     // Set minted SNX balance to RewardEscrow's balance
-    //     // Minus the minterReward and set balance of minter to add reward
-    //     uint amountToDistribute = supplyToMint.sub(minterReward);
-
-    //     // Set the token balance to the RewardsDistribution contract
-    //     tokenState.setBalanceOf(
-    //         address(_rewardsDistribution),
-    //         tokenState.balanceOf(address(_rewardsDistribution)).add(
-    //             amountToDistribute
-    //         )
-    //     );
-    //     emitTransfer(
-    //         address(this),
-    //         address(_rewardsDistribution),
-    //         amountToDistribute
-    //     );
-
-    //     // Kick off the distribution of rewards
-    //     _rewardsDistribution.distributeRewards(amountToDistribute);
-
-    //     // Assign the minters reward.
-    //     tokenState.setBalanceOf(
-    //         msg.sender,
-    //         tokenState.balanceOf(msg.sender).add(minterReward)
-    //     );
-    //     emitTransfer(address(this), msg.sender, minterReward);
-
-    //     // Increase total supply by minted amount
-    //     totalSupply = totalSupply.add(supplyToMint);
-
-    //     return true;
-    // }
 
     /* Once off function for SIP-60 to migrate SNX balances in the RewardEscrow contract
      * To the new RewardEscrowV2 contract

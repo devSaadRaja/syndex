@@ -711,9 +711,9 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
         _notImplemented();
     }
 
-    // function mint() external virtual returns (bool) {
-    //     _notImplemented();
-    // }
+    function mint() external virtual returns (bool) {
+        _notImplemented();
+    }
 
     function mintSecondary(address, uint) external virtual {
         _notImplemented();

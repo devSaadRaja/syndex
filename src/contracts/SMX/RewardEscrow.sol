@@ -2,14 +2,12 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./interfaces/IRewardEscrow.sol";
 
-// Libraries
-import "./libraries/SafeDecimalMath.sol";
-
-// Internal references
 import "./interfaces/ISMX.sol";
 import "./extras/IStakingRewards.sol";
+import "./interfaces/IRewardEscrow.sol";
+
+import "../../libraries/SafeDecimalMath.sol";
 
 contract RewardEscrow is Ownable, IRewardEscrow {
     using SafeDecimalMath for uint;

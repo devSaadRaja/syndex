@@ -1,9 +1,10 @@
 const { tenderly } = require("hardhat");
 
 const { readFileSync, writeFileSync } = require("fs");
-const outputFilePath = process.env.TENDERLY_MAIN === "true"
-  ? "./smx_tenderly_deployments.json"
-  : "./smx_test_tenderly_deployments.json";
+const outputFilePath =
+  process.env.TENDERLY_MAIN === "true"
+    ? "./smx_tenderly_deployments.json"
+    : "./smx_test_tenderly_deployments.json";
 
 const WETH = require("../abis/weth.json");
 const uniswapRouter = require("../abis/uniswap-router.json");
@@ -15,15 +16,12 @@ const { config } = require("dotenv");
 config({ path: resolve(__dirname, "./.env") });
 
 const parseEth = (eth) => ethers.utils.parseEther(String(eth));
-const parseUnits = (eth) => ethers.utils.parseUnits(String(eth), 6);
 
 const contractsPath = {
   SMX: "src/contracts/SMX/SMX.sol:SMX",
   Staking: "src/contracts/staking/Staking.sol:Staking",
   SMXRewardEscrow: "src/contracts/SMX/RewardEscrow.sol:RewardEscrow",
   SMXSupplySchedule: "src/contracts/SMX/SupplySchedule.sol:SupplySchedule",
-  SMXSafeDecimalMath:
-    "src/contracts/SMX/libraries/SafeDecimalMath.sol:SafeDecimalMath",
 };
 
 async function main() {
@@ -77,35 +75,35 @@ async function main() {
   //   deployments["WETH"]
   // );
 
-  // const SafeDecimalMath = await contractDeploy(
+  // const SMXSafeDecimalMath = await contractDeploy(
   //   contractsPath.SMXSafeDecimalMath,
   //   []
   // );
-  // deployments["SafeDecimalMath"] = SafeDecimalMath.address;
-  // await verify(contractsPath.SMXSafeDecimalMath, SafeDecimalMath.address);
+  // deployments["SMXSafeDecimalMath"] = SMXSafeDecimalMath.address;
+  // await verify(contractsPath.SMXSafeDecimalMath, SMXSafeDecimalMath.address);
 
-  // const RewardEscrow = await contractDeploy(contractsPath.SMXRewardEscrow, [
+  // const SMXRewardEscrow = await contractDeploy(contractsPath.SMXRewardEscrow, [
   //   deployer,
   //   deployments["SMX"],
   // ]);
-  // deployments["RewardEscrow"] = RewardEscrow.address;
-  // await verify(contractsPath.SMXRewardEscrow, RewardEscrow.address);
+  // deployments["SMXRewardEscrow"] = SMXRewardEscrow.address;
+  // await verify(contractsPath.SMXRewardEscrow, SMXRewardEscrow.address);
 
   // const MultipleMerkleDistributor = await contractDeploy(
   //   "MultipleMerkleDistributor",
-  //   [deployer, deployments["SMX"], deployments["RewardEscrow"]]
+  //   [deployer, deployments["SMX"], deployments["SMXRewardEscrow"]]
   // );
   // deployments["MultipleMerkleDistributor"] = MultipleMerkleDistributor.address;
   // await verify("MultipleMerkleDistributor", MultipleMerkleDistributor.address);
 
-  // const SupplySchedule = await contractDeploy(contractsPath.SMXSupplySchedule, [
+  // const SMXSupplySchedule = await contractDeploy(contractsPath.SMXSupplySchedule, [
   //   deployer,
   //   treasury,
   // ]);
-  // deployments["SupplySchedule"] = SupplySchedule.address;
-  // await verify(contractsPath.SMXSupplySchedule, SupplySchedule.address, {
+  // deployments["SMXSupplySchedule"] = SMXSupplySchedule.address;
+  // await verify(contractsPath.SMXSupplySchedule, SMXSupplySchedule.address, {
   //   contractsPath.SMXSafeDecimalMath:
-  //     deployments["SafeDecimalMath"],
+  //     deployments["SMXSafeDecimalMath"],
   // });
 
   // // vSmxRedeemer = new vSMXRedeemer(address(smx), address(smx));
@@ -158,8 +156,8 @@ async function main() {
   // console.log("ADDED LIQUIDITY");
 
   // const supplySchedule = await ethers.getContractAt(
-  //   contractsPath.SupplySchedule,
-  //   deployments["SupplySchedule"],
+  //   contractsPath.SMXSupplySchedule,
+  //   deployments["SMXSupplySchedule"],
   //   signer
   // );
   // await supplySchedule.setSMX(deployments["SMX"]);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
 import "./ERC20.sol";
 import "./Taxable.sol";
@@ -9,7 +9,10 @@ import "./Blacklist.sol";
 
 import "./interfaces/ISupplySchedule.sol";
 
-contract SMX is Ownable, ERC20, Taxable, Blacklist {
+contract SMX is AccessControl, ERC20, Taxable, Blacklist {
+    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
+
     /// @notice defines inflationary supply schedule,
     /// according to which the SMX inflationary supply is released
     ISupplySchedule public supplySchedule;
@@ -21,7 +24,7 @@ contract SMX is Ownable, ERC20, Taxable, Blacklist {
     modifier onlySupplySchedule() {
         require(
             msg.sender == address(supplySchedule),
-            "Kwenta: Only SupplySchedule can perform this action"
+            "SMX: Only SupplySchedule can perform this action"
         );
         _;
     }
@@ -33,25 +36,24 @@ contract SMX is Ownable, ERC20, Taxable, Blacklist {
         uint256 _initialSupply
     ) ERC20(name, symbol) Ownable(_owner) {
         _mint(_owner, _initialSupply);
+
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    // // Mints inflationary supply
-    // function mint(
-    //     address account,
-    //     uint256 amount
-    // ) external override onlySupplySchedule {
-    //     _mint(account, amount);
-    // }
+    function mint(address account, uint256 amount) external onlySupplySchedule {
+        // onlyRole(MINTER_ROLE)
+        _mint(account, amount);
+    }
 
-    function burn() external onlyOwner {
+    function burn() external onlyRole(BURNER_ROLE) {
         require(reserveAddr != address(0), "Invalid address");
-        uint256 amount = 100000 ether;
 
+        uint256 amount = 100000 ether;
         _burn(reserveAddr, amount);
     }
 
     function setSupplySchedule(address _supplySchedule) external onlyOwner {
-        require(_supplySchedule != address(0), "Kwenta: Invalid Address");
+        require(_supplySchedule != address(0), "SMX: Invalid Address");
         supplySchedule = ISupplySchedule(_supplySchedule);
     }
 

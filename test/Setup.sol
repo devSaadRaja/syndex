@@ -199,8 +199,8 @@ contract Setup is Test, Utils {
         );
         rewardEscrow = new RewardEscrow(
             owner,
-            ISynthetix(address(synthetix)),
-            IFeePool(address(feePool))
+            address(synthetix),
+            address(feePool)
         );
         etherWrapper = new EtherWrapper(
             owner,
@@ -273,7 +273,7 @@ contract Setup is Test, Utils {
             address(addressResolver)
         );
         eternalStorage = new EternalStorage(owner, address(synthsUSD));
-        delegateApprovals = new DelegateApprovals(owner, eternalStorage);
+        delegateApprovals = new DelegateApprovals(owner, address(eternalStorage));
 
         exchangeRates = new ExchangeRates(owner, address(addressResolver));
 
@@ -449,7 +449,6 @@ contract Setup is Test, Utils {
         systemSettings.setLiquidationDelay(28800);
         systemSettings.setRateStalePeriod(86400);
         systemSettings.setPriceDeviationThresholdFactor(100 * 10 ** 18);
-        systemSettings.setWaitingPeriodSecs(360);
 
         // // uint256 val = 100;
         // // uint256 minCratio = 150;
@@ -459,10 +458,17 @@ contract Setup is Test, Utils {
         // systemSettings.setLiquidationDelay(28800); // 8 hours
         // systemSettings.setRateStalePeriod(86400); // 1 day
 
+        // systemSettings.setWaitingPeriodSecs(360); // 0 in optimism
+        systemSettings.setAtomicTwapWindow(1800);
+        systemSettings.setAtomicMaxVolumePerBlock(200000 ether);
+        systemSettings.setExchangeMaxDynamicFee(0.1 ether);
+        systemSettings.setExchangeDynamicFeeRounds(6);
+        systemSettings.setExchangeDynamicFeeThreshold(0.0025 ether);
+        systemSettings.setExchangeDynamicFeeWeightDecay(0.95 ether);
+        systemSettings.setPriceDeviationThresholdFactor(3 ether);
+
         supplySchedule.setSynthetixProxy(address(proxySNX));
         supplySchedule.setInflationAmount(3000000 * 10 ** 18);
-
-        synthetix.setTaxable(address(taxable));
 
         vm.stopPrank(); // OWNER
     }

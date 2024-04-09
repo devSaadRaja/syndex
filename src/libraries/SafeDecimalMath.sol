@@ -21,14 +21,14 @@ library SafeDecimalMath {
     /**
      * @return Provides an interface to UNIT.
      */
-    function unit() internal pure returns (uint) {
+    function unit() external pure returns (uint) {
         return UNIT;
     }
 
     /**
      * @return Provides an interface to PRECISE_UNIT.
      */
-    function preciseUnit() internal pure returns (uint) {
+    function preciseUnit() external pure returns (uint) {
         return PRECISE_UNIT;
     }
 

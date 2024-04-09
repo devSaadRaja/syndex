@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "./libraries/Math.sol";
-import "./libraries/SafeDecimalMath.sol";
+import "../../libraries/SafeDecimalMath.sol";
 
 import "./interfaces/ISMX.sol";
 import "./interfaces/ISupplySchedule.sol";

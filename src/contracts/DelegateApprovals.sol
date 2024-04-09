@@ -25,11 +25,8 @@ contract DelegateApprovals is Ownable, IDelegateApprovals {
     /* ========== STATE VARIABLES ========== */
     EternalStorage public eternalStorage;
 
-    constructor(
-        address _owner,
-        EternalStorage _eternalStorage
-    ) Ownable(_owner) {
-        eternalStorage = _eternalStorage;
+    constructor(address _owner, address _eternalStorage) Ownable(_owner) {
+        eternalStorage = EternalStorage(_eternalStorage);
     }
 
     /* ========== VIEWS ========== */

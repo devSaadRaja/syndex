@@ -10,10 +10,10 @@ import "./IStakingRewards.sol";
 import "../interfaces/IRewardEscrow.sol";
 import "../interfaces/ISupplySchedule.sol";
 
-/// @title KWENTA Staking Rewards
+/// @title SMX Staking Rewards
 /// @author SYNTHETIX, JaredBorders (jaredborders@proton.me), JChiaramonte7 (jeremy@bytecode.llc)
 /// @notice Updated version of Synthetix's StakingRewards with new features specific
-/// to Kwenta
+/// to SMX
 contract StakingRewards is IStakingRewards, Ownable, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;
 

@@ -12,7 +12,7 @@ contract TokenTest is Setup {
 
         vm.startPrank(owner);
 
-        synthetix.mint(owner, 100_000_000 ether);
+        synthetix.mint();
 
         factory.createPair(address(proxySNX), WETH);
 
@@ -36,9 +36,6 @@ contract TokenTest is Setup {
         taxable.setExcludeFromFee(address(taxable), true);
 
         taxable.setFeeTaker(user2, 100);
-
-        synthetix.setTrade(true);
-        synthetix.setDeploy(true);
 
         vm.stopPrank();
     }

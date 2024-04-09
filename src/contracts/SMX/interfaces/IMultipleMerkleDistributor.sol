@@ -26,7 +26,7 @@ interface IMultipleMerkleDistributor {
     /// @return escrow for tokens claimed
     function rewardEscrow() external view returns (address);
 
-    /// @return token to be distributed (KWENTA)
+    /// @return token to be distributed (SMX)
     function token() external view returns (address);
 
     // @return the merkle root of the merkle tree containing account balances available to claim
@@ -41,10 +41,10 @@ interface IMultipleMerkleDistributor {
         uint256 epoch
     ) external view returns (bool);
 
-    /// @notice attempt to claim as `account` and escrow KWENTA for `account`
+    /// @notice attempt to claim as `account` and escrow SMX for `account`
     /// @param index: used for merkle tree managment and verification
     /// @param account: address used for escrow entry
-    /// @param amount: $KWENTA amount to be escrowed
+    /// @param amount: $SMX amount to be escrowed
     /// @param merkleProof: off-chain generated proof of merkle tree inclusion
     /// @param epoch: distribution index number
     function claim(

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "./SafeDecimalMath.sol";
+import "../../../libraries/SafeDecimalMath.sol";
 
 library Math {
     using SafeDecimalMath for uint;

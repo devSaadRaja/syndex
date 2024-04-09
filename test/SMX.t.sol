@@ -3,16 +3,14 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 import {Setup} from "./Setup.sol";
-import {Utils} from "./Utils.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
-// import {TokenState} from "../src/contracts/TokenState.sol";
-// import {ProxyERC20} from "../src/contracts/ProxyERC20.sol";
-// import {AddressResolver} from "../src/contracts/AddressResolver.sol";
-// import {MultiCollateralSynth} from "../src/contracts/MultiCollateralSynth.sol";
+import {ISwapRouter} from "../src/contracts/SMX/interfaces/ISwapRouter.sol";
+import {IUniswapV3Factory} from "../src/contracts/SMX/interfaces/IUniswapV3Factory.sol";
+import {INonfungiblePositionManager} from "../src/contracts/SMX/interfaces/INonfungiblePositionManager.sol";
 
 import {SMX} from "../src/contracts/SMX/SMX.sol";
 import {Staking} from "../src/contracts/staking/Staking.sol";
@@ -23,22 +21,16 @@ import {SupplySchedule} from "../src/contracts/SMX/SupplySchedule.sol";
 import {MultipleMerkleDistributor} from "../src/contracts/SMX/MultipleMerkleDistributor.sol";
 
 contract SMXTest is Setup {
-    // address public deployerOnETH = 0xEb3107117FEAd7de89Cd14D463D340A2E6917769;
     address public treasury = vm.addr(5);
+    address public reserveAddr = vm.addr(6);
 
-    // // ? OPTIMISM DEPLOYMENTS ---
-
-    // address WETH = 0x4200000000000000000000000000000000000006;
-    // IUniswapV2Factory factory =
-    //     IUniswapV2Factory(0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f);
-    // IUniswapV2Router02 router =
-    //     IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+    // ? OPTIMISM DEPLOYMENTS --
+    IUniswapV3Factory v3factory =
+        IUniswapV3Factory(0x1F98431c8aD98523631AE4a59f267346ea31F984);
+    IUniswapV2Router02 swapRouter =
+        IUniswapV2Router02(0xE592427A0AEce92De3Edee1F18E0157C05861564);
 
     SynthSwap public synthSwap;
-    // ProxyERC20 public proxysUSD;
-    // TokenState public tokenStatesUSD;
-    // MultiCollateralSynth public synthsUSD;
-    // AddressResolver public addressResolver;
 
     SMX public smx;
     Staking public staking;
@@ -50,11 +42,6 @@ contract SMXTest is Setup {
     function setUp() public override {
         super.setUp();
 
-        // vm.startPrank(deployerOnETH);
-        // proxySNX.transfer(owner, 100 ether);
-        // proxySNX.transfer(user1, 100 ether);
-        // vm.stopPrank();
-
         vm.startPrank(address(issuer));
         synthsUSD.issue(owner, 1000 ether);
         synthsUSD.issue(user1, 1000 ether);
@@ -64,7 +51,13 @@ contract SMXTest is Setup {
 
         synthetix.exchange("sUSD", 500 ether, "sETH");
 
-        _passTime(400);
+        // v3factory.createPool(address(proxysUSD), address(proxysETH), 3000);
+        // address p = v3factory.getPool(
+        //     address(proxysUSD),
+        //     address(proxysETH),
+        //     3000
+        // );
+        // console.log(p);
 
         factory.createPair(address(proxysUSD), address(proxysETH));
 
@@ -81,29 +74,13 @@ contract SMXTest is Setup {
             block.timestamp + 10 minutes
         );
 
-        // proxysUSD = new ProxyERC20(owner);
-        // addressResolver = new AddressResolver(owner);
-        // tokenStatesUSD = new TokenState(owner, address(synthsUSD));
-        // synthsUSD = new MultiCollateralSynth(
-        //     payable(address(proxysUSD)),
-        //     address(tokenStatesUSD),
-        //     "SynthsUSD",
-        //     "sUSD",
-        //     owner,
-        //     "sUSD",
-        //     0,
-        //     address(addressResolver)
-        // );
-        // synthSwap = new SynthSwap(
-        //     address(synthsUSD),
-        //     address(router),
-        //     address(addressResolver),
-        //     owner, // volumeRewards
-        //     treasury
-        // );
-
-        // proxysUSD.setTarget(address(synthsUSD));
-        // tokenStatesUSD.setAssociatedContract(address(synthsUSD));
+        synthSwap = new SynthSwap(
+            address(synthsUSD),
+            address(router),
+            address(addressResolver),
+            owner, // volumeRewards
+            treasury
+        );
 
         smx = new SMX("SMX", "SMX", owner, 100_000_000 ether);
         staking = new Staking(address(smx), address(smx));
@@ -116,9 +93,6 @@ contract SMXTest is Setup {
             address(rewardEscrow2)
         );
 
-        deal(address(smx), owner, 500 ether);
-        deal(address(smx), user1, 500 ether);
-
         factory.createPair(address(smx), WETH);
         address pair = factory.getPair(address(smx), WETH);
 
@@ -128,10 +102,14 @@ contract SMXTest is Setup {
         smx.setPool(pair, true);
         smx.setFeeTaker(user2, 100);
         smx.setRouter(address(router));
+        smx.setReserveAddress(reserveAddr);
         smx.setRewardAddress(address(WETH));
         smx.setExcludeFromFee(address(smx), true);
 
-        smx.transfer(address(staking), 100 * 10 ** 18);
+        console.log("HERE");
+        smx.transfer(reserveAddr, 200000 ether);
+        smx.transfer(address(staking), 100 ether);
+        console.log("HERE 2");
 
         smx.approve(address(router), 50 ether);
         IERC20(WETH).approve(address(router), 50 ether);
@@ -155,30 +133,77 @@ contract SMXTest is Setup {
         vm.stopPrank();
     }
 
+    function testOnlyBurner() public {
+        vm.startPrank(user1);
+        vm.expectRevert();
+        smx.burn();
+        vm.stopPrank();
+
+        vm.startPrank(owner);
+        smx.grantRole(keccak256("BURNER_ROLE"), user1);
+        vm.stopPrank();
+
+        vm.startPrank(user1);
+        assertEq(smx.balanceOf(reserveAddr), 200000 ether);
+        smx.burn();
+        assertEq(smx.balanceOf(reserveAddr), 100000 ether);
+        vm.stopPrank();
+    }
+
     function testTradeSynths() public {
         vm.startPrank(user1);
 
         synthetix.issueMaxSynths();
 
-        IERC20(address(proxysUSD)).approve(address(router), 50 ether);
+        // IERC20(address(proxysUSD)).approve(address(router), 50 ether);
+        // address[] memory path = new address[](2);
+        // path[0] = address(proxysUSD);
+        // path[1] = address(proxysETH);
+        // router.swapExactTokensForTokens(
+        //     1 ether,
+        //     0,
+        //     path,
+        //     user1,
+        //     block.timestamp + 10 minutes
+        // );
+
         address[] memory path = new address[](2);
         path[0] = address(proxysUSD);
         path[1] = address(proxysETH);
-        router.swapExactTokensForTokens(
+        bytes memory _data = abi.encodeWithSignature(
+            "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+            // "swapExactTokensForTokensSupportingFeeOnTransferTokens(uint256,uint256,address[],address,uint256)",
             1 ether,
             0,
             path,
-            user1,
+            address(synthSwap),
             block.timestamp + 10 minutes
         );
 
-        // IERC20(address(proxysUSD)).approve(address(synthSwap), 50 ether);
-        // synthSwap.uniswapSwapInto(
-        //     bytes32("sETH"), // "sETH", // bytes32(abi.encodePacked("sETH"))
-        //     address(proxysUSD),
-        //     50 ether,
-        //     _data
-        // );
+        console.log();
+        console.log("--- BEFORE ---");
+        console.log(
+            "sUSD balanceOf(user1)",
+            IERC20(address(proxysUSD)).balanceOf(user1)
+        );
+        console.log(
+            "sETH balanceOf(user1)",
+            IERC20(address(proxysETH)).balanceOf(user1)
+        );
+
+        IERC20(address(proxysUSD)).approve(address(synthSwap), 10 ether);
+        synthSwap.uniswapSwapInto("sETH", address(proxysUSD), 10 ether, _data);
+
+        console.log();
+        console.log("--- AFTER ---");
+        console.log(
+            "sUSD balanceOf(user1)",
+            IERC20(address(proxysUSD)).balanceOf(user1)
+        );
+        console.log(
+            "sETH balanceOf(user1)",
+            IERC20(address(proxysETH)).balanceOf(user1)
+        );
 
         vm.stopPrank();
     }
@@ -216,6 +241,7 @@ contract SMXTest is Setup {
 
         console.log();
         console.log("BALANCE WETH");
+        console.log("balanceOf smx\n", smx.balanceOf(address(smx)));
         console.log("user2 balance\n", IERC20(WETH).balanceOf(user2));
     }
 
