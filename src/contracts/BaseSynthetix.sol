@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "./Blacklist.sol";
 import "./TokenState.sol";
 import "./MixinResolver.sol";
 import "./ExternStateToken.sol";
@@ -16,7 +15,7 @@ import "../interfaces/IRewardEscrowV2.sol";
 import "../interfaces/ILiquidatorRewards.sol";
 import "../interfaces/IRewardsDistribution.sol";
 
-contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
+contract BaseSynthetix is ExternStateToken, MixinResolver {
     // ========== STATE VARIABLES ==========
 
     // Available Synths which can be used with the system
@@ -373,14 +372,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
     function transfer(
         address to,
         uint value
-    )
-        external
-        onlyProxyOrInternal
-        systemActive
-        notBlacklisted(messageSender)
-        notBlacklisted(to)
-        returns (bool)
-    {
+    ) external onlyProxyOrInternal systemActive returns (bool) {
         // Ensure they're not trying to exceed their locked amount -- only if they have debt.
         _canTransfer(messageSender, value);
 
@@ -394,14 +386,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
         address from,
         address to,
         uint value
-    )
-        external
-        onlyProxyOrInternal
-        systemActive
-        notBlacklisted(from)
-        notBlacklisted(to)
-        returns (bool)
-    {
+    ) external onlyProxyOrInternal systemActive returns (bool) {
         // Ensure they're not trying to exceed their locked amount -- only if they have debt.
         _canTransfer(from, value);
 

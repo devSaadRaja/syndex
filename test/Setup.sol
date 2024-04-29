@@ -13,16 +13,16 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IFeePool} from "../src/interfaces/IFeePool.sol";
 import {ISynthetix} from "../src/interfaces/ISynthetix.sol";
 
+import {Proxy} from "../src/contracts/Proxy.sol";
 import {Issuer} from "../src/contracts/Issuer.sol";
 import {FeePool} from "../src/contracts/FeePool.sol";
-import {Taxable} from "../src/contracts/tax/Taxable.sol";
-import {Synthetix} from "../src/contracts/Synthetix.sol";
 import {Proxyable} from "../src/contracts/Proxyable.sol";
+import {Synthetix} from "../src/contracts/Synthetix.sol";
 import {DebtCache} from "../src/contracts/DebtCache.sol";
 import {Exchanger} from "../src/contracts/Exchanger.sol";
+import {ProxyERC20} from "../src/contracts/ProxyERC20.sol";
 import {Liquidator} from "../src/contracts/Liquidator.sol";
 import {TokenState} from "../src/contracts/TokenState.sol";
-import {ProxyERC20} from "../src/contracts/ProxyERC20.sol";
 import {EtherWrapper} from "../src/contracts/EtherWrapper.sol";
 import {RewardEscrow} from "../src/contracts/RewardEscrow.sol";
 import {SystemStatus} from "../src/contracts/SystemStatus.sol";
@@ -40,6 +40,7 @@ import {CollateralUtil} from "../src/contracts/CollateralUtil.sol";
 import {EternalStorage} from "../src/contracts/EternalStorage.sol";
 import {SystemSettings} from "../src/contracts/SystemSettings.sol";
 import {CircuitBreaker} from "../src/contracts/CircuitBreaker.sol";
+import {CollateralErc20} from "../src/contracts/CollateralErc20.sol";
 import {AddressResolver} from "../src/contracts/AddressResolver.sol";
 import {FlexibleStorage} from "../src/contracts/FlexibleStorage.sol";
 import {LegacyTokenState} from "../src/contracts/LegacyTokenState.sol";
@@ -64,26 +65,27 @@ contract Setup is Test, Utils {
     address public user1 = vm.addr(2);
     address public user2 = vm.addr(3);
     address public user3 = vm.addr(4);
+    address public user4 = vm.addr(5);
 
     address public WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
-    IUniswapV2Factory public factory =
+    IUniswapV2Factory factory =
         IUniswapV2Factory(0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f);
-    IUniswapV2Router02 public router =
+    IUniswapV2Router02 router =
         IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
 
     bytes32[] public names;
     address[] public addresses;
 
     Issuer public issuer;
-    Taxable public taxable;
-    ProxyERC20 public proxySNX;
-    ProxyERC20 public proxysUSD;
-    ProxyERC20 public proxysETH;
     FeePool public feePool;
+    Proxy public proxyFeePool;
     DebtCache public debtCache;
     Synthetix public synthetix;
     Exchanger public exchanger;
+    ProxyERC20 public proxySNX;
+    ProxyERC20 public proxysUSD;
+    ProxyERC20 public proxysETH;
     Liquidator public liquidator;
     EtherWrapper public etherWrapper;
     RewardEscrow public rewardEscrow;
@@ -108,6 +110,7 @@ contract Setup is Test, Utils {
     MultiCollateralSynth public synthsETH;
     FlexibleStorage public flexibleStorage;
     AddressResolver public addressResolver;
+    CollateralErc20 public collateralErc20;
     DelegateApprovals public delegateApprovals;
     CollateralManager public collateralManager;
     LiquidatorRewards public liquidatorRewards;
@@ -126,15 +129,15 @@ contract Setup is Test, Utils {
     AggregatorIssuedSynths public aggregatorIssuedSynths;
 
     function setUp() public virtual {
-        deal(owner, 500 ether);
-        deal(user1, 500 ether);
-        deal(user2, 500 ether);
-        deal(user3, 500 ether);
+        deal(owner, 100 ether);
+        deal(user1, 100 ether);
+        deal(user2, 100 ether);
+        deal(user3, 100 ether);
 
-        deal(WETH, owner, 500 ether);
-        deal(WETH, user1, 500 ether);
-        deal(WETH, user2, 500 ether);
-        deal(WETH, user3, 500 ether);
+        deal(WETH, owner, 100 ether);
+        deal(WETH, user1, 100 ether);
+        deal(WETH, user2, 100 ether);
+        deal(WETH, user3, 100 ether);
 
         vm.startPrank(owner); // OWNER
 
@@ -151,8 +154,8 @@ contract Setup is Test, Utils {
             address(collateralManagerState),
             owner,
             address(addressResolver),
-            75000000 * 10 ** 18,
-            0.2 * 10 ** 18,
+            75000000 ether,
+            0.2 ether,
             0,
             0
         );
@@ -161,10 +164,21 @@ contract Setup is Test, Utils {
             address(collateralManager),
             address(addressResolver),
             "sETH",
-            1.5 * 10 ** 18, // 100 / 150, 150%
-            0.1 * 10 ** 18
+            1.5 ether, // 100 / 150, 150%
+            0.1 ether
         );
+        // collateralErc20 = new CollateralErc20(
+        //     owner,
+        //     address(collateralManager),
+        //     address(addressResolver),
+        //     "SMX",
+        //     1.5 ether, // 100 / 150, 150%
+        //     0.1 ether,
+        //     address(smx),
+        //     18
+        // );
 
+        proxyFeePool = new Proxy(owner);
         proxySNX = new ProxyERC20(owner);
         proxysUSD = new ProxyERC20(owner);
         proxysETH = new ProxyERC20(owner);
@@ -182,7 +196,6 @@ contract Setup is Test, Utils {
         tokenStatesUSD = new TokenState(owner, address(synthsUSD));
         tokenStatesETH = new TokenState(owner, address(synthsETH));
         wrapperFactory = new WrapperFactory(owner, address(addressResolver));
-        rewardEscrowV2 = new RewardEscrowV2(owner, address(addressResolver));
         supplySchedule = new SupplySchedule(owner, 1551830400, 4);
         tradingRewards = new TradingRewards(
             owner,
@@ -190,6 +203,11 @@ contract Setup is Test, Utils {
             address(addressResolver)
         );
         directIntegrationManager = new DirectIntegrationManager(
+            owner,
+            address(addressResolver)
+        );
+        feePool = new FeePool(
+            payable(address(proxysUSD)),
             owner,
             address(addressResolver)
         );
@@ -226,12 +244,6 @@ contract Setup is Test, Utils {
             0,
             address(addressResolver)
         );
-        taxable = new Taxable(
-            address(proxySNX),
-            address(synthetix),
-            0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2, // WETH mainnet address
-            0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D // Uniswap mainnet address
-        );
         synthsUSD = new MultiCollateralSynth(
             payable(address(proxysUSD)),
             address(tokenStatesUSD),
@@ -252,39 +264,36 @@ contract Setup is Test, Utils {
             0,
             address(addressResolver)
         );
+        rewardEscrowV2 = new RewardEscrowV2(owner, address(addressResolver));
         rewardEscrowV2Storage = new RewardEscrowV2Storage(
             owner,
             address(rewardEscrowV2)
         );
-        feePool = new FeePool(
-            payable(address(proxysUSD)),
-            owner,
-            address(addressResolver)
-        );
         rewardsDistribution = new RewardsDistribution(
             owner,
-            address(synthetix),
+            owner, // synthetix
             address(proxySNX),
             address(rewardEscrowV2),
-            address(feePool) // feePoolProxy
+            address(proxyFeePool)
         );
         rewardEscrowV2Frozen = new RewardEscrowV2Frozen(
             owner,
             address(addressResolver)
         );
         eternalStorage = new EternalStorage(owner, address(synthsUSD));
-        delegateApprovals = new DelegateApprovals(owner, address(eternalStorage));
+        delegateApprovals = new DelegateApprovals(
+            owner,
+            address(eternalStorage)
+        );
 
         exchangeRates = new ExchangeRates(owner, address(addressResolver));
 
         aggregatorETH = new AggregatorETH(addressResolver);
+        aggregatorDebtRatio = new AggregatorDebtRatio(addressResolver);
+        aggregatorIssuedSynths = new AggregatorIssuedSynths(addressResolver);
         aggregatorCollateral = new AggregatorCollateral(
             address(addressResolver)
         );
-
-        aggregatorIssuedSynths = new AggregatorIssuedSynths(addressResolver);
-
-        aggregatorDebtRatio = new AggregatorDebtRatio(addressResolver);
 
         // // ------------------------------
         // RESOLVER ADDRESSES ---
@@ -322,7 +331,7 @@ contract Setup is Test, Utils {
         addresses.push(address(supplySchedule));
         names.push("FeePoolEternalStorage");
         addresses.push(address(feePoolEternalStorage));
-        // ---------------------------------------------
+        // ---
         names.push("DirectIntegrationManager");
         addresses.push(address(directIntegrationManager));
         names.push("RewardEscrowV2");
@@ -359,6 +368,8 @@ contract Setup is Test, Utils {
         addresses.push(address(collateralManager));
         names.push("CollateralETH");
         addresses.push(address(collateralETH));
+        // names.push("CollateralErc20");
+        // addresses.push(address(collateralErc20));
         names.push("CollateralUtil");
         addresses.push(address(collateralUtil));
         names.push("FuturesMarketManager");
@@ -396,6 +407,7 @@ contract Setup is Test, Utils {
 
         address[] memory collateralAddresses = new address[](1);
         collateralAddresses[0] = address(collateralETH);
+        // collateralAddresses[1] = address(collateralErc20);
         collateralManager.addCollaterals(collateralAddresses);
 
         issuer.addSynth(address(synthsUSD));
@@ -404,6 +416,7 @@ contract Setup is Test, Utils {
         proxySNX.setTarget(address(synthetix));
         proxysUSD.setTarget(address(synthsUSD));
         proxysETH.setTarget(address(synthsETH));
+        proxyFeePool.setTarget(address(feePool));
 
         tokenStateSNX.setAssociatedContract(address(synthetix));
         tokenStatesUSD.setAssociatedContract(address(synthsUSD));
@@ -440,36 +453,51 @@ contract Setup is Test, Utils {
         // 600000000000000000, 0.6   = 60% / 100
         // 500000000000000000, 0.5   = 50% / 100
 
-        systemSettings.setIssuanceRatio(0.2 * 10 ** 18);
-        // systemSettings.setIssuanceRatio(0.8 * 10 ** 18); // 125%
-        systemSettings.setLiquidationRatio(0.625 * 10 ** 18);
+        systemSettings.setIssuanceRatio(0.2 ether);
+        // systemSettings.setIssuanceRatio(0.8 ether); // 125%
+        systemSettings.setLiquidationRatio(0.625 ether);
         // systemSettings.setLiquidationPenalty(100000000000000000);
-        systemSettings.setSnxLiquidationPenalty(0.6 * 10 ** 18); // forced
-        systemSettings.setSelfLiquidationPenalty(0.5 * 10 ** 18);
+        systemSettings.setSnxLiquidationPenalty(0.6 ether); // forced
+        systemSettings.setSelfLiquidationPenalty(0.5 ether);
         systemSettings.setLiquidationDelay(28800);
         systemSettings.setRateStalePeriod(86400);
-        systemSettings.setPriceDeviationThresholdFactor(100 * 10 ** 18);
+        systemSettings.setPriceDeviationThresholdFactor(100 ether);
 
-        // // uint256 val = 100;
-        // // uint256 minCratio = 150;
-        // systemSettings.setIssuanceRatio(0.66 * 10 ** 18); // 150%
-        // systemSettings.setLiquidationRatio(0.8 * 10 ** 18);
-        // systemSettings.setSnxLiquidationPenalty(0.5 * 10 ** 18); // 50%
-        // systemSettings.setLiquidationDelay(28800); // 8 hours
-        // systemSettings.setRateStalePeriod(86400); // 1 day
-
-        // systemSettings.setWaitingPeriodSecs(360); // 0 in optimism
         systemSettings.setAtomicTwapWindow(1800);
         systemSettings.setAtomicMaxVolumePerBlock(200000 ether);
         systemSettings.setExchangeMaxDynamicFee(0.1 ether);
         systemSettings.setExchangeDynamicFeeRounds(6);
         systemSettings.setExchangeDynamicFeeThreshold(0.0025 ether);
         systemSettings.setExchangeDynamicFeeWeightDecay(0.95 ether);
-        systemSettings.setPriceDeviationThresholdFactor(3 ether);
+        systemSettings.setTradingRewardsEnabled(true);
+
+        bytes32[] memory synthKeys = new bytes32[](2);
+        uint256[] memory exchangeFeeRates = new uint256[](2);
+        synthKeys[0] = "sUSD";
+        synthKeys[1] = "sETH";
+        exchangeFeeRates[0] = 1;
+        exchangeFeeRates[1] = 1;
+        systemSettings.setExchangeFeeRateForSynths(synthKeys, exchangeFeeRates);
+
+        // // uint256 val = 100;
+        // // uint256 minCratio = 150;
+        // systemSettings.setIssuanceRatio(0.66 ether); // 150%
+        // systemSettings.setLiquidationRatio(0.8 ether);
+        // systemSettings.setSnxLiquidationPenalty(0.5 ether); // 50%
+        // systemSettings.setLiquidationDelay(28800); // 8 hours
+        // systemSettings.setRateStalePeriod(86400); // 1 day
 
         supplySchedule.setSynthetixProxy(address(proxySNX));
         supplySchedule.setInflationAmount(3000000 * 10 ** 18);
 
         vm.stopPrank(); // OWNER
+
+        vm.startPrank(address(synthetix));
+        tokenStateSNX.setBalanceOf(owner, 1000 ether);
+        tokenStateSNX.setBalanceOf(user1, 5 ether);
+        tokenStateSNX.setBalanceOf(user2, 10 ether);
+        tokenStateSNX.setBalanceOf(user3, 15 ether);
+        tokenStateSNX.setBalanceOf(user4, 1000 ether);
+        vm.stopPrank();
     }
 }

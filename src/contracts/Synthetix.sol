@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "./tax/Taxable.sol";
 import "./BaseSynthetix.sol";
 
-import "../interfaces/ITaxable.sol";
 import "../interfaces/IRewardEscrow.sol";
 import "../interfaces/IRewardEscrowV2.sol";
 import "../interfaces/ISupplySchedule.sol";

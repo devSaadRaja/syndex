@@ -21,8 +21,8 @@ import {SupplySchedule} from "../src/contracts/SMX/SupplySchedule.sol";
 import {MultipleMerkleDistributor} from "../src/contracts/SMX/MultipleMerkleDistributor.sol";
 
 contract SMXTest is Setup {
-    address public treasury = vm.addr(5);
-    address public reserveAddr = vm.addr(6);
+    address public treasury = vm.addr(7);
+    address public reserveAddr = vm.addr(8);
 
     // ? OPTIMISM DEPLOYMENTS --
     IUniswapV3Factory v3factory =
@@ -106,10 +106,8 @@ contract SMXTest is Setup {
         smx.setRewardAddress(address(WETH));
         smx.setExcludeFromFee(address(smx), true);
 
-        console.log("HERE");
         smx.transfer(reserveAddr, 200000 ether);
         smx.transfer(address(staking), 100 ether);
-        console.log("HERE 2");
 
         smx.approve(address(router), 50 ether);
         IERC20(WETH).approve(address(router), 50 ether);
@@ -212,13 +210,13 @@ contract SMXTest is Setup {
         vm.startPrank(user1);
 
         console.log("BEFORE");
-        console.log("SNX", smx.balanceOf(user1));
+        console.log("SMX", smx.balanceOf(user1));
         console.log("WETH", IERC20(WETH).balanceOf(user1));
 
         _swap(WETH, address(smx), 10 ether, user1);
 
         console.log("AFTER");
-        console.log("SNX", smx.balanceOf(user1));
+        console.log("SMX", smx.balanceOf(user1));
         console.log("WETH", IERC20(WETH).balanceOf(user1));
 
         vm.stopPrank();

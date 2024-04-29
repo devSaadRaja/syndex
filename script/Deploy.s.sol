@@ -8,7 +8,6 @@ import "@uniswap/core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 import {Issuer} from "../src/contracts/Issuer.sol";
-import {Taxable} from "../src/contracts/tax/Taxable.sol";
 import {Proxyable} from "../src/contracts/Proxyable.sol";
 import {Synthetix} from "../src/contracts/Synthetix.sol";
 import {ProxyERC20} from "../src/contracts/ProxyERC20.sol";
@@ -34,7 +33,6 @@ contract DeployScript is Script {
     address[] public addresses;
 
     Issuer public issuer;
-    Taxable public taxable;
     ProxyERC20 public proxySNX;
     Synthetix public synthetix;
     TokenState public tokenState;
@@ -75,12 +73,6 @@ contract DeployScript is Script {
             address(addressResolver)
         );
         staking = new Staking(address(proxySNX), address(proxySNX));
-        taxable = new Taxable(
-            address(proxySNX),
-            address(synthetix),
-            0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2, // WETH mainnet address
-            0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D // Uniswap mainnet address
-        );
 
         // ? SETUP ---
 
@@ -96,14 +88,6 @@ contract DeployScript is Script {
         // // factory.createPair(address(proxySNX), WETH);
         // // address pair = factory.getPair(address(proxySNX), WETH);
         // // taxable.setPool(pair, true);
-
-        // taxable.setFeeTaker(user, 50);
-        // taxable.setFeeTaker(treasury, 50);
-        // taxable.setExcludeFromFee(address(taxable), true);
-
-        // synthetix.setTrade(true);
-        // synthetix.setDeploy(true);
-        // synthetix.setTaxable(address(taxable));
 
         // ? TRANSACTIONS ---
 

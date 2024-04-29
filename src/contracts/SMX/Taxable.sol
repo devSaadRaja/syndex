@@ -39,11 +39,6 @@ abstract contract Taxable is Ownable {
 
     // ==================== FUNCTIONS ==================== //
 
-    // constructor(address _rewardAddr, address _router) Ownable(msg.sender) {
-    //     rewardAddr = _rewardAddr;
-    //     routerAddr = _router;
-    // }
-
     function getAllFeeTakers() external view returns (address[] memory) {
         return feeTakers;
     }

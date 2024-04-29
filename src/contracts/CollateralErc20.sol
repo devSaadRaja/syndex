@@ -14,7 +14,7 @@ contract CollateralErc20 is Collateral {
 
     constructor(
         address _owner,
-        ICollateralManager _manager,
+        address _manager,
         address _resolver,
         bytes32 _collateralKey,
         uint _minCratio,
@@ -24,7 +24,7 @@ contract CollateralErc20 is Collateral {
     )
         Collateral(
             _owner,
-            _manager,
+            ICollateralManager(_manager),
             _resolver,
             _collateralKey,
             _minCratio,
