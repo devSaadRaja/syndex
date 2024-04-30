@@ -8,7 +8,6 @@ import {SMX} from "../src/contracts/SMX/SMX.sol";
 import {Staking} from "../src/contracts/staking/Staking.sol";
 
 contract StakingTest is Setup {
-    SMX public smx;
     Staking public staking;
 
     function setUp() public override {

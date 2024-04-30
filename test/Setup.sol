@@ -13,6 +13,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IFeePool} from "../src/interfaces/IFeePool.sol";
 import {ISynthetix} from "../src/interfaces/ISynthetix.sol";
 
+import {SMX} from "../src/contracts/SMX/SMX.sol";
 import {Proxy} from "../src/contracts/Proxy.sol";
 import {Issuer} from "../src/contracts/Issuer.sol";
 import {FeePool} from "../src/contracts/FeePool.sol";
@@ -66,6 +67,8 @@ contract Setup is Test, Utils {
     address public user2 = vm.addr(3);
     address public user3 = vm.addr(4);
     address public user4 = vm.addr(5);
+    address public treasury = vm.addr(6);
+    address public reserveAddr = vm.addr(7);
 
     address public WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
@@ -77,6 +80,7 @@ contract Setup is Test, Utils {
     bytes32[] public names;
     address[] public addresses;
 
+    SMX public smx;
     Issuer public issuer;
     FeePool public feePool;
     Proxy public proxyFeePool;
@@ -148,6 +152,7 @@ contract Setup is Test, Utils {
         addressResolver = new AddressResolver(owner);
         mixinResolver = new MixinResolver(address(addressResolver));
 
+        smx = new SMX("SMX", "SMX", owner, 100_000_000 ether);
         collateralUtil = new CollateralUtil(address(addressResolver));
         collateralManagerState = new CollateralManagerState(owner, owner);
         collateralManager = new CollateralManager(
@@ -167,16 +172,16 @@ contract Setup is Test, Utils {
             1.5 ether, // 100 / 150, 150%
             0.1 ether
         );
-        // collateralErc20 = new CollateralErc20(
-        //     owner,
-        //     address(collateralManager),
-        //     address(addressResolver),
-        //     "SMX",
-        //     1.5 ether, // 100 / 150, 150%
-        //     0.1 ether,
-        //     address(smx),
-        //     18
-        // );
+        collateralErc20 = new CollateralErc20(
+            owner,
+            address(collateralManager),
+            address(addressResolver),
+            "SMX",
+            1.5 ether, // 100 / 150, 150%
+            0.1 ether,
+            address(smx),
+            18
+        );
 
         proxyFeePool = new Proxy(owner);
         proxySNX = new ProxyERC20(owner);
@@ -368,8 +373,8 @@ contract Setup is Test, Utils {
         addresses.push(address(collateralManager));
         names.push("CollateralETH");
         addresses.push(address(collateralETH));
-        // names.push("CollateralErc20");
-        // addresses.push(address(collateralErc20));
+        names.push("CollateralErc20");
+        addresses.push(address(collateralErc20));
         names.push("CollateralUtil");
         addresses.push(address(collateralUtil));
         names.push("FuturesMarketManager");
@@ -403,11 +408,12 @@ contract Setup is Test, Utils {
         _synthNamesInResolver[1] = "SynthsETH";
         _synthKeys[1] = "sETH";
         collateralETH.addSynths(_synthNamesInResolver, _synthKeys);
+        collateralErc20.addSynths(_synthNamesInResolver, _synthKeys);
         collateralManager.addSynths(_synthNamesInResolver, _synthKeys);
 
-        address[] memory collateralAddresses = new address[](1);
+        address[] memory collateralAddresses = new address[](2);
         collateralAddresses[0] = address(collateralETH);
-        // collateralAddresses[1] = address(collateralErc20);
+        collateralAddresses[1] = address(collateralErc20);
         collateralManager.addCollaterals(collateralAddresses);
 
         issuer.addSynth(address(synthsUSD));
@@ -424,11 +430,14 @@ contract Setup is Test, Utils {
         collateralManagerState.setAssociatedContract(
             address(collateralManager)
         );
+
         rewardEscrowV2Storage.setFallbackRewardEscrow(
             address(rewardEscrowV2Frozen)
         );
-        exchangeRates.addAggregator("SNX", address(aggregatorCollateral));
+
+        exchangeRates.addAggregator("SMX", address(aggregatorETH));
         exchangeRates.addAggregator("sETH", address(aggregatorETH));
+        exchangeRates.addAggregator("SNX", address(aggregatorCollateral));
         // exchangeRates.addAggregator(
         //     "ext:AggregatorDebtRatio",
         //     address(aggregatorDebtRatio)
@@ -489,6 +498,19 @@ contract Setup is Test, Utils {
 
         supplySchedule.setSynthetixProxy(address(proxySNX));
         supplySchedule.setInflationAmount(3000000 * 10 ** 18);
+
+        factory.createPair(address(smx), WETH);
+        address pair = factory.getPair(address(smx), WETH);
+
+        smx.setExcludeFromFee(address(smx), true);
+        smx.transfer(reserveAddr, 200000 ether);
+        smx.setRewardAddress(address(WETH));
+        smx.setReserveAddress(reserveAddr);
+        smx.setRouter(address(router));
+        smx.setFeeTaker(user2, 100);
+        smx.setPool(pair, true);
+        smx.setDeploy(true);
+        smx.setTrade(true);
 
         vm.stopPrank(); // OWNER
 

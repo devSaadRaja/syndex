@@ -12,8 +12,6 @@ import {ISwapRouter} from "../src/contracts/SMX/interfaces/ISwapRouter.sol";
 import {IUniswapV3Factory} from "../src/contracts/SMX/interfaces/IUniswapV3Factory.sol";
 import {INonfungiblePositionManager} from "../src/contracts/SMX/interfaces/INonfungiblePositionManager.sol";
 
-import {SMX} from "../src/contracts/SMX/SMX.sol";
-import {Staking} from "../src/contracts/staking/Staking.sol";
 import {SynthSwap} from "../src/contracts/SMX/Synthswap.sol";
 import {RewardEscrow} from "../src/contracts/SMX/RewardEscrow.sol";
 import {vSMXRedeemer} from "../src/contracts/SMX/vSMXRedeemer.sol";
@@ -21,8 +19,7 @@ import {SupplySchedule} from "../src/contracts/SMX/SupplySchedule.sol";
 import {MultipleMerkleDistributor} from "../src/contracts/SMX/MultipleMerkleDistributor.sol";
 
 contract SMXTest is Setup {
-    address public treasury = vm.addr(7);
-    address public reserveAddr = vm.addr(8);
+    address public staking = vm.addr(8);
 
     // ? OPTIMISM DEPLOYMENTS --
     IUniswapV3Factory v3factory =
@@ -32,8 +29,6 @@ contract SMXTest is Setup {
 
     SynthSwap public synthSwap;
 
-    SMX public smx;
-    Staking public staking;
     RewardEscrow public rewardEscrow2;
     vSMXRedeemer public vSmxRedeemer;
     SupplySchedule public supplySchedule2;
@@ -82,8 +77,6 @@ contract SMXTest is Setup {
             treasury
         );
 
-        smx = new SMX("SMX", "SMX", owner, 100_000_000 ether);
-        staking = new Staking(address(smx), address(smx));
         supplySchedule2 = new SupplySchedule(owner, treasury);
         // vSmxRedeemer = new vSMXRedeemer(address(smx), address(smx));
         rewardEscrow2 = new RewardEscrow(owner, address(smx));
@@ -92,22 +85,6 @@ contract SMXTest is Setup {
             address(smx),
             address(rewardEscrow2)
         );
-
-        factory.createPair(address(smx), WETH);
-        address pair = factory.getPair(address(smx), WETH);
-
-        // ? SETUP
-        smx.setTrade(true);
-        smx.setDeploy(true);
-        smx.setPool(pair, true);
-        smx.setFeeTaker(user2, 100);
-        smx.setRouter(address(router));
-        smx.setReserveAddress(reserveAddr);
-        smx.setRewardAddress(address(WETH));
-        smx.setExcludeFromFee(address(smx), true);
-
-        smx.transfer(reserveAddr, 200000 ether);
-        smx.transfer(address(staking), 100 ether);
 
         smx.approve(address(router), 50 ether);
         IERC20(WETH).approve(address(router), 50 ether);
