@@ -20,7 +20,7 @@ contract TradeSynthsTest is Setup {
         );
         vm.stopPrank();
 
-        vm.startPrank(owner);
+        vm.startPrank(user5);
         synthetix.issueMaxSynths();
 
         synthetix.exchange("sUSD", 100 ether, "sETH");
@@ -38,7 +38,7 @@ contract TradeSynthsTest is Setup {
         assertEq(tradingRewards.getPeriodRecordedFees(0), 200);
         assertEq(tradingRewards.getAvailableRewards(), 200);
         assertEq(
-            tradingRewards.getAvailableRewardsForAccountForPeriod(owner, 0),
+            tradingRewards.getAvailableRewardsForAccountForPeriod(user5, 0),
             200
         );
 
@@ -50,8 +50,8 @@ contract TradeSynthsTest is Setup {
             tradingRewards.getPeriodAvailableRewards(0)
         );
         console.log(
-            "getAvailableRewardsForAccountForPeriod(owner, 0)",
-            tradingRewards.getAvailableRewardsForAccountForPeriod(owner, 0)
+            "getAvailableRewardsForAccountForPeriod(user5, 0)",
+            tradingRewards.getAvailableRewardsForAccountForPeriod(user5, 0)
         );
 
         vm.stopPrank();

@@ -3,8 +3,8 @@ const { tenderly } = require("hardhat");
 const { readFileSync, writeFileSync } = require("fs");
 const outputFilePath =
   process.env.TENDERLY_MAIN === "true"
-    ? "./smx_tenderly_deployments.json"
-    : "./smx_test_tenderly_deployments.json";
+    ? "./tenderly_deployments.json"
+    : "./test_tenderly_deployments.json";
 
 const WETH = require("../abis/weth.json");
 const uniswapRouter = require("../abis/uniswap-router.json");
@@ -60,6 +60,7 @@ async function main() {
   // const SafeDecimalMath = await contractDeploy("SafeDecimalMath", []);
   // deployments["SafeDecimalMath"] = SafeDecimalMath.address;
   // await verify("SafeDecimalMath", SafeDecimalMath.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const SystemSettingsLib = await contractDeploy("SystemSettingsLib", [], {
   //   libraries: {
@@ -70,6 +71,7 @@ async function main() {
   // await verify("SystemSettingsLib", SystemSettingsLib.address, {
   //   SafeDecimalMath: deployments["SafeDecimalMath"],
   // });
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const ExchangeSettlementLib = await contractDeploy(
   //   "ExchangeSettlementLib",
@@ -84,12 +86,21 @@ async function main() {
   // await verify("ExchangeSettlementLib", ExchangeSettlementLib.address, {
   //   SafeDecimalMath: deployments["SafeDecimalMath"],
   // });
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // // * ------------------------------
 
   // const AddressResolver = await contractDeploy("AddressResolver", [deployer]);
   // deployments["AddressResolver"] = AddressResolver.address;
   // await verify("AddressResolver", AddressResolver.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+
+  // const SynthUtil = await contractDeploy("SynthUtil", [
+  //   deployments["AddressResolver"],
+  // ]);
+  // deployments["SynthUtil"] = SynthUtil.address;
+  // await verify("SynthUtil", SynthUtil.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const CollateralUtil = await contractDeploy(
   //   "CollateralUtil",
@@ -104,6 +115,7 @@ async function main() {
   // await verify("CollateralUtil", CollateralUtil.address, {
   //   SafeDecimalMath: deployments["SafeDecimalMath"],
   // });
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const CollateralManagerState = await contractDeploy(
   //   "CollateralManagerState",
@@ -114,6 +126,7 @@ async function main() {
   // );
   // deployments["CollateralManagerState"] = CollateralManagerState.address;
   // await verify("CollateralManagerState", CollateralManagerState.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const CollateralManager = await contractDeploy("CollateralManager", [
   //   deployments["CollateralManagerState"],
@@ -126,6 +139,7 @@ async function main() {
   // ]);
   // deployments["CollateralManager"] = CollateralManager.address;
   // await verify("CollateralManager", CollateralManager.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const CollateralEth = await contractDeploy("CollateralEth", [
   //   deployer,
@@ -137,26 +151,32 @@ async function main() {
   // ]);
   // deployments["CollateralEth"] = CollateralEth.address;
   // await verify("CollateralEth", CollateralEth.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const ProxySNX = await contractDeploy("ProxyERC20", [deployer]);
   // deployments["ProxySNX"] = ProxySNX.address;
   // await verify("ProxyERC20", ProxySNX.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const ProxysUSD = await contractDeploy("ProxyERC20", [deployer]);
   // deployments["ProxysUSD"] = ProxysUSD.address;
   // await verify("ProxyERC20", ProxysUSD.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const ProxysETH = await contractDeploy("ProxyERC20", [deployer]);
   // deployments["ProxysETH"] = ProxysETH.address;
   // await verify("ProxyERC20", ProxysETH.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const ProxyFeePool = await contractDeploy("Proxy", [deployer]);
   // deployments["ProxyFeePool"] = ProxyFeePool.address;
   // await verify("Proxy", ProxyFeePool.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const SystemStatus = await contractDeploy("SystemStatus", [deployer]);
   // deployments["SystemStatus"] = SystemStatus.address;
   // await verify("SystemStatus", SystemStatus.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const Issuer = await contractDeploy(
   //   "Issuer",
@@ -171,6 +191,7 @@ async function main() {
   // await verify("Issuer", Issuer.address, {
   //   SafeDecimalMath: deployments["SafeDecimalMath"],
   // });
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const DebtCache = await contractDeploy("DebtCache", [
   //   deployer,
@@ -178,6 +199,7 @@ async function main() {
   // ]);
   // deployments["DebtCache"] = DebtCache.address;
   // await verify("DebtCache", DebtCache.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const Exchanger = await contractDeploy(
   //   "Exchanger",
@@ -194,6 +216,7 @@ async function main() {
   //   SafeDecimalMath: deployments["SafeDecimalMath"],
   //   ExchangeSettlementLib: deployments["ExchangeSettlementLib"],
   // });
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const ExchangeState = await contractDeploy("ExchangeState", [
   //   deployer,
@@ -201,12 +224,14 @@ async function main() {
   // ]);
   // deployments["ExchangeState"] = ExchangeState.address;
   // await verify("ExchangeState", ExchangeState.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const SynthRedeemer = await contractDeploy("SynthRedeemer", [
   //   deployments["AddressResolver"],
   // ]);
   // deployments["SynthRedeemer"] = SynthRedeemer.address;
   // await verify("SynthRedeemer", SynthRedeemer.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const Liquidator = await contractDeploy(
   //   "Liquidator",
@@ -221,12 +246,14 @@ async function main() {
   // await verify("Liquidator", Liquidator.address, {
   //   SafeDecimalMath: deployments["SafeDecimalMath"],
   // });
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const FlexibleStorage = await contractDeploy("FlexibleStorage", [
   //   deployments["AddressResolver"],
   // ]);
   // deployments["FlexibleStorage"] = FlexibleStorage.address;
   // await verify("FlexibleStorage", FlexibleStorage.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const SystemSettings = await contractDeploy(
   //   "SystemSettings",
@@ -241,6 +268,7 @@ async function main() {
   // await verify("SystemSettings", SystemSettings.address, {
   //   SystemSettingsLib: deployments["SystemSettingsLib"],
   // });
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const CircuitBreaker = await contractDeploy("CircuitBreaker", [
   //   deployer,
@@ -248,6 +276,7 @@ async function main() {
   // ]);
   // deployments["CircuitBreaker"] = CircuitBreaker.address;
   // await verify("CircuitBreaker", CircuitBreaker.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const TokenStateSNX = await contractDeploy("LegacyTokenState", [
   //   deployer,
@@ -255,6 +284,7 @@ async function main() {
   // ]);
   // deployments["TokenStateSNX"] = TokenStateSNX.address;
   // await verify("LegacyTokenState", TokenStateSNX.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const TokenStatesUSD = await contractDeploy("TokenState", [
   //   deployer,
@@ -262,6 +292,7 @@ async function main() {
   // ]);
   // deployments["TokenStatesUSD"] = TokenStatesUSD.address;
   // await verify("TokenState", TokenStatesUSD.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const TokenStatesETH = await contractDeploy("TokenState", [
   //   deployer,
@@ -269,6 +300,7 @@ async function main() {
   // ]);
   // deployments["TokenStatesETH"] = TokenStatesETH.address;
   // await verify("TokenState", TokenStatesETH.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const WrapperFactory = await contractDeploy(
   //   "WrapperFactory",
@@ -283,6 +315,7 @@ async function main() {
   // await verify("WrapperFactory", WrapperFactory.address, {
   //   SafeDecimalMath: deployments["SafeDecimalMath"],
   // });
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const RewardEscrowV2 = await contractDeploy("RewardEscrowV2", [
   //   deployer,
@@ -290,6 +323,7 @@ async function main() {
   // ]);
   // deployments["RewardEscrowV2"] = RewardEscrowV2.address;
   // await verify("RewardEscrowV2", RewardEscrowV2.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const SupplySchedule = await contractDeploy(contractsPath.SupplySchedule, [
   //   deployer,
@@ -298,6 +332,7 @@ async function main() {
   // ]);
   // deployments["SupplySchedule"] = SupplySchedule.address;
   // await verify(contractsPath.SupplySchedule, SupplySchedule.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const TradingRewards = await contractDeploy("TradingRewards", [
   //   deployer,
@@ -306,6 +341,7 @@ async function main() {
   // ]);
   // deployments["TradingRewards"] = TradingRewards.address;
   // await verify("TradingRewards", TradingRewards.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const DirectIntegrationManager = await contractDeploy(
   //   "DirectIntegrationManager",
@@ -313,6 +349,7 @@ async function main() {
   // );
   // deployments["DirectIntegrationManager"] = DirectIntegrationManager.address;
   // await verify("DirectIntegrationManager", DirectIntegrationManager.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const Synthetix = await contractDeploy("Synthetix", [
   //   deployments["ProxySNX"],
@@ -323,6 +360,7 @@ async function main() {
   // ]);
   // deployments["Synthetix"] = Synthetix.address;
   // await verify("Synthetix", Synthetix.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const FeePool = await contractDeploy(
   //   "FeePool",
@@ -337,6 +375,7 @@ async function main() {
   // await verify("FeePool", FeePool.address, {
   //   SafeDecimalMath: deployments["SafeDecimalMath"],
   // });
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const FeePoolEternalStorage = await contractDeploy("FeePoolEternalStorage", [
   //   deployer,
@@ -344,6 +383,7 @@ async function main() {
   // ]);
   // deployments["FeePoolEternalStorage"] = FeePoolEternalStorage.address;
   // await verify("FeePoolEternalStorage", FeePoolEternalStorage.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const RewardEscrow = await contractDeploy(contractsPath.RewardEscrow, [
   //   deployer,
@@ -352,6 +392,7 @@ async function main() {
   // ]);
   // deployments["RewardEscrow"] = RewardEscrow.address;
   // await verify(contractsPath.RewardEscrow, RewardEscrow.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const EtherWrapper = await contractDeploy(
   //   "EtherWrapper",
@@ -366,6 +407,7 @@ async function main() {
   // await verify("EtherWrapper", EtherWrapper.address, {
   //   SafeDecimalMath: deployments["SafeDecimalMath"],
   // });
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const FuturesMarketManager = await contractDeploy("FuturesMarketManager", [
   //   deployer,
@@ -373,6 +415,7 @@ async function main() {
   // ]);
   // deployments["FuturesMarketManager"] = FuturesMarketManager.address;
   // await verify("FuturesMarketManager", FuturesMarketManager.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const LiquidatorRewards = await contractDeploy("LiquidatorRewards", [
   //   deployer,
@@ -380,6 +423,7 @@ async function main() {
   // ]);
   // deployments["LiquidatorRewards"] = LiquidatorRewards.address;
   // await verify("LiquidatorRewards", LiquidatorRewards.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const SynthetixDebtShare = await contractDeploy("SynthetixDebtShare", [
   //   deployer,
@@ -387,6 +431,7 @@ async function main() {
   // ]);
   // deployments["SynthetixDebtShare"] = SynthetixDebtShare.address;
   // await verify("SynthetixDebtShare", SynthetixDebtShare.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const SynthsUSD = await contractDeploy("MultiCollateralSynth", [
   //   deployments["ProxysUSD"],
@@ -400,6 +445,7 @@ async function main() {
   // ]);
   // deployments["SynthsUSD"] = SynthsUSD.address;
   // await verify("MultiCollateralSynth", SynthsUSD.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const SynthsETH = await contractDeploy("MultiCollateralSynth", [
   //   deployments["ProxysETH"],
@@ -413,6 +459,7 @@ async function main() {
   // ]);
   // deployments["SynthsETH"] = SynthsETH.address;
   // await verify("MultiCollateralSynth", SynthsETH.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const RewardEscrowV2Storage = await contractDeploy("RewardEscrowV2Storage", [
   //   deployer,
@@ -420,6 +467,7 @@ async function main() {
   // ]);
   // deployments["RewardEscrowV2Storage"] = RewardEscrowV2Storage.address;
   // await verify("RewardEscrowV2Storage", RewardEscrowV2Storage.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const RewardsDistribution = await contractDeploy("RewardsDistribution", [
   //   deployer,
@@ -430,6 +478,7 @@ async function main() {
   // ]);
   // deployments["RewardsDistribution"] = RewardsDistribution.address;
   // await verify("RewardsDistribution", RewardsDistribution.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const RewardEscrowV2Frozen = await contractDeploy("RewardEscrowV2Frozen", [
   //   deployer,
@@ -437,6 +486,7 @@ async function main() {
   // ]);
   // deployments["RewardEscrowV2Frozen"] = RewardEscrowV2Frozen.address;
   // await verify("RewardEscrowV2Frozen", RewardEscrowV2Frozen.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const EternalStorage = await contractDeploy("EternalStorage", [
   //   deployer,
@@ -444,6 +494,7 @@ async function main() {
   // ]);
   // deployments["EternalStorage"] = EternalStorage.address;
   // await verify("EternalStorage", EternalStorage.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const DelegateApprovals = await contractDeploy("DelegateApprovals", [
   //   deployer,
@@ -451,6 +502,7 @@ async function main() {
   // ]);
   // deployments["DelegateApprovals"] = DelegateApprovals.address;
   // await verify("DelegateApprovals", DelegateApprovals.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const ExchangeRates = await contractDeploy(
   //   "ExchangeRates",
@@ -465,18 +517,21 @@ async function main() {
   // await verify("ExchangeRates", ExchangeRates.address, {
   //   SafeDecimalMath: deployments["SafeDecimalMath"],
   // });
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const AggregatorETH = await contractDeploy("AggregatorETH", [
   //   deployments["AddressResolver"],
   // ]);
   // deployments["AggregatorETH"] = AggregatorETH.address;
   // await verify("AggregatorETH", AggregatorETH.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const AggregatorCollateral = await contractDeploy("AggregatorCollateral", [
   //   deployments["AddressResolver"],
   // ]);
   // deployments["AggregatorCollateral"] = AggregatorCollateral.address;
   // await verify("AggregatorCollateral", AggregatorCollateral.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const AggregatorIssuedSynths = await contractDeploy(
   //   "AggregatorIssuedSynths",
@@ -484,18 +539,19 @@ async function main() {
   // );
   // deployments["AggregatorIssuedSynths"] = AggregatorIssuedSynths.address;
   // await verify("AggregatorIssuedSynths", AggregatorIssuedSynths.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const AggregatorDebtRatio = await contractDeploy("AggregatorDebtRatio", [
   //   deployments["AddressResolver"],
   // ]);
   // deployments["AggregatorDebtRatio"] = AggregatorDebtRatio.address;
   // await verify("AggregatorDebtRatio", AggregatorDebtRatio.address);
-
-  // // // ============================================================ //
-
-  // // * Write deployment addresses to file
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-  // console.log("--- DEPLOYMENTS UPDATED ---");
+
+  // // ============================================================ //
+
+  // * Write deployment addresses to file
+  console.log("--- DEPLOYMENTS UPDATED ---");
 
   // // ============================================================ //
 

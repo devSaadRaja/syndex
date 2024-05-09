@@ -3,8 +3,8 @@ const { tenderly } = require("hardhat");
 const { readFileSync, writeFileSync } = require("fs");
 const outputFilePath =
   process.env.TENDERLY_MAIN === "true"
-    ? "./smx_tenderly_deployments.json"
-    : "./smx_test_tenderly_deployments.json";
+    ? "./tenderly_deployments.json"
+    : "./test_tenderly_deployments.json";
 
 const WETH = require("../abis/weth.json");
 const uniswapRouter = require("../abis/uniswap-router.json");
@@ -56,6 +56,7 @@ async function main() {
   // ]);
   // deployments["SMX"] = SMX.address;
   // await verify("SMX", SMX.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const Staking = await contractDeploy("Staking", [
   //   deployments["SMX"],
@@ -63,6 +64,7 @@ async function main() {
   // ]);
   // deployments["Staking"] = Staking.address;
   // await verify("Staking", Staking.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const FactoryContract = new ethers.Contract(
   //   deployments["UniswapFactory"],
@@ -74,6 +76,7 @@ async function main() {
   //   deployments["SMX"],
   //   deployments["WETH"]
   // );
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const SMXSafeDecimalMath = await contractDeploy(
   //   contractsPath.SMXSafeDecimalMath,
@@ -81,6 +84,7 @@ async function main() {
   // );
   // deployments["SMXSafeDecimalMath"] = SMXSafeDecimalMath.address;
   // await verify(contractsPath.SMXSafeDecimalMath, SMXSafeDecimalMath.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const SMXRewardEscrow = await contractDeploy(contractsPath.SMXRewardEscrow, [
   //   deployer,
@@ -88,6 +92,7 @@ async function main() {
   // ]);
   // deployments["SMXRewardEscrow"] = SMXRewardEscrow.address;
   // await verify(contractsPath.SMXRewardEscrow, SMXRewardEscrow.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const MultipleMerkleDistributor = await contractDeploy(
   //   "MultipleMerkleDistributor",
@@ -95,6 +100,7 @@ async function main() {
   // );
   // deployments["MultipleMerkleDistributor"] = MultipleMerkleDistributor.address;
   // await verify("MultipleMerkleDistributor", MultipleMerkleDistributor.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const SMXSupplySchedule = await contractDeploy(contractsPath.SMXSupplySchedule, [
   //   deployer,
@@ -105,13 +111,29 @@ async function main() {
   //   contractsPath.SMXSafeDecimalMath:
   //     deployments["SMXSafeDecimalMath"],
   // });
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+
+  // const SynthSwap = await contractDeploy("SynthSwap", [
+  //   deployments["SynthsUSD"],
+  //   deployments["UniswapRouter"],
+  //   deployments["AddressResolver"],
+  //   deployer,
+  //   treasury,
+  // ]);
+  // deployments["SynthSwap"] = SynthSwap.address;
+  // await verify("SynthSwap", SynthSwap.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+
+  // const DappMaintenance = await contractDeploy("DappMaintenance", [deployer]);
+  // deployments["DappMaintenance"] = DappMaintenance.address;
+  // await verify("DappMaintenance", DappMaintenance.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // // vSmxRedeemer = new vSMXRedeemer(address(smx), address(smx));
 
   // // ============================================================ //
 
   // * Write deployment addresses to file
-  writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   console.log("--- DEPLOYMENTS UPDATED ---");
 
   // // ============================================================ //
