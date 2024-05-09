@@ -79,4 +79,20 @@ contract StakingTest is Setup {
 
         vm.stopPrank();
     }
+
+    function testWarmupPeriod() public {
+        vm.startPrank(owner);
+        staking.setWarmupPeriod(2 days);
+        vm.stopPrank();
+
+        vm.startPrank(user1);
+        smx.approve(address(staking), 10 ether);
+        staking.stake(10 ether);
+        _passTime(1 days);
+        vm.expectRevert("Warmup Period not Ended!");
+        staking.claimReward();
+        vm.expectRevert("Warmup Period not Ended!");
+        staking.unstake(5 ether);
+        vm.stopPrank();
+    }
 }
