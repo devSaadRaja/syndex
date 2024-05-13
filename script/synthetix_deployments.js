@@ -548,9 +548,24 @@ async function main() {
   // await verify("AggregatorDebtRatio", AggregatorDebtRatio.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
+  // const FactoryContract = new ethers.Contract(
+  //   deployments["UniswapFactory"],
+  //   uniswapFactory,
+  //   signer
+  // );
+
+  // await FactoryContract.createPair(
+  //   deployments["ProxysUSD"],
+  //   deployments["ProxysETH"]
+  // );
+  // deployments["ETHUSD"] = await FactoryContract.getPair(
+  //   deployments["ProxysUSD"],
+  //   deployments["ProxysETH"]
+  // );
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+
   // // ============================================================ //
 
-  // * Write deployment addresses to file
   console.log("--- DEPLOYMENTS UPDATED ---");
 
   // // ============================================================ //
@@ -715,12 +730,32 @@ async function main() {
   // );
   // await proxyFeePool.setTarget(deployments["FeePool"]);
 
+  // const synthetix = await ethers.getContractAt(
+  //   contractsPath.Synthetix,
+  //   deployments["Synthetix"],
+  //   signer
+  // );
+  // await synthetix.setTokenState(deployments["TokenStateSNX"]);
+
   // const tokenStateSNX = await ethers.getContractAt(
   //   contractsPath.TokenState,
   //   deployments["TokenStateSNX"],
   //   signer
   // );
   // await tokenStateSNX.setAssociatedContract(deployments["Synthetix"]);
+  // await tokenStateSNX.setBalanceOf(deployer, parseEth(1000));
+  // await tokenStateSNX.setBalanceOf(user, parseEth(1000));
+  // await tokenStateSNX.setBalanceOf(
+  //   "0xAfdb49aF7e7BDE7e99589DF3831d849b7a55dE34",
+  //   parseEth(1000)
+  // );
+
+  // await synthetix.issueMaxSynths();
+  // await synthetix.exchange(
+  //   ethers.utils.formatBytes32String("sUSD"),
+  //   parseEth(50),
+  //   ethers.utils.formatBytes32String("sETH")
+  // );
 
   // const tokenStatesUSD = await ethers.getContractAt(
   //   contractsPath.TokenState,
@@ -781,6 +816,15 @@ async function main() {
   //   deployments["SystemSettings"],
   //   signer
   // );
+
+  // let synthKeys = [];
+  // let exchangeFeeRates = [];
+  // synthKeys.push(ethers.utils.formatBytes32String("sUSD"));
+  // synthKeys.push(ethers.utils.formatBytes32String("sETH"));
+  // exchangeFeeRates.push(1);
+  // exchangeFeeRates.push(1);
+  // await systemSettings.setExchangeFeeRateForSynths(synthKeys, exchangeFeeRates);
+
   // await systemSettings.setIssuanceRatio(parseEth(0.2));
   // await systemSettings.setLiquidationRatio(parseEth(0.625));
   // await systemSettings.setSnxLiquidationPenalty(parseEth(0.6)); // forced
@@ -797,21 +841,24 @@ async function main() {
   // await systemSettings.setExchangeDynamicFeeWeightDecay(parseEth(0.95));
   // await systemSettings.setPriceDeviationThresholdFactor(parseEth(3));
 
-  // // const FactoryContract = new ethers.Contract(
-  // //   deployments["UniswapFactory"],
-  // //   uniswapFactory,
-  // //   signer
-  // // );
-
-  // // const cTx = await FactoryContract.createPair(
-  // //   deployments["ProxySNX"],
-  // //   deployments["WETH"]
-  // // );
-  // // await cTx.wait(6);
-  // // deployments["SMXWETH"] = await FactoryContract.getPair(
-  // //   deployments["ProxySNX"],
-  // //   deployments["WETH"]
-  // // );
+  // const RouterContract = new ethers.Contract(
+  //   deployments["UniswapRouter"],
+  //   uniswapRouter,
+  //   signer
+  // );
+  // await proxysUSD.approve(deployments["UniswapRouter"], parseEth(50));
+  // await proxysETH.approve(deployments["UniswapRouter"], parseEth(50));
+  // await RouterContract.addLiquidity(
+  //   deployments["ProxysUSD"],
+  //   deployments["ProxysETH"],
+  //   parseEth(50),
+  //   parseEth(50),
+  //   1,
+  //   1,
+  //   deployer,
+  //   Math.round(Date.now() / 1000) + 1000
+  // );
+  // console.log("ADDED LIQUIDITY");
 
   console.log("--- COMPLETED ---");
 }

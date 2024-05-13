@@ -9,25 +9,22 @@ import "@uniswap/core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 import {ISwapRouter} from "../src/contracts/SMX/interfaces/ISwapRouter.sol";
+import {IUniswapV3Pool} from "../src/contracts/SMX/interfaces/IUniswapV3Pool.sol";
 import {IUniswapV3Factory} from "../src/contracts/SMX/interfaces/IUniswapV3Factory.sol";
 import {INonfungiblePositionManager} from "../src/contracts/SMX/interfaces/INonfungiblePositionManager.sol";
 
-import {SynthSwap} from "../src/contracts/SMX/Synthswap.sol";
 import {RewardEscrow} from "../src/contracts/SMX/RewardEscrow.sol";
 import {vSMXRedeemer} from "../src/contracts/SMX/vSMXRedeemer.sol";
 import {SupplySchedule} from "../src/contracts/SMX/SupplySchedule.sol";
 import {MultipleMerkleDistributor} from "../src/contracts/SMX/MultipleMerkleDistributor.sol";
 
 contract SMXTest is Setup {
-    address public staking = vm.addr(8);
-
-    // ? OPTIMISM DEPLOYMENTS --
+    ISwapRouter swapRouter =
+        ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
     IUniswapV3Factory v3factory =
         IUniswapV3Factory(0x1F98431c8aD98523631AE4a59f267346ea31F984);
-    IUniswapV2Router02 swapRouter =
-        IUniswapV2Router02(0xE592427A0AEce92De3Edee1F18E0157C05861564);
-
-    SynthSwap public synthSwap;
+    INonfungiblePositionManager nonfungiblePositionManager =
+        INonfungiblePositionManager(0xC36442b4a4522E871399CD717aBDD847Ab11FE88);
 
     RewardEscrow public rewardEscrow2;
     vSMXRedeemer public vSmxRedeemer;
@@ -46,14 +43,6 @@ contract SMXTest is Setup {
 
         synthetix.exchange("sUSD", 500 ether, "sETH");
 
-        // v3factory.createPool(address(proxysUSD), address(proxysETH), 3000);
-        // address p = v3factory.getPool(
-        //     address(proxysUSD),
-        //     address(proxysETH),
-        //     3000
-        // );
-        // console.log(p);
-
         factory.createPair(address(proxysUSD), address(proxysETH));
 
         IERC20(address(proxysUSD)).approve(address(router), 50 ether);
@@ -67,14 +56,6 @@ contract SMXTest is Setup {
             0,
             owner,
             block.timestamp + 10 minutes
-        );
-
-        synthSwap = new SynthSwap(
-            address(synthsUSD),
-            address(router),
-            address(addressResolver),
-            owner, // volumeRewards
-            treasury
         );
 
         supplySchedule2 = new SupplySchedule(owner, treasury);
@@ -100,10 +81,119 @@ contract SMXTest is Setup {
         );
 
         supplySchedule2.setSMX(address(smx));
-        supplySchedule2.setStakingRewards(address(staking));
+        supplySchedule2.setStakingRewards(address(stakingAddr));
         supplySchedule2.setTradingRewards(address(multipleMerkleDistributor));
 
         // multipleMerkleDistributor.setMerkleRootForEpoch();
+
+        vm.stopPrank();
+    }
+
+    function testUniswapV3() public {
+        vm.startPrank(owner);
+
+        // ! MAKE POOL ---
+
+        v3factory.createPool(address(proxysUSD), address(proxysETH), 3000); // take care of sequence of tokens
+        address pool = v3factory.getPool(
+            address(proxysUSD),
+            address(proxysETH),
+            3000
+        );
+
+        IUniswapV3Pool v3Pool = IUniswapV3Pool(pool);
+        v3Pool.initialize(792281625142644000000000000000);
+
+        // ! ADD LIQUIDITY ---
+
+        IERC20(address(proxysUSD)).approve(
+            address(nonfungiblePositionManager),
+            50 ether
+        );
+        IERC20(address(proxysETH)).approve(
+            address(nonfungiblePositionManager),
+            50 ether
+        );
+
+        int24 tickSpacing = v3Pool.tickSpacing();
+        uint128 liquidity = v3Pool.liquidity();
+        uint24 fee = v3Pool.fee();
+        (
+            uint160 sqrtPriceX96,
+            int24 tick,
+            uint16 observationIndex,
+            uint16 observationCardinality,
+            uint16 observationCardinalityNext,
+            uint8 feeProtocol,
+            bool unlocked
+        ) = v3Pool.slot0();
+
+        console.log("liquidity BEFORE", liquidity);
+        console.log("tickSpacing", uint24(tickSpacing));
+        console.log("fee", fee);
+        console.log("sqrtPriceX96", sqrtPriceX96);
+        console.log("tick", uint24(tick));
+        console.log("observationIndex", uint16(observationIndex));
+        console.log("observationCardinality", uint16(observationCardinality));
+        console.log(
+            "observationCardinalityNext",
+            uint16(observationCardinalityNext)
+        );
+        console.log("feeProtocol", uint16(feeProtocol));
+        console.log("unlocked", unlocked);
+
+        // tickLower = nearestUsableTick(tick, tickSpacing) - tickSpacing * 2;
+        // tickUpper = nearestUsableTick(tick, tickSpacing) + tickSpacing * 2;
+
+        INonfungiblePositionManager.MintParams
+            memory params = INonfungiblePositionManager.MintParams({
+                token0: address(proxysUSD),
+                token1: address(proxysETH),
+                fee: fee,
+                tickLower: 45960,
+                tickUpper: 46200,
+                amount0Desired: 50 ether,
+                amount1Desired: 50 ether,
+                amount0Min: 0,
+                amount1Min: 0,
+                recipient: owner,
+                deadline: block.timestamp + 10 minutes
+            });
+
+        nonfungiblePositionManager.mint(params);
+
+        // ! SWAP ---
+
+        // IERC20(address(proxysUSD)).approve(address(swapRouter), 10 ether);
+        // ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
+        //     .ExactInputSingleParams({
+        //         tokenIn: address(proxysUSD),
+        //         tokenOut: address(proxysETH),
+        //         fee: fee,
+        //         recipient: owner,
+        //         deadline: block.timestamp + 10 minutes,
+        //         amountIn: 1 ether,
+        //         amountOutMinimum: 0,
+        //         sqrtPriceLimitX96: 0
+        //     });
+
+        // uint256 amountOut = swapRouter.exactInputSingle(inputParams);
+        // console.log("amountOut", amountOut);
+
+        IERC20(address(proxysETH)).approve(address(swapRouter), 10 ether);
+        ISwapRouter.ExactOutputSingleParams memory outputParams = ISwapRouter
+            .ExactOutputSingleParams({
+                tokenIn: address(proxysETH),
+                tokenOut: address(proxysUSD),
+                fee: fee,
+                recipient: owner,
+                deadline: block.timestamp + 10 minutes,
+                amountOut: 0.099 ether,
+                amountInMaximum: 10 ether,
+                sqrtPriceLimitX96: 0
+            });
+        uint256 amountIn = swapRouter.exactOutputSingle(outputParams);
+        console.log("amountIn", amountIn);
 
         vm.stopPrank();
     }
@@ -182,6 +272,68 @@ contract SMXTest is Setup {
 
         vm.stopPrank();
     }
+
+    //  function testTradeSynths() public {
+    //     vm.startPrank(user4);
+    //     IERC20(address(proxySNX)).transfer(address(tradingRewards), 250 ether);
+    //     IERC20(address(proxySNX)).transfer(
+    //         address(rewardsDistribution),
+    //         250 ether
+    //     );
+    //     vm.stopPrank();
+
+    //     vm.startPrank(user5);
+    //     synthetix.issueMaxSynths();
+
+    //     address[] memory path = new address[](2);
+    //     path[0] = address(proxysUSD);
+    //     path[1] = address(proxysETH);
+    //     bytes memory _data = abi.encodeWithSignature(
+    //         "swapExactTokensForTokens(uint256,uint256,address[],address,uint256)",
+    //         1 ether,
+    //         0,
+    //         path,
+    //         address(synthSwap),
+    //         block.timestamp + 10 minutes
+    //     );
+
+    //     IERC20(address(proxysUSD)).approve(address(synthSwap), 10 ether);
+    //     synthSwap.uniswapSwapInto("sETH", address(proxysUSD), 10 ether, _data);
+
+    //     // synthetix.exchange("sUSD", 100 ether, "sETH");
+
+    //     tradingRewards.closeCurrentPeriodWithRewards(
+    //         tradingRewards.getPeriodRecordedFees(0)
+    //     );
+
+    //     // assertEq(tradingRewards.getPeriodAvailableRewards(0), 1001);
+    //     // assertEq(tradingRewards.getPeriodIsClaimable(0), true);
+    //     // assertEq(tradingRewards.getPeriodRecordedFees(0), 1001);
+    //     // assertEq(tradingRewards.getAvailableRewards(), 1001);
+    //     // assertEq(
+    //     //     tradingRewards.getAvailableRewardsForAccountForPeriod(user5, 0),
+    //     //     1001
+    //     // );
+
+    //     console.log(tradingRewards.getPeriodRecordedFees(0));
+    //     console.log(tradingRewards.getPeriodIsClaimable(0));
+    //     console.log(tradingRewards.getAvailableRewards());
+    //     console.log(
+    //         "getPeriodAvailableRewards(0)",
+    //         tradingRewards.getPeriodAvailableRewards(0)
+    //     );
+    //     console.log();
+    //     console.log(
+    //         "getAvailableRewardsForAccountForPeriod(user5, 0)",
+    //         tradingRewards.getAvailableRewardsForAccountForPeriod(user5, 0)
+    //     );
+    //     console.log(
+    //         "getAvailableRewardsForAccountForPeriod(owner, 0)",
+    //         tradingRewards.getAvailableRewardsForAccountForPeriod(owner, 0)
+    //     );
+
+    //     vm.stopPrank();
+    // }
 
     function testSwap() public {
         vm.startPrank(user1);

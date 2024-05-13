@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import {IFeePool} from "../src/interfaces/IFeePool.sol";
 import {ISynthetix} from "../src/interfaces/ISynthetix.sol";
+import {IAggregationRouterV4} from "../src/contracts/SMX/interfaces/IAggregationRouterV4.sol";
 
 import {SMX} from "../src/contracts/SMX/SMX.sol";
 import {Proxy} from "../src/contracts/Proxy.sol";
@@ -21,9 +22,11 @@ import {Proxyable} from "../src/contracts/Proxyable.sol";
 import {Synthetix} from "../src/contracts/Synthetix.sol";
 import {DebtCache} from "../src/contracts/DebtCache.sol";
 import {Exchanger} from "../src/contracts/Exchanger.sol";
+import {SynthUtil} from "../src/contracts/SynthUtil.sol";
 import {ProxyERC20} from "../src/contracts/ProxyERC20.sol";
 import {Liquidator} from "../src/contracts/Liquidator.sol";
 import {TokenState} from "../src/contracts/TokenState.sol";
+import {SynthSwap} from "../src/contracts/SMX/Synthswap.sol";
 import {EtherWrapper} from "../src/contracts/EtherWrapper.sol";
 import {RewardEscrow} from "../src/contracts/RewardEscrow.sol";
 import {SystemStatus} from "../src/contracts/SystemStatus.sol";
@@ -48,6 +51,7 @@ import {LegacyTokenState} from "../src/contracts/LegacyTokenState.sol";
 import {DelegateApprovals} from "../src/contracts/DelegateApprovals.sol";
 import {CollateralManager} from "../src/contracts/CollateralManager.sol";
 import {LiquidatorRewards} from "../src/contracts/LiquidatorRewards.sol";
+import {DappMaintenance} from "../src/contracts/SMX/DappMaintenance.sol";
 import {SynthetixDebtShare} from "../src/contracts/SynthetixDebtShare.sol";
 import {RewardsDistribution} from "../src/contracts/RewardsDistribution.sol";
 import {AggregatorDebtRatio} from "../src/contracts/AggregatorDebtRatio.sol";
@@ -67,8 +71,10 @@ contract Setup is Test, Utils {
     address public user2 = vm.addr(3);
     address public user3 = vm.addr(4);
     address public user4 = vm.addr(5);
-    address public treasury = vm.addr(6);
-    address public reserveAddr = vm.addr(7);
+    address public user5 = vm.addr(6);
+    address public treasury = vm.addr(7);
+    address public reserveAddr = vm.addr(8);
+    address public stakingAddr = vm.addr(9);
 
     address public WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
@@ -76,6 +82,8 @@ contract Setup is Test, Utils {
         IUniswapV2Factory(0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f);
     IUniswapV2Router02 router =
         IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+    IAggregationRouterV4 routerV4 =
+        IAggregationRouterV4(0x1111111254fb6c44bAC0beD2854e76F90643097d);
 
     bytes32[] public names;
     address[] public addresses;
@@ -87,7 +95,9 @@ contract Setup is Test, Utils {
     DebtCache public debtCache;
     Synthetix public synthetix;
     Exchanger public exchanger;
+    SynthSwap public synthSwap;
     ProxyERC20 public proxySNX;
+    SynthUtil public synthUtil;
     ProxyERC20 public proxysUSD;
     ProxyERC20 public proxysETH;
     Liquidator public liquidator;
@@ -112,6 +122,7 @@ contract Setup is Test, Utils {
     LegacyTokenState public tokenStateSNX;
     MultiCollateralSynth public synthsUSD;
     MultiCollateralSynth public synthsETH;
+    DappMaintenance public dappMaintenance;
     FlexibleStorage public flexibleStorage;
     AddressResolver public addressResolver;
     CollateralErc20 public collateralErc20;
@@ -149,10 +160,12 @@ contract Setup is Test, Utils {
         // DEPLOYMENTS ---
         // // ------------------------------
 
+        dappMaintenance = new DappMaintenance(owner);
         addressResolver = new AddressResolver(owner);
         mixinResolver = new MixinResolver(address(addressResolver));
 
         smx = new SMX("SMX", "SMX", owner, 100_000_000 ether);
+        synthUtil = new SynthUtil(address(addressResolver));
         collateralUtil = new CollateralUtil(address(addressResolver));
         collateralManagerState = new CollateralManagerState(owner, owner);
         collateralManager = new CollateralManager(
@@ -202,11 +215,6 @@ contract Setup is Test, Utils {
         tokenStatesETH = new TokenState(owner, address(synthsETH));
         wrapperFactory = new WrapperFactory(owner, address(addressResolver));
         supplySchedule = new SupplySchedule(owner, 1551830400, 4);
-        tradingRewards = new TradingRewards(
-            owner,
-            owner,
-            address(addressResolver)
-        );
         directIntegrationManager = new DirectIntegrationManager(
             owner,
             address(addressResolver)
@@ -289,6 +297,18 @@ contract Setup is Test, Utils {
         delegateApprovals = new DelegateApprovals(
             owner,
             address(eternalStorage)
+        );
+        synthSwap = new SynthSwap(
+            address(synthsUSD),
+            address(router), // routerV4
+            address(addressResolver),
+            owner, // volumeRewards
+            treasury
+        );
+        tradingRewards = new TradingRewards(
+            owner,
+            user5, // periodController
+            address(addressResolver)
         );
 
         exchangeRates = new ExchangeRates(owner, address(addressResolver));
@@ -520,6 +540,7 @@ contract Setup is Test, Utils {
         tokenStateSNX.setBalanceOf(user2, 10 ether);
         tokenStateSNX.setBalanceOf(user3, 15 ether);
         tokenStateSNX.setBalanceOf(user4, 1000 ether);
+        tokenStateSNX.setBalanceOf(user5, 1000 ether);
         vm.stopPrank();
     }
 }
