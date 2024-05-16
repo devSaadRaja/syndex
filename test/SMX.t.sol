@@ -11,12 +11,17 @@ import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import {ISwapRouter} from "../src/contracts/SMX/interfaces/ISwapRouter.sol";
 import {IUniswapV3Pool} from "../src/contracts/SMX/interfaces/IUniswapV3Pool.sol";
 import {IUniswapV3Factory} from "../src/contracts/SMX/interfaces/IUniswapV3Factory.sol";
+import {IAggregationRouterV4} from "../src/contracts/SMX/interfaces/IAggregationRouterV4.sol";
 import {INonfungiblePositionManager} from "../src/contracts/SMX/interfaces/INonfungiblePositionManager.sol";
 
 import {RewardEscrow} from "../src/contracts/SMX/RewardEscrow.sol";
 import {vSMXRedeemer} from "../src/contracts/SMX/vSMXRedeemer.sol";
 import {SupplySchedule} from "../src/contracts/SMX/SupplySchedule.sol";
 import {MultipleMerkleDistributor} from "../src/contracts/SMX/MultipleMerkleDistributor.sol";
+
+import {SynthSwap} from "../src/contracts/SMX/Synthswap2.sol";
+import {AggregationRouterV4} from "../src/contracts/SMX/AggregationRouterV4.sol";
+import {IClipperExchangeInterface} from "../src/contracts/SMX/interfaces/IClipperExchangeInterface.sol";
 
 contract SMXTest is Setup {
     ISwapRouter swapRouter =
@@ -30,6 +35,9 @@ contract SMXTest is Setup {
     vSMXRedeemer public vSmxRedeemer;
     SupplySchedule public supplySchedule2;
     MultipleMerkleDistributor public multipleMerkleDistributor;
+
+    SynthSwap public synthSwap2;
+    AggregationRouterV4 public aggregationRouterV4;
 
     function setUp() public override {
         super.setUp();
@@ -86,6 +94,138 @@ contract SMXTest is Setup {
 
         // multipleMerkleDistributor.setMerkleRootForEpoch();
 
+        // IClipperExchangeInterface clipperExchangeInterface = IClipperExchangeInterface(
+        //         0x655eDCE464CC797526600a462A8154650EEe4B77
+        //     );
+
+        // aggregationRouterV4 = new AggregationRouterV4(
+        //     WETH,
+        //     address(clipperExchangeInterface)
+        // );
+
+        synthSwap2 = new SynthSwap(
+            address(synthsUSD),
+            address(swapRouter), // routerV4, aggregationRouterV4
+            address(addressResolver),
+            owner,
+            treasury
+        );
+
+        vm.stopPrank();
+    }
+
+    function testRouterV4() public {
+        vm.startPrank(owner);
+
+        // ! MAKE POOL ---
+
+        v3factory.createPool(address(proxysUSD), address(proxysETH), 3000); // take care of sequence of tokens
+        address pool = v3factory.getPool(
+            address(proxysUSD),
+            address(proxysETH),
+            3000
+        );
+
+        IUniswapV3Pool v3Pool = IUniswapV3Pool(pool);
+        v3Pool.initialize(79228162514264337593543950336);
+
+        console.log("--- POOL CREATED ---");
+
+        // ! ADD LIQUIDITY ---
+
+        INonfungiblePositionManager.MintParams
+            memory params = INonfungiblePositionManager.MintParams({
+                token0: address(proxysUSD),
+                token1: address(proxysETH),
+                fee: v3Pool.fee(),
+                tickLower: -120,
+                tickUpper: 120,
+                amount0Desired: 50 ether,
+                amount1Desired: 50 ether,
+                amount0Min: 0,
+                amount1Min: 0,
+                recipient: owner,
+                deadline: block.timestamp + 10 minutes
+            });
+
+        IERC20(address(proxysUSD)).approve(
+            address(nonfungiblePositionManager),
+            50 ether
+        );
+        IERC20(address(proxysETH)).approve(
+            address(nonfungiblePositionManager),
+            50 ether
+        );
+        nonfungiblePositionManager.mint(params);
+
+        console.log("--- ADDED LIQUIDITY ---");
+
+        // ! SWAP ---
+
+        ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
+            .ExactInputSingleParams({
+                tokenIn: address(proxysUSD),
+                tokenOut: address(proxysETH),
+                fee: v3Pool.fee(),
+                recipient: owner,
+                deadline: block.timestamp + 10 minutes,
+                amountIn: 1 ether,
+                amountOutMinimum: 0,
+                sqrtPriceLimitX96: 0
+            });
+        bytes memory _data = abi.encodeWithSelector(
+            ISwapRouter.exactInputSingle.selector,
+            inputParams
+        );
+
+        IERC20(address(proxysUSD)).approve(address(synthSwap2), 10 ether);
+        synthSwap2.uniswapSwapInto("sETH", address(proxysUSD), 10 ether, _data);
+
+        // ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
+        //     .ExactInputSingleParams({
+        //         tokenIn: address(proxysUSD),
+        //         tokenOut: address(proxysETH),
+        //         fee: v3Pool.fee(),
+        //         recipient: owner,
+        //         deadline: block.timestamp + 10 minutes,
+        //         amountIn: 1 ether,
+        //         amountOutMinimum: 0,
+        //         sqrtPriceLimitX96: 0
+        //     });
+        // bytes memory _data = abi.encodeWithSelector(
+        //     ISwapRouter.exactInputSingle.selector,
+        //     inputParams
+        // );
+
+        // IAggregationRouterV4.SwapDescription memory desc = IAggregationRouterV4
+        //     .SwapDescription({
+        //         srcToken: address(proxysUSD),
+        //         dstToken: address(proxysETH),
+        //         srcReceiver: payable(owner),
+        //         dstReceiver: payable(owner),
+        //         amount: 1 ether,
+        //         minReturnAmount: 0.01 ether,
+        //         flags: 1,
+        //         permit: new bytes(0)
+        //     });
+
+        // bytes memory data = abi.encodeWithSelector(
+        //     IAggregationRouterV4.swap.selector,
+        //     // IAggregationExecutor(address(swapRouter)),
+        //     swapRouter,
+        //     desc,
+        //     _data
+        // );
+
+        // console.log("BEFORE proxysUSD", proxysUSD.balanceOf(owner));
+        // console.log("BEFORE proxysETH", proxysETH.balanceOf(owner));
+
+        // IERC20(address(proxysUSD)).approve(address(synthSwap2), 10 ether);
+        // synthSwap2.uniswapSwapInto("sETH", address(proxysUSD), 10 ether, data);
+
+        // console.log("AFTER proxysUSD", proxysUSD.balanceOf(owner));
+        // console.log("AFTER proxysETH", proxysETH.balanceOf(owner));
+
         vm.stopPrank();
     }
 
@@ -102,7 +242,7 @@ contract SMXTest is Setup {
         );
 
         IUniswapV3Pool v3Pool = IUniswapV3Pool(pool);
-        v3Pool.initialize(792281625142644000000000000000);
+        v3Pool.initialize(79228162514264337593543950336);
 
         // ! ADD LIQUIDITY ---
 
@@ -150,8 +290,8 @@ contract SMXTest is Setup {
                 token0: address(proxysUSD),
                 token1: address(proxysETH),
                 fee: fee,
-                tickLower: 45960,
-                tickUpper: 46200,
+                tickLower: -120,
+                tickUpper: 120,
                 amount0Desired: 50 ether,
                 amount1Desired: 50 ether,
                 amount0Min: 0,
@@ -164,21 +304,21 @@ contract SMXTest is Setup {
 
         // ! SWAP ---
 
-        // IERC20(address(proxysUSD)).approve(address(swapRouter), 10 ether);
-        // ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
-        //     .ExactInputSingleParams({
-        //         tokenIn: address(proxysUSD),
-        //         tokenOut: address(proxysETH),
-        //         fee: fee,
-        //         recipient: owner,
-        //         deadline: block.timestamp + 10 minutes,
-        //         amountIn: 1 ether,
-        //         amountOutMinimum: 0,
-        //         sqrtPriceLimitX96: 0
-        //     });
+        IERC20(address(proxysUSD)).approve(address(swapRouter), 10 ether);
+        ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
+            .ExactInputSingleParams({
+                tokenIn: address(proxysUSD),
+                tokenOut: address(proxysETH),
+                fee: fee,
+                recipient: owner,
+                deadline: block.timestamp + 10 minutes,
+                amountIn: 1 ether,
+                amountOutMinimum: 0,
+                sqrtPriceLimitX96: 0
+            });
 
-        // uint256 amountOut = swapRouter.exactInputSingle(inputParams);
-        // console.log("amountOut", amountOut);
+        uint256 amountOut = swapRouter.exactInputSingle(inputParams);
+        console.log("amountOut", amountOut);
 
         IERC20(address(proxysETH)).approve(address(swapRouter), 10 ether);
         ISwapRouter.ExactOutputSingleParams memory outputParams = ISwapRouter
@@ -188,7 +328,7 @@ contract SMXTest is Setup {
                 fee: fee,
                 recipient: owner,
                 deadline: block.timestamp + 10 minutes,
-                amountOut: 0.099 ether,
+                amountOut: 1 ether,
                 amountInMaximum: 10 ether,
                 sqrtPriceLimitX96: 0
             });

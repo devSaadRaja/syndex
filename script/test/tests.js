@@ -24,7 +24,7 @@ console.log(encodePriceSqrt(1000, 1000));
 
 const { nearestUsableTick } = require("@uniswap/v3-sdk");
 
-const tick = 46054;
+const tick = 0;
 const tickSpacing = 60;
 
 const tickLower = nearestUsableTick(tick, tickSpacing) - tickSpacing * 2;
