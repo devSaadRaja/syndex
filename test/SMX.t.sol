@@ -178,25 +178,6 @@ contract SMXTest is Setup {
             inputParams
         );
 
-        IERC20(address(proxysUSD)).approve(address(synthSwap2), 10 ether);
-        synthSwap2.uniswapSwapInto("sETH", address(proxysUSD), 10 ether, _data);
-
-        // ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
-        //     .ExactInputSingleParams({
-        //         tokenIn: address(proxysUSD),
-        //         tokenOut: address(proxysETH),
-        //         fee: v3Pool.fee(),
-        //         recipient: owner,
-        //         deadline: block.timestamp + 10 minutes,
-        //         amountIn: 1 ether,
-        //         amountOutMinimum: 0,
-        //         sqrtPriceLimitX96: 0
-        //     });
-        // bytes memory _data = abi.encodeWithSelector(
-        //     ISwapRouter.exactInputSingle.selector,
-        //     inputParams
-        // );
-
         // IAggregationRouterV4.SwapDescription memory desc = IAggregationRouterV4
         //     .SwapDescription({
         //         srcToken: address(proxysUSD),
@@ -220,8 +201,10 @@ contract SMXTest is Setup {
         // console.log("BEFORE proxysUSD", proxysUSD.balanceOf(owner));
         // console.log("BEFORE proxysETH", proxysETH.balanceOf(owner));
 
-        // IERC20(address(proxysUSD)).approve(address(synthSwap2), 10 ether);
-        // synthSwap2.uniswapSwapInto("sETH", address(proxysUSD), 10 ether, data);
+        IERC20(address(proxysUSD)).approve(address(synthSwap2), 2 ether);
+        synthSwap2.uniswapSwapInto("sETH", address(proxysUSD), 2 ether, _data);
+        // // IERC20(address(proxysUSD)).approve(address(synthSwap2), 10 ether);
+        // // synthSwap2.uniswapSwapInto("sETH", address(proxysUSD), 10 ether, data);
 
         // console.log("AFTER proxysUSD", proxysUSD.balanceOf(owner));
         // console.log("AFTER proxysETH", proxysETH.balanceOf(owner));

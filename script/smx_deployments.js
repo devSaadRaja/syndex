@@ -115,7 +115,7 @@ async function main() {
 
   // const SynthSwap = await contractDeploy("SynthSwap", [
   //   deployments["SynthsUSD"],
-  //   deployments["UniswapRouter"],
+  //   deployments["UniswapSwapRouter"],
   //   deployments["AddressResolver"],
   //   deployer,
   //   treasury,

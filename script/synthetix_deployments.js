@@ -7,8 +7,13 @@ const outputFilePath =
     : "./test_tenderly_deployments.json";
 
 const WETH = require("../abis/weth.json");
+const uniswapPair = require("../abis/uniswap-pair.json");
 const uniswapRouter = require("../abis/uniswap-router.json");
 const uniswapFactory = require("../abis/uniswap-factory.json");
+const uniswapPoolV3 = require("../abis/uniswap-pool-v3.json");
+const uniswapFactoryV3 = require("../abis/uniswap-factory-v3.json");
+const uniswapSwapRouter = require("../abis/uniswap-swaprouter.json");
+const uniswapNonfungiblePositionManager = require("../abis/uniswap-nonfungible-position-manager.json");
 
 const { resolve } = require("path");
 const { config } = require("dotenv");
@@ -22,6 +27,7 @@ const contractsPath = {
   Proxy: "src/contracts/Proxy.sol:Proxy",
   Issuer: "src/contracts/Issuer.sol:Issuer",
   Synthetix: "src/contracts/Synthetix.sol:Synthetix",
+  Exchanger: "src/contracts/Exchanger.sol:Exchanger",
   ProxyERC20: "src/contracts/ProxyERC20.sol:ProxyERC20",
   TokenState: "src/contracts/TokenState.sol:TokenState",
   RewardEscrow: "src/contracts/RewardEscrow.sol:RewardEscrow",
@@ -31,28 +37,31 @@ const contractsPath = {
   SupplySchedule: "src/contracts/SupplySchedule.sol:SupplySchedule",
   AddressResolver: "src/contracts/AddressResolver.sol:AddressResolver",
   CollateralManager: "src/contracts/CollateralManager.sol:CollateralManager",
+  MultiCollateralSynth:
+    "src/contracts/MultiCollateralSynth.sol:MultiCollateralSynth",
   RewardEscrowV2Storage:
     "src/contracts/RewardEscrowV2Storage.sol:RewardEscrowV2Storage",
   CollateralManagerState:
     "src/contracts/CollateralManagerState.sol:CollateralManagerState",
 };
 
+const deployments = JSON.parse(readFileSync(outputFilePath, "utf-8"));
+
+// * Second parameter is chainId, 1 for Ethereum mainnet
+const provider_tenderly = new ethers.providers.JsonRpcProvider(
+  process.env.TENDERLY_MAIN === "true"
+    ? `${process.env.TENDERLY_MAINNET_FORK_URL}`
+    : `${process.env.TENDERLY_MAINNET_FORK_URL_TEST}`,
+  1
+);
+
+const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider_tenderly);
+
+const deployer = "0xE536B4D7cf1e346D985cEe807e16B1b11B019976";
+const user = "0xc5Fa3B9D1C223E96eC77CB48880eeBeb9DaB4ad7";
+const treasury = "0x35D9466FFa2497fa919203809C2F150F493A0f73";
+
 async function main() {
-  const deployments = JSON.parse(readFileSync(outputFilePath, "utf-8"));
-
-  // * Second parameter is chainId, 1 for Ethereum mainnet
-  const provider_tenderly = new ethers.providers.JsonRpcProvider(
-    process.env.TENDERLY_MAIN === "true"
-      ? `${process.env.TENDERLY_MAINNET_FORK_URL}`
-      : `${process.env.TENDERLY_MAINNET_FORK_URL_TEST}`,
-    1
-  );
-  const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider_tenderly);
-
-  const deployer = "0xE536B4D7cf1e346D985cEe807e16B1b11B019976";
-  const user = "0xc5Fa3B9D1C223E96eC77CB48880eeBeb9DaB4ad7";
-  const treasury = "0x35D9466FFa2497fa919203809C2F150F493A0f73";
-
   // ! ------------------------------------------------------------------------
   // ! DEPLOYMENTS ------------------------------------------------------------
   // ! ------------------------------------------------------------------------
@@ -860,7 +869,278 @@ async function main() {
   // );
   // console.log("ADDED LIQUIDITY");
 
-  console.log("--- COMPLETED ---");
+  // ! ------------------------------------------------------------
+  // await addSynths();
+  // ! ------------------------------------------------------------
+
+  // ! ------------------------------------------------------------
+  // await uniswapV3();
+  // ! ------------------------------------------------------------
+
+  console.log("[[[ COMPLETED ]]]");
+}
+
+async function uniswapV3() {
+  // const FactoryContract = new ethers.Contract(
+  //   deployments["UniswapFactoryV3"],
+  //   uniswapFactoryV3,
+  //   signer
+  // );
+
+  // await FactoryContract.createPool(
+  //   deployments["ProxysUSD"],
+  //   deployments["ProxysETH"],
+  //   3000
+  // );
+  // deployments["ETHUSDV3"] = await FactoryContract.getPool(
+  //   deployments["ProxysUSD"],
+  //   deployments["ProxysETH"],
+  //   3000
+  // );
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+
+  // const v3Pool = new ethers.Contract(
+  //   deployments["ETHUSDV3"],
+  //   uniswapPoolV3,
+  //   signer
+  // );
+  // await v3Pool.initialize(79228162514264337593543950336n);
+
+  // // console.log("=== POOL CREATED ===");
+
+  const proxysUSD = await ethers.getContractAt(
+    contractsPath.ProxyERC20,
+    deployments["ProxysUSD"],
+    signer
+  );
+  let balanceOfsUSD = await proxysUSD.balanceOf(deployer);
+  console.log("balanceOfsUSD", balanceOfsUSD);
+  // await proxysUSD.approve(
+  //   deployments["NonfungiblePositionManager"],
+  //   parseEth(50)
+  // );
+
+  const proxysETH = await ethers.getContractAt(
+    contractsPath.ProxyERC20,
+    deployments["ProxysETH"],
+    signer
+  );
+  let balanceOfsETH = await proxysETH.balanceOf(deployer);
+  console.log("balanceOfsETH", balanceOfsETH);
+  // await proxysETH.approve(
+  //   deployments["NonfungiblePositionManager"],
+  //   parseEth(50)
+  // );
+
+  // const params = {
+  //   token0: deployments["ProxysUSD"],
+  //   token1: deployments["ProxysETH"],
+  //   fee: v3Pool.fee(),
+  //   tickLower: -120,
+  //   tickUpper: 120,
+  //   amount0Desired: parseEth(30),
+  //   amount1Desired: parseEth(30),
+  //   amount0Min: 0,
+  //   amount1Min: 0,
+  //   recipient: deployer,
+  //   deadline: parseInt(new Date().getTime() / 1000) + 600,
+  // };
+  // const nonfungiblePositionManager = new ethers.Contract(
+  //   deployments["NonfungiblePositionManager"],
+  //   uniswapNonfungiblePositionManager,
+  //   signer
+  // );
+  // await nonfungiblePositionManager.mint(params);
+
+  // // console.log("--- ADDED LIQUIDITY ---");
+}
+
+async function addSynths() {
+  // Gold | Wheat | Crude Oil | Orange Juice | Silver | Platinum | Palladium | Livestock
+  // Coffee | Sugar | Cotton | Soybeans | Natural Gas | Iron | Cocoa | Steel | Copper
+  // await deploySynth("ProxyGold", "SynthGold", "Gold", "TokenStateGold");
+  // await deploySynth("ProxyWheat", "SynthWheat", "Wheat", "TokenStateWheat");
+  // await deploySynth(
+  //   "ProxyCrudeOil",
+  //   "SynthCrudeOil",
+  //   "CrudeOil",
+  //   "TokenStateCrudeOil"
+  // );
+  // await deploySynth(
+  //   "ProxyOrangeJuice",
+  //   "SynthOrangeJuice",
+  //   "OrangeJuice",
+  //   "TokenStateOrangeJuice"
+  // );
+  // await deploySynth("ProxySilver", "SynthSilver", "Silver", "TokenStateSilver");
+  // await deploySynth(
+  //   "ProxyPlatinum",
+  //   "SynthPlatinum",
+  //   "Platinum",
+  //   "TokenStatePlatinum"
+  // );
+  // await deploySynth(
+  //   "ProxyPalladium",
+  //   "SynthPalladium",
+  //   "Palladium",
+  //   "TokenStatePalladium"
+  // );
+  // await deploySynth(
+  //   "ProxyLivestock",
+  //   "SynthLivestock",
+  //   "Livestock",
+  //   "TokenStateLivestock"
+  // );
+  // await deploySynth("ProxyCoffee", "SynthCoffee", "Coffee", "TokenStateCoffee");
+  // await deploySynth("ProxySugar", "SynthSugar", "Sugar", "TokenStateSugar");
+  // await deploySynth("ProxyCotton", "SynthCotton", "Cotton", "TokenStateCotton");
+  // await deploySynth(
+  //   "ProxySoybeans",
+  //   "SynthSoybeans",
+  //   "Soybeans",
+  //   "TokenStateSoybeans"
+  // );
+  // await deploySynth(
+  //   "ProxyNaturalGas",
+  //   "SynthNaturalGas",
+  //   "NaturalGas",
+  //   "TokenStateNaturalGas"
+  // );
+  // await deploySynth("ProxyIron", "SynthIron", "Iron", "TokenStateIron");
+  // await deploySynth("ProxyCocoa", "SynthCocoa", "Cocoa", "TokenStateCocoa");
+  // await deploySynth("ProxySteel", "SynthSteel", "Steel", "TokenStateSteel");
+  // await deploySynth("ProxyCopper", "SynthCopper", "Copper", "TokenStateCopper");
+}
+
+async function deploySynth(proxyName, synthName, synthSymbol, tokenStateName) {
+  const Proxy = await contractDeploy("ProxyERC20", [deployer]);
+  deployments[proxyName] = Proxy.address;
+  await verify("ProxyERC20", Proxy.address);
+  writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+
+  const TokenState = await contractDeploy("TokenState", [
+    deployer,
+    ADDRESS_ZERO, // Synth
+  ]);
+  deployments[tokenStateName] = TokenState.address;
+  await verify("TokenState", TokenState.address);
+  writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+
+  const Synth = await contractDeploy("MultiCollateralSynth", [
+    deployments[proxyName],
+    deployments[tokenStateName],
+    synthName,
+    synthSymbol,
+    deployer,
+    ethers.utils.formatBytes32String(synthSymbol),
+    0,
+    deployments["AddressResolver"],
+  ]);
+  deployments[synthName] = Synth.address;
+  await verify("MultiCollateralSynth", Synth.address);
+  writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+
+  console.log("=== DEPLOYMENTS ===");
+
+  // ! ---
+
+  let names = [];
+  let addresses = [];
+  names.push(ethers.utils.formatBytes32String(synthName));
+  addresses.push(deployments[synthName]);
+
+  const addressResolver = await ethers.getContractAt(
+    contractsPath.AddressResolver,
+    deployments["AddressResolver"],
+    signer
+  );
+  await addressResolver.importAddresses(names, addresses);
+
+  console.log("=== IMPORT ADDRESSES ===");
+
+  const abi = ["function rebuildCache() public"];
+  const contract = new ethers.Contract(deployments[synthName], abi, signer);
+  await contract.rebuildCache();
+
+  console.log("=== REBUILD CACHE ===");
+
+  // ! ---
+
+  let synthNamesInResolver = [];
+  let synthKeys = [];
+  synthNamesInResolver.push(ethers.utils.formatBytes32String(synthName));
+  synthKeys.push(ethers.utils.formatBytes32String(synthSymbol));
+
+  const collateralETH = await ethers.getContractAt(
+    contractsPath.CollateralETH,
+    deployments["CollateralEth"],
+    signer
+  );
+  await collateralETH.addSynths(synthNamesInResolver, synthKeys);
+
+  console.log("=== collateralETH.addSynths ===");
+
+  const collateralManager = await ethers.getContractAt(
+    contractsPath.CollateralManager,
+    deployments["CollateralManager"],
+    signer
+  );
+  await collateralManager.addSynths(synthNamesInResolver, synthKeys);
+
+  console.log("=== collateralManager.addSynths ===");
+
+  // ! ---
+
+  const issuer = await ethers.getContractAt(
+    contractsPath.Issuer,
+    deployments["Issuer"],
+    signer
+  );
+  await issuer.addSynth(deployments[synthName]);
+
+  const proxy = await ethers.getContractAt(
+    contractsPath.ProxyERC20,
+    deployments[proxyName],
+    signer
+  );
+  await proxy.setTarget(deployments[synthName]);
+
+  const tokenState = await ethers.getContractAt(
+    contractsPath.TokenState,
+    deployments[tokenStateName],
+    signer
+  );
+  await tokenState.setAssociatedContract(deployments[synthName]);
+
+  const exchangeRates = await ethers.getContractAt(
+    contractsPath.ExchangeRates,
+    deployments["ExchangeRates"],
+    signer
+  );
+  await exchangeRates.addAggregator(
+    ethers.utils.formatBytes32String(synthSymbol),
+    deployments["AggregatorETH"] // deploy and add oracle
+  );
+
+  console.log("=== EXCHANGE RATES ADDED ===");
+
+  // ! ---
+
+  let synthKey = [];
+  let exchangeFeeRates = [];
+  synthKey.push(ethers.utils.formatBytes32String(synthSymbol));
+  exchangeFeeRates.push(1);
+
+  const systemSettings = await ethers.getContractAt(
+    contractsPath.SystemSettings,
+    deployments["SystemSettings"],
+    signer
+  );
+  await systemSettings.setExchangeFeeRateForSynths(synthKey, exchangeFeeRates);
+
+  console.log("=== systemSettings.setExchangeFeeRateForSynths ===");
+
+  console.log(`=== ${synthSymbol} DONE ===`);
 }
 
 const contractDeploy = async (name, args, libraries) => {

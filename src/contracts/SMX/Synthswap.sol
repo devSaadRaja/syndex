@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "forge-std/Test.sol";
+
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 import "./interfaces/ISynthSwap.sol";
-// import "./interfaces/IAggregationRouterV4.sol";
 import "./interfaces/IAggregationExecutor.sol";
 import "../../interfaces/ISynthetix.sol";
 import "../../interfaces/IAddressResolver.sol";
+import {ISwapRouter} from "./interfaces/ISwapRouter.sol";
 
 import "./libraries/RevertReasonParser.sol";
 
@@ -20,7 +21,7 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     IERC20 immutable sUSD;
-    IUniswapV2Router02 immutable router; // IAggregationRouterV4
+    ISwapRouter immutable router; // IAggregationRouterV4
     IAddressResolver immutable addressResolver;
     address immutable volumeRewards;
     address immutable treasury;
@@ -36,13 +37,13 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
 
     constructor(
         address _sUSD,
-        address _aggregationRouterV4,
+        address _router,
         address _addressResolver,
         address _volumeRewards,
         address _treasury
     ) Ownable(msg.sender) {
         sUSD = IERC20(_sUSD);
-        router = IUniswapV2Router02(_aggregationRouterV4); // IAggregationRouterV4
+        router = ISwapRouter(_router); // IAggregationRouterV4
         addressResolver = IAddressResolver(_addressResolver);
         volumeRewards = _volumeRewards;
         treasury = _treasury;
