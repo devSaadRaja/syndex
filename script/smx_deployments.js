@@ -113,16 +113,16 @@ async function main() {
   // });
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
-  // const SynthSwap = await contractDeploy("SynthSwap", [
-  //   deployments["SynthsUSD"],
-  //   deployments["UniswapSwapRouter"],
-  //   deployments["AddressResolver"],
-  //   deployer,
-  //   treasury,
-  // ]);
-  // deployments["SynthSwap"] = SynthSwap.address;
-  // await verify("SynthSwap", SynthSwap.address);
-  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+  const SynthSwap = await contractDeploy("SynthSwap", [
+    deployments["ProxysUSD"],
+    deployments["UniswapSwapRouter"],
+    deployments["AddressResolver"],
+    deployer,
+    treasury,
+  ]);
+  deployments["SynthSwap"] = SynthSwap.address;
+  await verify("SynthSwap", SynthSwap.address);
+  writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const DappMaintenance = await contractDeploy("DappMaintenance", [deployer]);
   // deployments["DappMaintenance"] = DappMaintenance.address;

@@ -109,7 +109,7 @@ contract SMXTest is Setup {
 
         token = new Token("Token", "TKN", owner, 1_000_000 ether);
         synthSwap2 = new SynthSwap(
-            address(synthsUSD),
+            address(proxysUSD),
             address(swapRouter), // routerV4, aggregationRouterV4
             address(addressResolver),
             owner,
@@ -167,6 +167,8 @@ contract SMXTest is Setup {
 
         // ! SWAP ---
 
+        // ? uniswapSwapInto
+
         ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
             .ExactInputSingleParams({
                 tokenIn: address(token),
@@ -203,16 +205,52 @@ contract SMXTest is Setup {
         //     _data
         // );
 
-        // console.log("BEFORE proxysUSD", proxysUSD.balanceOf(owner));
-        // console.log("BEFORE token", token.balanceOf(owner));
+        console.log("BEFORE proxysUSD", proxysUSD.balanceOf(owner));
+        console.log("BEFORE token", token.balanceOf(owner));
 
         IERC20(address(token)).approve(address(synthSwap2), 2 ether);
         synthSwap2.uniswapSwapInto("sETH", address(token), 1 ether, _data);
         // // IERC20(address(proxysUSD)).approve(address(synthSwap2), 10 ether);
         // // synthSwap2.uniswapSwapInto("sETH", address(proxysUSD), 10 ether, data);
 
-        // console.log("AFTER proxysUSD", proxysUSD.balanceOf(owner));
-        // console.log("AFTER token", token.balanceOf(owner));
+        console.log(
+            "AFTER uniswapSwapInto proxysUSD",
+            proxysUSD.balanceOf(owner)
+        );
+        console.log("AFTER uniswapSwapInto token", token.balanceOf(owner));
+
+        // ? uniswapSwapOutOf
+
+        ISwapRouter.ExactInputSingleParams memory outParams = ISwapRouter
+            .ExactInputSingleParams({
+                tokenIn: address(proxysUSD),
+                tokenOut: address(token),
+                fee: v3Pool.fee(),
+                recipient: address(synthSwap2),
+                deadline: block.timestamp + 10 minutes,
+                amountIn: 0.5 ether,
+                amountOutMinimum: 0,
+                sqrtPriceLimitX96: 0
+            });
+        bytes memory _dataOut = abi.encodeWithSelector(
+            ISwapRouter.exactInputSingle.selector,
+            outParams
+        );
+
+        IERC20(address(proxysETH)).approve(address(synthSwap2), 2 ether);
+        synthSwap2.uniswapSwapOutOf(
+            "sETH",
+            address(token),
+            0.8 ether,
+            2 ether,
+            _dataOut
+        );
+
+        console.log(
+            "AFTER uniswapSwapOutOf proxysUSD",
+            proxysUSD.balanceOf(owner)
+        );
+        console.log("AFTER uniswapSwapOutOf token", token.balanceOf(owner));
 
         vm.stopPrank();
     }
