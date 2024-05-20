@@ -8,6 +8,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
+import {Token} from "../src/contracts/test/Token.sol";
+
 import {ISwapRouter} from "../src/contracts/SMX/interfaces/ISwapRouter.sol";
 import {IUniswapV3Pool} from "../src/contracts/SMX/interfaces/IUniswapV3Pool.sol";
 import {IUniswapV3Factory} from "../src/contracts/SMX/interfaces/IUniswapV3Factory.sol";
@@ -30,6 +32,8 @@ contract SMXTest is Setup {
         IUniswapV3Factory(0x1F98431c8aD98523631AE4a59f267346ea31F984);
     INonfungiblePositionManager nonfungiblePositionManager =
         INonfungiblePositionManager(0xC36442b4a4522E871399CD717aBDD847Ab11FE88);
+
+    Token public token;
 
     RewardEscrow public rewardEscrow2;
     vSMXRedeemer public vSmxRedeemer;
@@ -103,6 +107,7 @@ contract SMXTest is Setup {
         //     address(clipperExchangeInterface)
         // );
 
+        token = new Token("Token", "TKN", owner, 1_000_000 ether);
         synthSwap2 = new SynthSwap(
             address(synthsUSD),
             address(swapRouter), // routerV4, aggregationRouterV4
@@ -119,10 +124,10 @@ contract SMXTest is Setup {
 
         // ! MAKE POOL ---
 
-        v3factory.createPool(address(proxysUSD), address(proxysETH), 3000); // take care of sequence of tokens
+        v3factory.createPool(address(proxysUSD), address(token), 3000); // take care of sequence of tokens
         address pool = v3factory.getPool(
             address(proxysUSD),
-            address(proxysETH),
+            address(token),
             3000
         );
 
@@ -135,8 +140,8 @@ contract SMXTest is Setup {
 
         INonfungiblePositionManager.MintParams
             memory params = INonfungiblePositionManager.MintParams({
-                token0: address(proxysUSD),
-                token1: address(proxysETH),
+                token0: address(token),
+                token1: address(proxysUSD),
                 fee: v3Pool.fee(),
                 tickLower: -120,
                 tickUpper: 120,
@@ -152,7 +157,7 @@ contract SMXTest is Setup {
             address(nonfungiblePositionManager),
             50 ether
         );
-        IERC20(address(proxysETH)).approve(
+        IERC20(address(token)).approve(
             address(nonfungiblePositionManager),
             50 ether
         );
@@ -164,10 +169,10 @@ contract SMXTest is Setup {
 
         ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
             .ExactInputSingleParams({
-                tokenIn: address(proxysUSD),
-                tokenOut: address(proxysETH),
+                tokenIn: address(token),
+                tokenOut: address(proxysUSD),
                 fee: v3Pool.fee(),
-                recipient: owner,
+                recipient: address(synthSwap2),
                 deadline: block.timestamp + 10 minutes,
                 amountIn: 1 ether,
                 amountOutMinimum: 0,
@@ -181,7 +186,7 @@ contract SMXTest is Setup {
         // IAggregationRouterV4.SwapDescription memory desc = IAggregationRouterV4
         //     .SwapDescription({
         //         srcToken: address(proxysUSD),
-        //         dstToken: address(proxysETH),
+        //         dstToken: address(token),
         //         srcReceiver: payable(owner),
         //         dstReceiver: payable(owner),
         //         amount: 1 ether,
@@ -199,15 +204,15 @@ contract SMXTest is Setup {
         // );
 
         // console.log("BEFORE proxysUSD", proxysUSD.balanceOf(owner));
-        // console.log("BEFORE proxysETH", proxysETH.balanceOf(owner));
+        // console.log("BEFORE token", token.balanceOf(owner));
 
-        IERC20(address(proxysUSD)).approve(address(synthSwap2), 2 ether);
-        synthSwap2.uniswapSwapInto("sETH", address(proxysUSD), 2 ether, _data);
+        IERC20(address(token)).approve(address(synthSwap2), 2 ether);
+        synthSwap2.uniswapSwapInto("sETH", address(token), 1 ether, _data);
         // // IERC20(address(proxysUSD)).approve(address(synthSwap2), 10 ether);
         // // synthSwap2.uniswapSwapInto("sETH", address(proxysUSD), 10 ether, data);
 
         // console.log("AFTER proxysUSD", proxysUSD.balanceOf(owner));
-        // console.log("AFTER proxysETH", proxysETH.balanceOf(owner));
+        // console.log("AFTER token", token.balanceOf(owner));
 
         vm.stopPrank();
     }
@@ -270,8 +275,8 @@ contract SMXTest is Setup {
 
         INonfungiblePositionManager.MintParams
             memory params = INonfungiblePositionManager.MintParams({
-                token0: address(proxysUSD),
-                token1: address(proxysETH),
+                token0: address(proxysETH),
+                token1: address(proxysUSD),
                 fee: fee,
                 tickLower: -120,
                 tickUpper: 120,
