@@ -205,19 +205,19 @@ contract SMXTest is Setup {
         //     _data
         // );
 
-        console.log("BEFORE proxysUSD", proxysUSD.balanceOf(owner));
-        console.log("BEFORE token", token.balanceOf(owner));
+        console.log("BEFORE token\n", token.balanceOf(owner));
+        console.log("BEFORE proxysETH\n", proxysETH.balanceOf(owner));
 
         IERC20(address(token)).approve(address(synthSwap2), 2 ether);
         synthSwap2.uniswapSwapInto("sETH", address(token), 1 ether, _data);
         // // IERC20(address(proxysUSD)).approve(address(synthSwap2), 10 ether);
         // // synthSwap2.uniswapSwapInto("sETH", address(proxysUSD), 10 ether, data);
 
+        console.log("AFTER uniswapSwapInto token\n", token.balanceOf(owner));
         console.log(
-            "AFTER uniswapSwapInto proxysUSD",
-            proxysUSD.balanceOf(owner)
+            "AFTER uniswapSwapInto proxysETH\n",
+            proxysETH.balanceOf(owner)
         );
-        console.log("AFTER uniswapSwapInto token", token.balanceOf(owner));
 
         // ? uniswapSwapOutOf
 
@@ -246,11 +246,39 @@ contract SMXTest is Setup {
             _dataOut
         );
 
+        console.log("AFTER uniswapSwapOutOf token\n", token.balanceOf(owner));
         console.log(
-            "AFTER uniswapSwapOutOf proxysUSD",
-            proxysUSD.balanceOf(owner)
+            "AFTER uniswapSwapOutOf proxysETH\n",
+            proxysETH.balanceOf(owner)
         );
-        console.log("AFTER uniswapSwapOutOf token", token.balanceOf(owner));
+
+        ISwapRouter.ExactInputSingleParams memory paramsss = ISwapRouter
+            .ExactInputSingleParams({
+                tokenIn: address(token),
+                tokenOut: address(proxysUSD),
+                fee: v3Pool.fee(),
+                recipient: address(synthSwap2),
+                deadline: block.timestamp + 10 minutes,
+                amountIn: 1 ether,
+                amountOutMinimum: 0,
+                sqrtPriceLimitX96: 0
+            });
+        bytes memory _dataaa = abi.encodeWithSelector(
+            ISwapRouter.exactInputSingle.selector,
+            paramsss
+        );
+
+        console.log();
+        console.log();
+
+        console.log("BEFORE token\n", token.balanceOf(owner));
+        console.log("BEFORE proxysUSD\n", proxysUSD.balanceOf(owner));
+
+        IERC20(address(token)).approve(address(synthSwap2), 2 ether);
+        synthSwap2.uniswapSwapInto("sUSD", address(token), 1 ether, _dataaa);
+
+        console.log("AFTER token\n", token.balanceOf(owner));
+        console.log("AFTER proxysUSD\n", proxysUSD.balanceOf(owner));
 
         vm.stopPrank();
     }

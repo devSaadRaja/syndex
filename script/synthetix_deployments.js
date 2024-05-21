@@ -822,6 +822,10 @@ async function main() {
   //   ethers.utils.formatBytes32String("sETH"),
   //   deployments["AggregatorETH"]
   // );
+  // await exchangeRates.addAggregator(
+  //   ethers.utils.formatBytes32String("TKN"),
+  //   deployments["AggregatorETH"]
+  // );
 
   // const supplySchedule = await ethers.getContractAt(
   //   contractsPath.SupplySchedule,
