@@ -9,6 +9,19 @@ config({ path: resolve(__dirname, "./.env") });
 const tenderly = require("@tenderly/hardhat-tenderly");
 tenderly.setup({ automaticVerirication: false });
 
+var url, chainId;
+const option = Number(process.env.TENDERLY_MAIN_OPTION);
+if (option == 1) {
+  url = process.env.TENDERLY_MAINNET_FORK_URL_TEST;
+  chainId = 1;
+} else if (option == 2) {
+  url = process.env.TENDERLY_MAINNET_FORK_URL;
+  chainId = 1;
+} else if (option == 3) {
+  url = process.env.TENDERLY_ARBITRUM_FORK_URL;
+  chainId = 42161;
+}
+
 module.exports = {
   solidity: {
     compilers: [
@@ -44,11 +57,8 @@ module.exports = {
       accounts: [process.env.PRIVATE_KEY],
     },
     tenderly: {
-      url:
-        process.env.TENDERLY_MAIN === "true"
-          ? `${process.env.TENDERLY_MAINNET_FORK_URL}`
-          : `${process.env.TENDERLY_MAINNET_FORK_URL_TEST}`,
-      chainId: 1,
+      url,
+      chainId,
     },
     // mainnet: {
     //   url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.MAINNET_ALCHEMY_API_KEY}`,

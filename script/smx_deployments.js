@@ -1,10 +1,22 @@
 const { tenderly } = require("hardhat");
 
 const { readFileSync, writeFileSync } = require("fs");
-const outputFilePath =
-  process.env.TENDERLY_MAIN === "true"
-    ? "./tenderly_deployments.json"
-    : "./test_tenderly_deployments.json";
+
+var url, chainId, outputFilePath;
+const option = Number(process.env.TENDERLY_MAIN_OPTION);
+if (option == 1) {
+  url = process.env.TENDERLY_MAINNET_FORK_URL_TEST;
+  outputFilePath = "./test_tenderly_deployments.json";
+  chainId = 1;
+} else if (option == 2) {
+  url = process.env.TENDERLY_MAINNET_FORK_URL;
+  outputFilePath = "./tenderly_deployments.json";
+  chainId = 1;
+} else if (option == 3) {
+  url = process.env.TENDERLY_ARBITRUM_FORK_URL;
+  outputFilePath = "./tenderly_arb_deployments.json";
+  chainId = 42161;
+}
 
 const WETH = require("../abis/weth.json");
 const uniswapRouter = require("../abis/uniswap-router.json");
@@ -27,13 +39,7 @@ const contractsPath = {
 async function main() {
   const deployments = JSON.parse(readFileSync(outputFilePath, "utf-8"));
 
-  // * Second parameter is chainId, 1 for Ethereum mainnet
-  const provider_tenderly = new ethers.providers.JsonRpcProvider(
-    process.env.TENDERLY_MAIN === "true"
-      ? `${process.env.TENDERLY_MAINNET_FORK_URL}`
-      : `${process.env.TENDERLY_MAINNET_FORK_URL_TEST}`,
-    1
-  );
+  const provider_tenderly = new ethers.providers.JsonRpcProvider(url, chainId);
   const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider_tenderly);
 
   const deployer = "0xE536B4D7cf1e346D985cEe807e16B1b11B019976";
@@ -78,14 +84,6 @@ async function main() {
   // );
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
-  // const SMXSafeDecimalMath = await contractDeploy(
-  //   contractsPath.SMXSafeDecimalMath,
-  //   []
-  // );
-  // deployments["SMXSafeDecimalMath"] = SMXSafeDecimalMath.address;
-  // await verify(contractsPath.SMXSafeDecimalMath, SMXSafeDecimalMath.address);
-  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-
   // const SMXRewardEscrow = await contractDeploy(contractsPath.SMXRewardEscrow, [
   //   deployer,
   //   deployments["SMX"],
@@ -102,27 +100,31 @@ async function main() {
   // await verify("MultipleMerkleDistributor", MultipleMerkleDistributor.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
-  // const SMXSupplySchedule = await contractDeploy(contractsPath.SMXSupplySchedule, [
-  //   deployer,
-  //   treasury,
-  // ]);
+  // const SMXSupplySchedule = await contractDeploy(
+  //   contractsPath.SMXSupplySchedule,
+  //   [deployer, treasury],
+  //   {
+  //     libraries: {
+  //       SafeDecimalMath: deployments["SafeDecimalMath"],
+  //     },
+  //   }
+  // );
   // deployments["SMXSupplySchedule"] = SMXSupplySchedule.address;
   // await verify(contractsPath.SMXSupplySchedule, SMXSupplySchedule.address, {
-  //   contractsPath.SMXSafeDecimalMath:
-  //     deployments["SMXSafeDecimalMath"],
+  //   SafeDecimalMath: deployments["SafeDecimalMath"],
   // });
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
-  const SynthSwap = await contractDeploy("SynthSwap", [
-    deployments["ProxysUSD"],
-    deployments["UniswapSwapRouter"],
-    deployments["AddressResolver"],
-    deployer,
-    treasury,
-  ]);
-  deployments["SynthSwap"] = SynthSwap.address;
-  await verify("SynthSwap", SynthSwap.address);
-  writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+  // const SynthSwap = await contractDeploy("SynthSwap", [
+  //   deployments["ProxysUSD"],
+  //   deployments["UniswapSwapRouter"],
+  //   deployments["AddressResolver"],
+  //   deployer,
+  //   treasury,
+  // ]);
+  // deployments["SynthSwap"] = SynthSwap.address;
+  // await verify("SynthSwap", SynthSwap.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const DappMaintenance = await contractDeploy("DappMaintenance", [deployer]);
   // deployments["DappMaintenance"] = DappMaintenance.address;
@@ -193,8 +195,8 @@ async function main() {
   console.log("--- COMPLETED ---");
 }
 
-const contractDeploy = async (name, args) => {
-  const contractFactory = await ethers.getContractFactory(name);
+const contractDeploy = async (name, args, libraries) => {
+  const contractFactory = await ethers.getContractFactory(name, libraries);
   const contract = await contractFactory.deploy(...args);
   await contract.deployTransaction.wait();
 
