@@ -299,7 +299,7 @@ contract Setup is Test, Utils {
             address(eternalStorage)
         );
         synthSwap = new SynthSwap(
-            address(synthsUSD),
+            address(proxysUSD),
             address(router), // routerV4
             address(addressResolver),
             owner, // volumeRewards

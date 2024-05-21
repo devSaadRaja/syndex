@@ -26,6 +26,7 @@ const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000";
 const contractsPath = {
   Proxy: "src/contracts/Proxy.sol:Proxy",
   Issuer: "src/contracts/Issuer.sol:Issuer",
+  ERC20: "src/contracts/SMX/ERC20.sol:ERC20",
   Synthetix: "src/contracts/Synthetix.sol:Synthetix",
   Exchanger: "src/contracts/Exchanger.sol:Exchanger",
   ProxyERC20: "src/contracts/ProxyERC20.sol:ProxyERC20",
@@ -675,6 +676,16 @@ async function main() {
   //   await contract.rebuildCache();
   // }
 
+  // const TestToken = await contractDeploy("Token", [
+  //   "TestToken",
+  //   "TKN",
+  //   deployer,
+  //   parseEth(1000000),
+  // ]);
+  // deployments["TestToken"] = TestToken.address;
+  // await verify("Token", TestToken.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+
   // ! ------------------------------------------------------------------------
   // ! SETUP ------------------------------------------------------------------
   // ! ------------------------------------------------------------------------
@@ -877,7 +888,128 @@ async function main() {
   // await uniswapV3();
   // ! ------------------------------------------------------------
 
+  // ! ------------------------------------------------------------
+  // await removeLiquidityV2(
+  //   deployments["ProxysUSD"],
+  //   deployments["ProxysETH"],
+  //   parseEth(10),
+  //   0,
+  //   0,
+  //   Math.floor(Date.now() / 1000) + 60 * 20 // 20 minutes from the current Unix time
+  // );
+  // ! ------------------------------------------------------------
+
+  // ! ------------------------------------------------------------
+  // await getPositions();
+
+  // const tokenId = 701434; // Replace with your NFT position ID
+  // const liquidity = parseEth(25); // Replace with the amount of liquidity to remove
+  // const amount0Min = 0;
+  // const amount1Min = 0;
+  // const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutes from the current Unix time
+
+  // await removeLiquidityV3(tokenId, liquidity, amount0Min, amount1Min, deadline);
+  // ! ------------------------------------------------------------
+
   console.log("[[[ COMPLETED ]]]");
+}
+
+async function getPositions() {
+  const positionManager = new ethers.Contract(
+    deployments["NonfungiblePositionManager"],
+    uniswapNonfungiblePositionManager,
+    signer
+  );
+
+  try {
+    // Get the balance of NFTs for the wallet
+    const balance = await positionManager.balanceOf(deployer);
+    console.log(`NFT balance: ${balance.toString()}`);
+
+    // Fetch each NFT position ID
+    for (let i = 0; i < balance; i++) {
+      const tokenId = await positionManager.tokenOfOwnerByIndex(deployer, i);
+      console.log(`Position ID: ${tokenId.toString()}`);
+    }
+  } catch (error) {
+    console.error("Error fetching positions:", error);
+  }
+}
+
+async function removeLiquidityV3(
+  tokenId,
+  liquidity,
+  amount0Min,
+  amount1Min,
+  deadline
+) {
+  const positionManager = new ethers.Contract(
+    deployments["NonfungiblePositionManager"],
+    uniswapNonfungiblePositionManager,
+    signer
+  );
+
+  try {
+    const tx = await positionManager.decreaseLiquidity({
+      tokenId,
+      liquidity,
+      amount0Min,
+      amount1Min,
+      deadline,
+    });
+
+    console.log("Transaction hash:", tx.hash);
+    await tx.wait();
+    console.log("Liquidity removed successfully");
+
+    const collectTx = await positionManager.collect({
+      tokenId,
+      recipient: deployer,
+      amount0Max: parseEth(1000000), // ethers.constants.MaxUint128
+      amount1Max: parseEth(1000000), // ethers.constants.MaxUint128
+    });
+
+    console.log("Collect transaction hash:", collectTx.hash);
+    await collectTx.wait();
+    console.log("Fees collected successfully");
+  } catch (error) {
+    console.error("Error removing liquidity:", error);
+  }
+}
+
+async function removeLiquidityV2(
+  tokenA,
+  tokenB,
+  liquidity,
+  amountAMin,
+  amountBMin,
+  deadline
+) {
+  let pair = new ethers.Contract(deployments["ETHUSD"], uniswapPair, signer);
+  console.log(await pair.getReserves());
+
+  const RouterContract = new ethers.Contract(
+    deployments["UniswapRouter"],
+    uniswapRouter,
+    signer
+  );
+  try {
+    const tx = await RouterContract.removeLiquidity(
+      tokenA,
+      tokenB,
+      liquidity,
+      amountAMin,
+      amountBMin,
+      deployer,
+      deadline
+    );
+
+    console.log("Transaction hash:", tx.hash);
+    await tx.wait();
+    console.log("Liquidity removed successfully");
+  } catch (error) {
+    console.error("Error removing liquidity:", error);
+  }
 }
 
 async function uniswapV3() {
@@ -889,18 +1021,18 @@ async function uniswapV3() {
 
   // await FactoryContract.createPool(
   //   deployments["ProxysUSD"],
-  //   deployments["ProxysETH"],
+  //   deployments["TestToken"],
   //   3000
   // );
-  // deployments["ETHUSDV3"] = await FactoryContract.getPool(
+  // deployments["TKNUSDV3"] = await FactoryContract.getPool(
   //   deployments["ProxysUSD"],
-  //   deployments["ProxysETH"],
+  //   deployments["TestToken"],
   //   3000
   // );
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const v3Pool = new ethers.Contract(
-  //   deployments["ETHUSDV3"],
+  //   deployments["TKNUSDV3"],
   //   uniswapPoolV3,
   //   signer
   // );
@@ -920,26 +1052,26 @@ async function uniswapV3() {
   //   parseEth(50)
   // );
 
-  const proxysETH = await ethers.getContractAt(
-    contractsPath.ProxyERC20,
-    deployments["ProxysETH"],
+  const token = await ethers.getContractAt(
+    contractsPath.ERC20,
+    deployments["TestToken"],
     signer
   );
-  let balanceOfsETH = await proxysETH.balanceOf(deployer);
-  console.log("balanceOfsETH", balanceOfsETH);
-  // await proxysETH.approve(
+  let balanceOfTKN = await token.balanceOf(deployer);
+  console.log("balanceOfTKN", balanceOfTKN);
+  // await token.approve(
   //   deployments["NonfungiblePositionManager"],
   //   parseEth(50)
   // );
 
   // const params = {
   //   token0: deployments["ProxysUSD"],
-  //   token1: deployments["ProxysETH"],
+  //   token1: deployments["TestToken"],
   //   fee: v3Pool.fee(),
   //   tickLower: -120,
   //   tickUpper: 120,
-  //   amount0Desired: parseEth(30),
-  //   amount1Desired: parseEth(30),
+  //   amount0Desired: parseEth(18),
+  //   amount1Desired: parseEth(18),
   //   amount0Min: 0,
   //   amount1Min: 0,
   //   recipient: deployer,
