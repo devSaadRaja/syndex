@@ -29,6 +29,10 @@ contract AggregatorSynth is AccessControl {
         return _description;
     }
 
+    function decimals() external view returns (uint8) {
+        return 8;
+    }
+
     function setPrice(int256 price) external onlyRole(PRICE_SETTER_ROLE) {
         _currentPrice = price;
     }
