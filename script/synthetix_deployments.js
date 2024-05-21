@@ -1,10 +1,22 @@
 const { tenderly } = require("hardhat");
 
 const { readFileSync, writeFileSync } = require("fs");
-const outputFilePath =
-  process.env.TENDERLY_MAIN === "true"
-    ? "./tenderly_deployments.json"
-    : "./test_tenderly_deployments.json";
+
+var url, chainId, outputFilePath;
+const option = Number(process.env.TENDERLY_MAIN_OPTION);
+if (option == 1) {
+  url = process.env.TENDERLY_MAINNET_FORK_URL_TEST;
+  outputFilePath = "./test_tenderly_deployments.json";
+  chainId = 1;
+} else if (option == 2) {
+  url = process.env.TENDERLY_MAINNET_FORK_URL;
+  outputFilePath = "./tenderly_deployments.json";
+  chainId = 1;
+} else if (option == 3) {
+  url = process.env.TENDERLY_ARBITRUM_FORK_URL;
+  outputFilePath = "./tenderly_arb_deployments.json";
+  chainId = 42161;
+}
 
 const WETH = require("../abis/weth.json");
 const uniswapPair = require("../abis/uniswap-pair.json");
@@ -48,14 +60,7 @@ const contractsPath = {
 
 const deployments = JSON.parse(readFileSync(outputFilePath, "utf-8"));
 
-// * Second parameter is chainId, 1 for Ethereum mainnet
-const provider_tenderly = new ethers.providers.JsonRpcProvider(
-  process.env.TENDERLY_MAIN === "true"
-    ? `${process.env.TENDERLY_MAINNET_FORK_URL}`
-    : `${process.env.TENDERLY_MAINNET_FORK_URL_TEST}`,
-  1
-);
-
+const provider_tenderly = new ethers.providers.JsonRpcProvider(url, chainId);
 const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider_tenderly);
 
 const deployer = "0xE536B4D7cf1e346D985cEe807e16B1b11B019976";
