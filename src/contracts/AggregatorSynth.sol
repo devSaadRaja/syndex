@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "./AddressResolver.sol";
 
 contract AggregatorSynth is AccessControl {
-
     bytes32 public constant PRICE_SETTER_ROLE = keccak256("PRICE_SETTER_ROLE");
 
     string private _description;
@@ -14,7 +13,11 @@ contract AggregatorSynth is AccessControl {
 
     AddressResolver public resolver;
 
-    constructor(string memory __description, int256 initialPrice, address _resolver) {
+    constructor(
+        string memory __description,
+        int256 initialPrice,
+        address _resolver
+    ) {
         _description = __description;
         _currentPrice = initialPrice;
         resolver = AddressResolver(_resolver);
@@ -40,14 +43,43 @@ contract AggregatorSynth is AccessControl {
 
     function getRoundData(
         uint80 _roundId
-    ) external view returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) {
-        return (_roundId, _currentPrice, block.timestamp, block.timestamp, _roundId);
+    )
+        external
+        view
+        returns (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        )
+    {
+        return (
+            _roundId,
+            _currentPrice,
+            block.timestamp,
+            block.timestamp,
+            _roundId
+        );
     }
 
     function latestRoundData()
         external
         view
-        returns (uint80 roundId, int256 answer, uint256 startedAt, uint256 updatedAt, uint80 answeredInRound) {
-            return (_latestRound, _currentPrice, block.timestamp, block.timestamp, _latestRound);
-        }
+        returns (
+            uint80 roundId,
+            int256 answer,
+            uint256 startedAt,
+            uint256 updatedAt,
+            uint80 answeredInRound
+        )
+    {
+        return (
+            _latestRound,
+            _currentPrice,
+            block.timestamp,
+            block.timestamp,
+            _latestRound
+        );
+    }
 }
