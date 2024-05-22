@@ -29,7 +29,7 @@ contract AggregatorSynth is AccessControl {
         return _description;
     }
 
-    function decimals() external view returns (uint8) {
+    function decimals() external pure returns (uint8) {
         return 8;
     }
 

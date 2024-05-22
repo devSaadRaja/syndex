@@ -1099,61 +1099,161 @@ async function uniswapV3() {
 async function addSynths() {
   // Gold | Wheat | Crude Oil | Orange Juice | Silver | Platinum | Palladium | Livestock
   // Coffee | Sugar | Cotton | Soybeans | Natural Gas | Iron | Cocoa | Steel | Copper
-  // await deploySynth("ProxyGold", "SynthGold", "Gold", "TokenStateGold");
-  // await deploySynth("ProxyWheat", "SynthWheat", "Wheat", "TokenStateWheat");
+  // await deploySynth(
+  //   "ProxyGold",
+  //   "SynthGold",
+  //   "Gold",
+  //   "TokenStateGold",
+  //   "AggregatorGold",
+  //   1 * 10 ** 8
+  // );
+  // await deploySynth(
+  //   "ProxyWheat",
+  //   "SynthWheat",
+  //   "Wheat",
+  //   "TokenStateWheat",
+  //   "AggregatorWheat",
+  //   1 * 10 ** 8
+  // );
   // await deploySynth(
   //   "ProxyCrudeOil",
   //   "SynthCrudeOil",
   //   "CrudeOil",
-  //   "TokenStateCrudeOil"
+  //   "TokenStateCrudeOil",
+  //   "AggregatorCrudeOil",
+  //   1 * 10 ** 8
   // );
   // await deploySynth(
   //   "ProxyOrangeJuice",
   //   "SynthOrangeJuice",
   //   "OrangeJuice",
-  //   "TokenStateOrangeJuice"
+  //   "TokenStateOrangeJuice",
+  //   "AggregatorOrangeJuice",
+  //   1 * 10 ** 8
   // );
-  // await deploySynth("ProxySilver", "SynthSilver", "Silver", "TokenStateSilver");
+  // await deploySynth(
+  //   "ProxySilver",
+  //   "SynthSilver",
+  //   "Silver",
+  //   "TokenStateSilver",
+  //   "AggregatorSilver",
+  //   1 * 10 ** 8
+  // );
   // await deploySynth(
   //   "ProxyPlatinum",
   //   "SynthPlatinum",
   //   "Platinum",
-  //   "TokenStatePlatinum"
+  //   "TokenStatePlatinum",
+  //   "AggregatorPlatinum",
+  //   1 * 10 ** 8
   // );
   // await deploySynth(
   //   "ProxyPalladium",
   //   "SynthPalladium",
   //   "Palladium",
-  //   "TokenStatePalladium"
+  //   "TokenStatePalladium",
+  //   "AggregatorPalladium",
+  //   1 * 10 ** 8
   // );
   // await deploySynth(
   //   "ProxyLivestock",
   //   "SynthLivestock",
   //   "Livestock",
-  //   "TokenStateLivestock"
+  //   "TokenStateLivestock",
+  //   "AggregatorLivestock",
+  //   1 * 10 ** 8
   // );
-  // await deploySynth("ProxyCoffee", "SynthCoffee", "Coffee", "TokenStateCoffee");
-  // await deploySynth("ProxySugar", "SynthSugar", "Sugar", "TokenStateSugar");
-  // await deploySynth("ProxyCotton", "SynthCotton", "Cotton", "TokenStateCotton");
+  // await deploySynth(
+  //   "ProxyCoffee",
+  //   "SynthCoffee",
+  //   "Coffee",
+  //   "TokenStateCoffee",
+  //   "AggregatorCoffee",
+  //   1 * 10 ** 8
+  // );
+  // await deploySynth(
+  //   "ProxySugar",
+  //   "SynthSugar",
+  //   "Sugar",
+  //   "TokenStateSugar",
+  //   "AggregatorSugar",
+  //   1 * 10 ** 8
+  // );
+  // await deploySynth(
+  //   "ProxyCotton",
+  //   "SynthCotton",
+  //   "Cotton",
+  //   "TokenStateCotton",
+  //   "AggregatorCotton",
+  //   1 * 10 ** 8
+  // );
   // await deploySynth(
   //   "ProxySoybeans",
   //   "SynthSoybeans",
   //   "Soybeans",
-  //   "TokenStateSoybeans"
+  //   "TokenStateSoybeans",
+  //   "AggregatorSoybeans",
+  //   1 * 10 ** 8
   // );
   // await deploySynth(
   //   "ProxyNaturalGas",
   //   "SynthNaturalGas",
   //   "NaturalGas",
-  //   "TokenStateNaturalGas"
+  //   "TokenStateNaturalGas",
+  //   "AggregatorNaturalGas",
+  //   1 * 10 ** 8
   // );
-  // await deploySynth("ProxyIron", "SynthIron", "Iron", "TokenStateIron");
-  // await deploySynth("ProxyCocoa", "SynthCocoa", "Cocoa", "TokenStateCocoa");
-  // await deploySynth("ProxySteel", "SynthSteel", "Steel", "TokenStateSteel");
-  // await deploySynth("ProxyCopper", "SynthCopper", "Copper", "TokenStateCopper");
+  // await deploySynth(
+  //   "ProxyIron",
+  //   "SynthIron",
+  //   "Iron",
+  //   "TokenStateIron",
+  //   "AggregatorIron",
+  //   1 * 10 ** 8
+  // );
+  // await deploySynth(
+  //   "ProxyCocoa",
+  //   "SynthCocoa",
+  //   "Cocoa",
+  //   "TokenStateCocoa",
+  //   "AggregatorCocoa",
+  //   1 * 10 ** 8
+  // );
+  // await deploySynth(
+  //   "ProxySteel",
+  //   "SynthSteel",
+  //   "Steel",
+  //   "TokenStateSteel",
+  //   "AggregatorSteel",
+  //   1 * 10 ** 8
+  // );
+  // await deploySynth(
+  //   "ProxyCopper",
+  //   "SynthCopper",
+  //   "Copper",
+  //   "TokenStateCopper",
+  //   "AggregatorCopper",
+  //   1 * 10 ** 8
+  // );
 }
 
-async function deploySynth(proxyName, synthName, synthSymbol, tokenStateName) {
+async function deploySynth(
+  proxyName,
+  synthName,
+  synthSymbol,
+  tokenStateName,
+  aggregatorName,
+  synthPrice
+) {
+  const Aggregator = await contractDeploy("AggregatorSynth", [
+    aggregatorName,
+    synthPrice,
+    deployments["AddressResolver"],
+  ]);
+  deployments[aggregatorName] = Aggregator.address;
+  await verify("AggregatorSynth", Aggregator.address);
+  writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+
   const Proxy = await contractDeploy("ProxyERC20", [deployer]);
   deployments[proxyName] = Proxy.address;
   await verify("ProxyERC20", Proxy.address);
@@ -1260,7 +1360,7 @@ async function deploySynth(proxyName, synthName, synthSymbol, tokenStateName) {
   );
   await exchangeRates.addAggregator(
     ethers.utils.formatBytes32String(synthSymbol),
-    deployments["AggregatorETH"] // deploy and add oracle
+    deployments[aggregatorName]
   );
 
   console.log("=== EXCHANGE RATES ADDED ===");
