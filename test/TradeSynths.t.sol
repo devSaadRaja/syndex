@@ -29,10 +29,6 @@ contract TradeSynthsTest is Setup {
             tradingRewards.getPeriodRecordedFees(0)
         );
 
-        // rewardsDistribution.distributeRewards(
-        //     tradingRewards.getPeriodRecordedFees(0)
-        // );
-
         assertEq(tradingRewards.getPeriodAvailableRewards(0), 200);
         assertEq(tradingRewards.getPeriodIsClaimable(0), true);
         assertEq(tradingRewards.getPeriodRecordedFees(0), 200);
@@ -42,16 +38,15 @@ contract TradeSynthsTest is Setup {
             200
         );
 
-        console.log(tradingRewards.getPeriodRecordedFees(0));
-        console.log(tradingRewards.getPeriodIsClaimable(0));
-        console.log(tradingRewards.getAvailableRewards());
-        console.log(
-            "getPeriodAvailableRewards(0)",
-            tradingRewards.getPeriodAvailableRewards(0)
-        );
-        console.log(
-            "getAvailableRewardsForAccountForPeriod(user5, 0)",
-            tradingRewards.getAvailableRewardsForAccountForPeriod(user5, 0)
+        uint256 amountBefore = IERC20(address(proxySNX)).balanceOf(user5);
+        uint256 rewardAmount = tradingRewards
+            .getAvailableRewardsForAccountForPeriod(user5, 0);
+
+        tradingRewards.claimRewardsForPeriod(0);
+        
+        assertEq(
+            IERC20(address(proxySNX)).balanceOf(user5),
+            amountBefore + rewardAmount
         );
 
         vm.stopPrank();

@@ -328,8 +328,8 @@ contract Setup is Test, Utils {
         addresses.push(address(addressResolver));
         names.push("MixinResolver");
         addresses.push(address(mixinResolver));
-        names.push("Proxy");
-        addresses.push(address(proxysUSD));
+        names.push("ProxySNX");
+        addresses.push(address(proxySNX));
         names.push("SystemStatus");
         addresses.push(address(systemStatus));
         names.push("TokenStateSynthetix");
