@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import {IFeePool} from "../src/interfaces/IFeePool.sol";
 import {ISynthetix} from "../src/interfaces/ISynthetix.sol";
+import {ISwapRouter} from "../src/contracts/SMX/interfaces/ISwapRouter.sol";
 import {IAggregationRouterV4} from "../src/contracts/SMX/interfaces/IAggregationRouterV4.sol";
 
 import {SMX} from "../src/contracts/SMX/SMX.sol";
@@ -84,6 +85,9 @@ contract Setup is Test, Utils {
         IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
     IAggregationRouterV4 routerV4 =
         IAggregationRouterV4(0x1111111254fb6c44bAC0beD2854e76F90643097d);
+
+    ISwapRouter swapRouter =
+        ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564);
 
     bytes32[] public names;
     address[] public addresses;
@@ -300,7 +304,7 @@ contract Setup is Test, Utils {
         );
         synthSwap = new SynthSwap(
             address(proxysUSD),
-            address(router), // routerV4
+            address(swapRouter), // routerV4
             address(addressResolver),
             owner, // volumeRewards
             treasury
