@@ -573,7 +573,7 @@ library Address {
      * plain`call` is an unsafe replacement for a function call: use this
      * function instead.
      *
-     * If `target` reverts with a revert reason, it is bubbled up by this
+     * If `currentTarget` reverts with a revert reason, it is bubbled up by this
      * function (like regular Solidity function calls).
      *
      * Returns the raw returned data. To convert to the expected return value,
@@ -581,35 +581,35 @@ library Address {
      *
      * Requirements:
      *
-     * - `target` must be a contract.
-     * - calling `target` with `data` must not revert.
+     * - `currentTarget` must be a contract.
+     * - calling `currentTarget` with `data` must not revert.
      *
      * _Available since v3.1._
      */
     function functionCall(
-        address target,
+        address currentTarget,
         bytes memory data
     ) internal returns (bytes memory) {
-        return functionCall(target, data, "Address: low-level call failed");
+        return functionCall(currentTarget, data, "Address: low-level call failed");
     }
 
     /**
      * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`], but with
-     * `errorMessage` as a fallback revert reason when `target` reverts.
+     * `errorMessage` as a fallback revert reason when `currentTarget` reverts.
      *
      * _Available since v3.1._
      */
     function functionCall(
-        address target,
+        address currentTarget,
         bytes memory data,
         string memory errorMessage
     ) internal returns (bytes memory) {
-        return functionCallWithValue(target, data, 0, errorMessage);
+        return functionCallWithValue(currentTarget, data, 0, errorMessage);
     }
 
     /**
      * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
-     * but also transferring `value` wei to `target`.
+     * but also transferring `value` wei to `currentTarget`.
      *
      * Requirements:
      *
@@ -619,13 +619,13 @@ library Address {
      * _Available since v3.1._
      */
     function functionCallWithValue(
-        address target,
+        address currentTarget,
         bytes memory data,
         uint256 value
     ) internal returns (bytes memory) {
         return
             functionCallWithValue(
-                target,
+                currentTarget,
                 data,
                 value,
                 "Address: low-level call with value failed"
@@ -634,12 +634,12 @@ library Address {
 
     /**
      * @dev Same as {xref-Address-functionCallWithValue-address-bytes-uint256-}[`functionCallWithValue`], but
-     * with `errorMessage` as a fallback revert reason when `target` reverts.
+     * with `errorMessage` as a fallback revert reason when `currentTarget` reverts.
      *
      * _Available since v3.1._
      */
     function functionCallWithValue(
-        address target,
+        address currentTarget,
         bytes memory data,
         uint256 value,
         string memory errorMessage
@@ -648,10 +648,10 @@ library Address {
             address(this).balance >= value,
             "Address: insufficient balance for call"
         );
-        require(isContract(target), "Address: call to non-contract");
+        require(isContract(currentTarget), "Address: call to non-contract");
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = target.call{value: value}(
+        (bool success, bytes memory returndata) = currentTarget.call{value: value}(
             data
         );
         return _verifyCallResult(success, returndata, errorMessage);
@@ -664,12 +664,12 @@ library Address {
      * _Available since v3.3._
      */
     function functionStaticCall(
-        address target,
+        address currentTarget,
         bytes memory data
     ) internal view returns (bytes memory) {
         return
             functionStaticCall(
-                target,
+                currentTarget,
                 data,
                 "Address: low-level static call failed"
             );
@@ -682,14 +682,14 @@ library Address {
      * _Available since v3.3._
      */
     function functionStaticCall(
-        address target,
+        address currentTarget,
         bytes memory data,
         string memory errorMessage
     ) internal view returns (bytes memory) {
-        require(isContract(target), "Address: static call to non-contract");
+        require(isContract(currentTarget), "Address: static call to non-contract");
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = target.staticcall(data);
+        (bool success, bytes memory returndata) = currentTarget.staticcall(data);
         return _verifyCallResult(success, returndata, errorMessage);
     }
 
@@ -700,12 +700,12 @@ library Address {
      * _Available since v3.4._
      */
     function functionDelegateCall(
-        address target,
+        address currentTarget,
         bytes memory data
     ) internal returns (bytes memory) {
         return
             functionDelegateCall(
-                target,
+                currentTarget,
                 data,
                 "Address: low-level delegate call failed"
             );
@@ -718,14 +718,14 @@ library Address {
      * _Available since v3.4._
      */
     function functionDelegateCall(
-        address target,
+        address currentTarget,
         bytes memory data,
         string memory errorMessage
     ) internal returns (bytes memory) {
-        require(isContract(target), "Address: delegate call to non-contract");
+        require(isContract(currentTarget), "Address: delegate call to non-contract");
 
         // solhint-disable-next-line avoid-low-level-calls
-        (bool success, bytes memory returndata) = target.delegatecall(data);
+        (bool success, bytes memory returndata) = currentTarget.delegatecall(data);
         return _verifyCallResult(success, returndata, errorMessage);
     }
 
@@ -859,7 +859,7 @@ library SafeERC20 {
     function _callOptionalReturn(IERC20 token, bytes memory data) private {
         // We need to perform a low level call here, to bypass Solidity's return data size checking mechanism, since
         // we're implementing it ourselves. We use {Address.functionCall} to perform this call, which verifies that
-        // the target address contains contract code and also asserts for success in the low-level call.
+        // the currentTarget address contains contract code and also asserts for success in the low-level call.
 
         bytes memory returndata = address(token).functionCall(
             data,
@@ -1542,7 +1542,7 @@ contract LimitOrderProtocolRFQ is
     /// @param signature Signature to confirm quote ownership
     /// @param makingAmount Making amount
     /// @param takingAmount Taking amount
-    /// @param target Address that will receive swap funds
+    /// @param currentTarget Address that will receive swap funds
     /// @param permit Should consist of abiencoded token address and encoded `IERC20Permit.permit` call.
     /// See tests for examples
     function fillOrderRFQToWithPermit(
@@ -1550,7 +1550,7 @@ contract LimitOrderProtocolRFQ is
         bytes calldata signature,
         uint256 makingAmount,
         uint256 takingAmount,
-        address payable target,
+        address payable currentTarget,
         bytes calldata permit
     )
         external
@@ -1566,7 +1566,7 @@ contract LimitOrderProtocolRFQ is
                 signature,
                 makingAmount,
                 takingAmount,
-                target
+                currentTarget
             );
     }
 
@@ -1575,13 +1575,13 @@ contract LimitOrderProtocolRFQ is
     /// @param signature Signature to confirm quote ownership
     /// @param makingAmount Making amount
     /// @param takingAmount Taking amount
-    /// @param target Address that will receive swap funds
+    /// @param currentTarget Address that will receive swap funds
     function fillOrderRFQTo(
         OrderRFQ memory order,
         bytes calldata signature,
         uint256 makingAmount,
         uint256 takingAmount,
-        address payable target
+        address payable currentTarget
     )
         public
         payable
@@ -1660,9 +1660,9 @@ contract LimitOrderProtocolRFQ is
                 makingAmount
             );
             _WETH.withdraw(makingAmount);
-            target.transfer(makingAmount);
+            currentTarget.transfer(makingAmount);
         } else {
-            order.makerAsset.safeTransferFrom(maker, target, makingAmount);
+            order.makerAsset.safeTransferFrom(maker, currentTarget, makingAmount);
         }
         // Taker => Maker
         if (order.takerAsset == _WETH && msg.value > 0) {
@@ -1762,7 +1762,7 @@ contract UnoswapRouter is EthReceiver, Permitable {
         return unoswap(srcToken, amount, minReturn, pools);
     }
 
-    /// @notice Performs swap using Uniswap exchange. Wraps and unwraps ETH if required.
+    /// @notice Performs swap using Uniswap executeExchange. Wraps and unwraps ETH if required.
     /// Sending non-zero `msg.value` for anything but ETH swaps is prohibited
     /// @param srcToken Source token
     /// @param amount Amount of source tokens to swap
@@ -2291,7 +2291,7 @@ contract UnoswapV3Router is EthReceiver, Permitable, IUniswapV3SwapCallback {
         return uniswapV3SwapTo(payable(msg.sender), amount, minReturn, pools);
     }
 
-    /// @notice Performs swap using Uniswap V3 exchange. Wraps and unwraps ETH if required.
+    /// @notice Performs swap using Uniswap V3 executeExchange. Wraps and unwraps ETH if required.
     /// Sending non-zero `msg.value` for anything but ETH swaps is prohibited
     /// @param recipient Address that will receive swap funds
     /// @param amount Amount of source tokens to swap
@@ -2588,7 +2588,7 @@ contract ClipperRouter is EthReceiver, Permitable {
             );
     }
 
-    /// @notice Performs swap using Clipper exchange. Wraps and unwraps ETH if required.
+    /// @notice Performs swap using Clipper executeExchange. Wraps and unwraps ETH if required.
     /// Sending non-zero `msg.value` for anything but ETH swaps is prohibited
     /// @param recipient Address that will receive swap funds
     /// @param srcToken Source token

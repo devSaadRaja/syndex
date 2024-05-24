@@ -12,10 +12,10 @@ import "../interfaces/ISystemStatus.sol";
 import "../libraries/SafeDecimalMath.sol";
 
 /**
- * Compares current exchange rate to previous, and suspends a synth if the
+ * Compares current executeExchange rate to previous, and suspends a synth if the
  * difference is outside of deviation bounds.
  * Stores last "good" rate for each synth on each invocation.
- * Inteded use is to use in combination with ExchangeRates on mutative exchange-like
+ * Inteded use is to use in combination with ExchangeRates on mutative executeExchange-like
  * methods.
  * Suspend functionality is public, resume functionality is controlled by owner.
  */

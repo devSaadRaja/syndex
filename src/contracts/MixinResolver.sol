@@ -39,7 +39,7 @@ contract MixinResolver {
         returns (bytes32[] memory addresses)
     {}
 
-    function rebuildCache() public {
+    function refreshCache() public {
         bytes32[] memory requiredAddresses = resolverAddressesRequired();
         // The resolver must call this function whenver it updates its state
         for (uint i = 0; i < requiredAddresses.length; i++) {
@@ -47,7 +47,7 @@ contract MixinResolver {
             // Note: can only be invoked once the resolver has all the targets needed added
             address destination = resolver.requireAndGetAddress(
                 name,
-                string(abi.encodePacked("Resolver missing target: ", name))
+                string(abi.encodePacked("Resolver missing currentTarget: ", name))
             );
             addressCache[name] = destination;
             emit CacheUpdated(name, destination);

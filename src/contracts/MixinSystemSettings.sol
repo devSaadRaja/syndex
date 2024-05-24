@@ -290,7 +290,7 @@ contract MixinSystemSettings is MixinResolver {
             );
     }
 
-    /// @notice Get exchange dynamic fee related keys
+    /// @notice Get executeExchange dynamic fee related keys
     /// @return threshold, weight decay, rounds, and max fee
     function getExchangeDynamicFeeConfig()
         internal

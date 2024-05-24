@@ -406,9 +406,9 @@ contract Setup is Test, Utils {
         names.push("TradingRewards");
         addresses.push(address(tradingRewards));
 
-        addressResolver.importAddresses(names, addresses);
+        addressResolver.loadAddresses(names, addresses);
         for (uint i = 16; i < addresses.length; i++) {
-            MixinResolver(addresses[i]).rebuildCache();
+            MixinResolver(addresses[i]).refreshCache();
         }
 
         // for (uint i = 0; i < addresses.length; i++) {
@@ -439,15 +439,15 @@ contract Setup is Test, Utils {
         issuer.addSynth(address(synthsUSD));
         issuer.addSynth(address(synthsETH));
 
-        proxySNX.setTarget(address(synthetix));
-        proxysUSD.setTarget(address(synthsUSD));
-        proxysETH.setTarget(address(synthsETH));
-        proxyFeePool.setTarget(address(feePool));
+        proxySNX.updateTarget(address(synthetix));
+        proxysUSD.updateTarget(address(synthsUSD));
+        proxysETH.updateTarget(address(synthsETH));
+        proxyFeePool.updateTarget(address(feePool));
 
-        tokenStateSNX.setAssociatedContract(address(synthetix));
-        tokenStatesUSD.setAssociatedContract(address(synthsUSD));
-        tokenStatesETH.setAssociatedContract(address(synthsETH));
-        collateralManagerState.setAssociatedContract(
+        tokenStateSNX.linkContract(address(synthetix));
+        tokenStatesUSD.linkContract(address(synthsUSD));
+        tokenStatesETH.linkContract(address(synthsETH));
+        collateralManagerState.linkContract(
             address(collateralManager)
         );
 
@@ -486,19 +486,19 @@ contract Setup is Test, Utils {
         // systemSettings.setIssuanceRatio(0.8 ether); // 125%
         systemSettings.setLiquidationRatio(0.625 ether);
         // systemSettings.setLiquidationPenalty(100000000000000000);
-        systemSettings.setSnxLiquidationPenalty(0.6 ether); // forced
-        systemSettings.setSelfLiquidationPenalty(0.5 ether);
-        systemSettings.setLiquidationDelay(28800);
-        systemSettings.setRateStalePeriod(86400);
-        systemSettings.setPriceDeviationThresholdFactor(100 ether);
+        systemSettings.updateSnxLiquidationPenalty(0.6 ether); // forced
+        systemSettings.updateSelfLiquidationPenalty(0.5 ether);
+        systemSettings.updateLiquidationDelay(28800);
+        systemSettings.updateRateStalePeriod(86400);
+        systemSettings.updatePriceDeviationThreshold(100 ether);
 
-        systemSettings.setAtomicTwapWindow(1800);
-        systemSettings.setAtomicMaxVolumePerBlock(200000 ether);
-        systemSettings.setExchangeMaxDynamicFee(0.1 ether);
-        systemSettings.setExchangeDynamicFeeRounds(6);
-        systemSettings.setExchangeDynamicFeeThreshold(0.0025 ether);
-        systemSettings.setExchangeDynamicFeeWeightDecay(0.95 ether);
-        systemSettings.setTradingRewardsEnabled(true);
+        systemSettings.updateAtomicTwapWindow(1800);
+        systemSettings.updateAtomicMaxVolumePerBlock(200000 ether);
+        systemSettings.updateExchangeMaxDynamicFee(0.1 ether);
+        systemSettings.updateExchangeDynamicFeeRounds(6);
+        systemSettings.updateExchangeDynamicFeeThreshold(0.0025 ether);
+        systemSettings.updateExchangeDynamicFeeWeightDecay(0.95 ether);
+        systemSettings.toggleTradingRewards(true);
 
         bytes32[] memory synthKeys = new bytes32[](2);
         uint256[] memory exchangeFeeRates = new uint256[](2);
@@ -506,15 +506,15 @@ contract Setup is Test, Utils {
         synthKeys[1] = "sETH";
         exchangeFeeRates[0] = 1;
         exchangeFeeRates[1] = 1;
-        systemSettings.setExchangeFeeRateForSynths(synthKeys, exchangeFeeRates);
+        systemSettings.updateExchangeFeeRateForSynths(synthKeys, exchangeFeeRates);
 
         // // uint256 val = 100;
         // // uint256 minCratio = 150;
         // systemSettings.setIssuanceRatio(0.66 ether); // 150%
         // systemSettings.setLiquidationRatio(0.8 ether);
-        // systemSettings.setSnxLiquidationPenalty(0.5 ether); // 50%
-        // systemSettings.setLiquidationDelay(28800); // 8 hours
-        // systemSettings.setRateStalePeriod(86400); // 1 day
+        // systemSettings.updateSnxLiquidationPenalty(0.5 ether); // 50%
+        // systemSettings.updateLiquidationDelay(28800); // 8 hours
+        // systemSettings.updateRateStalePeriod(86400); // 1 day
 
         supplySchedule.setSynthetixProxy(address(proxySNX));
         supplySchedule.setInflationAmount(3000000 * 10 ** 18);

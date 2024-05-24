@@ -53,7 +53,7 @@ contract SMXTest is Setup {
 
         vm.startPrank(owner);
 
-        synthetix.exchange("sUSD", 500 ether, "sETH");
+        synthetix.executeExchange("sUSD", 500 ether, "sETH");
 
         factory.createPair(address(proxysUSD), address(proxysETH));
 
@@ -138,10 +138,17 @@ contract SMXTest is Setup {
 
         // ! ADD LIQUIDITY ---
 
+        address token0 = address(token) < address(proxysUSD)
+            ? address(token)
+            : address(proxysUSD);
+        address token1 = token0 == address(token)
+            ? address(proxysUSD)
+            : address(token);
+
         INonfungiblePositionManager.MintParams
             memory params = INonfungiblePositionManager.MintParams({
-                token0: address(token),
-                token1: address(proxysUSD),
+                token0: token0,
+                token1: token1,
                 fee: v3Pool.fee(),
                 tickLower: -120,
                 tickUpper: 120,
@@ -339,10 +346,17 @@ contract SMXTest is Setup {
         // tickLower = nearestUsableTick(tick, tickSpacing) - tickSpacing * 2;
         // tickUpper = nearestUsableTick(tick, tickSpacing) + tickSpacing * 2;
 
+        address token0 = address(proxysETH) < address(proxysUSD)
+            ? address(proxysETH)
+            : address(proxysUSD);
+        address token1 = token0 == address(proxysETH)
+            ? address(proxysUSD)
+            : address(proxysETH);
+
         INonfungiblePositionManager.MintParams
             memory params = INonfungiblePositionManager.MintParams({
-                token0: address(proxysETH),
-                token1: address(proxysUSD),
+                token0: token0,
+                token1: token1,
                 fee: fee,
                 tickLower: -120,
                 tickUpper: 120,
@@ -412,7 +426,7 @@ contract SMXTest is Setup {
     function testTradeSynths() public {
         vm.startPrank(user1);
 
-        synthetix.issueMaxSynths();
+        synthetix.createMaxSynths();
 
         // IERC20(address(proxysUSD)).approve(address(router), 50 ether);
         // address[] memory path = new address[](2);
@@ -477,7 +491,7 @@ contract SMXTest is Setup {
     //     vm.stopPrank();
 
     //     vm.startPrank(user5);
-    //     synthetix.issueMaxSynths();
+    //     synthetix.createMaxSynths();
 
     //     address[] memory path = new address[](2);
     //     path[0] = address(proxysUSD);
@@ -494,14 +508,14 @@ contract SMXTest is Setup {
     //     IERC20(address(proxysUSD)).approve(address(synthSwap), 10 ether);
     //     synthSwap.uniswapSwapInto("sETH", address(proxysUSD), 10 ether, _data);
 
-    //     // synthetix.exchange("sUSD", 100 ether, "sETH");
+    //     // synthetix.executeExchange("sUSD", 100 ether, "sETH");
 
     //     tradingRewards.closeCurrentPeriodWithRewards(
     //         tradingRewards.getPeriodRecordedFees(0)
     //     );
 
     //     // assertEq(tradingRewards.getPeriodAvailableRewards(0), 1001);
-    //     // assertEq(tradingRewards.getPeriodIsClaimable(0), true);
+    //     // assertEq(tradingRewards.isPeriodClaimable(0), true);
     //     // assertEq(tradingRewards.getPeriodRecordedFees(0), 1001);
     //     // assertEq(tradingRewards.getAvailableRewards(), 1001);
     //     // assertEq(
@@ -510,7 +524,7 @@ contract SMXTest is Setup {
     //     // );
 
     //     console.log(tradingRewards.getPeriodRecordedFees(0));
-    //     console.log(tradingRewards.getPeriodIsClaimable(0));
+    //     console.log(tradingRewards.isPeriodClaimable(0));
     //     console.log(tradingRewards.getAvailableRewards());
     //     console.log(
     //         "getPeriodAvailableRewards(0)",

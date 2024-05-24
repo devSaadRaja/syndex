@@ -322,8 +322,8 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
     /// @notice execute swap on Synthetix
     /// @dev token approval is always required
     /// @param _amount of source synth to swap
-    /// @param _sourceSynthCurrencyKey source synth key needed for exchange
-    /// @param _destSynthCurrencyKey destination synth key needed for exchange
+    /// @param _sourceSynthCurrencyKey source synth key needed for executeExchange
+    /// @param _destSynthCurrencyKey destination synth key needed for executeExchange
     /// @return amountOut: received from Synthetix swap
     function swapOnSynthetix(
         uint _amount,

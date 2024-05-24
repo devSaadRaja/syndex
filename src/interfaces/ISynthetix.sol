@@ -72,7 +72,7 @@ interface ISynthetix {
 
     function burnSynthsToTargetOnBehalf(address burnForAddress) external;
 
-    function exchange(
+    function executeExchange(
         bytes32 sourceCurrencyKey,
         uint sourceAmount,
         bytes32 destinationCurrencyKey
@@ -125,11 +125,11 @@ interface ISynthetix {
         uint minAmount
     ) external returns (uint amountReceived);
 
-    function issueMaxSynths() external;
+    function createMaxSynths() external;
 
     function issueMaxSynthsOnBehalf(address issueForAddress) external;
 
-    function issueSynths(uint amount) external;
+    function createSynths(uint amount) external;
 
     function issueSynthsOnBehalf(address issueForAddress, uint amount) external;
 

@@ -92,7 +92,7 @@ interface IIssuer {
     // Restricted: used internally to Synthetix
     function addSynths(ISynth[] calldata synthsToAdd) external;
 
-    function issueSynths(address from, uint amount) external;
+    function createSynths(address from, uint amount) external;
 
     function issueSynthsOnBehalf(
         address issueFor,
@@ -100,7 +100,7 @@ interface IIssuer {
         uint amount
     ) external;
 
-    function issueMaxSynths(address from) external;
+    function createMaxSynths(address from) external;
 
     function issueMaxSynthsOnBehalf(address issueFor, address from) external;
 

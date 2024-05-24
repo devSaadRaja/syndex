@@ -101,7 +101,7 @@ contract TradingRewards is
         return _currentPeriodID;
     }
 
-    function getPeriodIsClaimable(uint periodID) external view returns (bool) {
+    function isPeriodClaimable(uint periodID) external view returns (bool) {
         return _periods[periodID].isFinalized;
     }
 
@@ -176,7 +176,7 @@ contract TradingRewards is
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function claimRewardsForPeriod(
+    function redeemRewardsForPeriod(
         uint periodID
     ) external nonReentrant whenNotPaused {
         _claimRewards(msg.sender, periodID);

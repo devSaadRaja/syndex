@@ -81,9 +81,9 @@ contract DeployScript is Script {
 
         // exchangeRates.addAggregator("SNX", address(aggregatorCollateral));
 
-        // proxySNX.setTarget(Proxyable(address(synthetix)));
+        // proxySNX.updateTarget(Proxyable(address(synthetix)));
 
-        // tokenState.setAssociatedContract(address(synthetix));
+        // tokenState.linkContract(address(synthetix));
 
         // // factory.createPair(address(proxySNX), WETH);
         // // address pair = factory.getPair(address(proxySNX), WETH);
@@ -103,9 +103,9 @@ contract DeployScript is Script {
         // names.push("Synthetix");
         // addresses.push(address(synthetix));
 
-        // addressResolver.importAddresses(names, addresses);
+        // addressResolver.loadAddresses(names, addresses);
         // for (uint i = 2; i < addresses.length; i++) {
-        //     MixinResolver(addresses[i]).rebuildCache();
+        //     MixinResolver(addresses[i]).refreshCache();
         // }
 
         // // ---

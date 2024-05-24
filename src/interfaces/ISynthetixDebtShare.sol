@@ -45,11 +45,11 @@ interface ISynthetixDebtShare {
         uint256 amount
     ) external returns (bool);
 
-    function addAuthorizedBroker(address target) external;
+    function addAuthorizedBroker(address currentTarget) external;
 
-    function removeAuthorizedBroker(address target) external;
+    function removeAuthorizedBroker(address currentTarget) external;
 
-    function addAuthorizedToSnapshot(address target) external;
+    function addAuthorizedToSnapshot(address currentTarget) external;
 
-    function removeAuthorizedToSnapshot(address target) external;
+    function removeAuthorizedToSnapshot(address currentTarget) external;
 }

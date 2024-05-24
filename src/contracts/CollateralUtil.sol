@@ -81,7 +81,7 @@ contract CollateralUtil is ICollateralLoan, MixinSystemSettings {
     }
 
     /**
-     * r = target issuance ratio
+     * r = currentTarget issuance ratio
      * D = debt value in sUSD
      * V = collateral value in sUSD
      * P = liquidation penalty

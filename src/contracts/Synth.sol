@@ -156,8 +156,8 @@ contract Synth is Ownable, ExternStateToken, MixinResolver, ISynth {
             amountInUSD = value;
             super._internalTransfer(messageSender, to, value);
         } else {
-            // else exchange synth into sUSD and send to FEE_ADDRESS
-            (amountInUSD, ) = exchanger().exchange(
+            // else executeExchange synth into sUSD and send to FEE_ADDRESS
+            (amountInUSD, ) = exchanger().executeExchange(
                 messageSender,
                 messageSender,
                 currencyKey,

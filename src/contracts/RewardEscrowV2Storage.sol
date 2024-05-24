@@ -213,13 +213,13 @@ contract RewardEscrowV2Storage is IRewardEscrowV2Storage, State {
         _setZeroAmountWithEndTime(account, entryId, endTime);
     }
 
-    /// zero out multiple entries in order of accountVestingEntryIDs until target is reached (or entries exhausted)
+    /// zero out multiple entries in order of accountVestingEntryIDs until currentTarget is reached (or entries exhausted)
     /// @param account: account
     /// @param startIndex: index into accountVestingEntryIDs to start with. NOT an entryID.
     /// @param targetAmount: amount to try and reach during the iteration, once the amount it reached (and passed)
     ///     the iteration stops
     /// @return total : total sum reached, may different from targetAmount (higher if sum is a bit more), lower
-    ///     if target wasn't reached reaching the length of the array
+    ///     if currentTarget wasn't reached reaching the length of the array
     /// @return endIndex : the index of the last revoked entry
     /// @return lastEntryTime : the endTime of the last revoked entry
     function setZeroAmountUntilTarget(
@@ -322,7 +322,7 @@ contract RewardEscrowV2Storage is IRewardEscrowV2Storage, State {
         VestingEntries.VestingEntry calldata entry
     ) external withFallback onlyAssociatedContract returns (uint) {
         // zero time is used as read-miss flag in this contract
-        require(entry.endTime != 0, "vesting target time zero");
+        require(entry.endTime != 0, "vesting currentTarget time zero");
 
         uint entryId = nextEntryId;
         // since this is a completely new entry, it's safe to write it directly without checking fallback data

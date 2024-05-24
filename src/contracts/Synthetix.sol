@@ -73,7 +73,7 @@ contract Synthetix is BaseSynthetix {
         returns (uint amountReceived, IVirtualSynth vSynth)
     {
         return
-            exchanger().exchange(
+            exchanger().executeExchange(
                 messageSender,
                 messageSender,
                 sourceCurrencyKey,
@@ -86,7 +86,7 @@ contract Synthetix is BaseSynthetix {
             );
     }
 
-    // SIP-140 The initiating user of this exchange will receive the proceeds of the exchange
+    // SIP-140 The initiating user of this executeExchange will receive the proceeds of the executeExchange
     // Note: this function may have unintended consequences if not understood correctly. Please
     // read SIP-140 for more information on the use-case
     function exchangeWithTrackingForInitiator(
@@ -102,7 +102,7 @@ contract Synthetix is BaseSynthetix {
         optionalProxy
         returns (uint amountReceived)
     {
-        (amountReceived, ) = exchanger().exchange(
+        (amountReceived, ) = exchanger().executeExchange(
             messageSender,
             messageSender,
             sourceCurrencyKey,

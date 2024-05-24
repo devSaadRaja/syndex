@@ -416,7 +416,7 @@ contract FuturesMarketManager is Ownable, MixinResolver, IFuturesMarketManager {
         address account,
         uint amount
     ) external onlyMarketImplementations {
-        // No settlement is required to issue synths into the target account.
+        // No settlement is required to issue synths into the currentTarget account.
         _sUSD().issue(account, amount);
     }
 
@@ -451,7 +451,7 @@ contract FuturesMarketManager is Ownable, MixinResolver, IFuturesMarketManager {
     }
 
     /**
-     * Allows markets to issue exchange fees into the fee pool and notify it that this occurred.
+     * Allows markets to issue executeExchange fees into the fee pool and notify it that this occurred.
      * This function is not callable through the proxy, only underlying contracts interact;
      * it reverts if not called by a known market.
      */

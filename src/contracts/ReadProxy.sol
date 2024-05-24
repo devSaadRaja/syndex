@@ -4,13 +4,13 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ReadProxy is Ownable {
-    address public target;
+    address public currentTarget;
 
     constructor(address _owner) Ownable(_owner) {}
 
-    function setTarget(address _target) external onlyOwner {
-        target = _target;
-        emit TargetUpdated(target);
+    function updateTarget(address _target) external onlyOwner {
+        currentTarget = _target;
+        emit TargetUpdated(currentTarget);
     }
 
     fallback() external payable {
@@ -22,7 +22,7 @@ contract ReadProxy is Ownable {
             // Use of staticcall - this will revert if the underlying function mutates state
             let result := staticcall(
                 gas(),
-                sload(target.slot),
+                sload(currentTarget.slot),
                 0,
                 calldatasize(),
                 0,

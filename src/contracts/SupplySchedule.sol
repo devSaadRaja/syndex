@@ -160,7 +160,7 @@ contract SupplySchedule is Ownable, ISupplySchedule {
 
     /**
      * @notice Set the weekly inflationAmount.
-     * Protocol DAO sets the amount based on the target staking ratio
+     * Protocol DAO sets the amount based on the currentTarget staking ratio
      * Will be replaced with on-chain calculation of the staking ratio
      * */
     function setInflationAmount(uint amount) external onlyOwner {
@@ -181,7 +181,7 @@ contract SupplySchedule is Ownable, ISupplySchedule {
      * */
     modifier onlySynthetix() {
         require(
-            msg.sender == address(Proxy(synthetixProxy).target()),
+            msg.sender == address(Proxy(synthetixProxy).currentTarget()),
             "Only the synthetix contract can perform this action"
         );
         _;

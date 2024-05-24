@@ -82,7 +82,7 @@ interface IExchanger {
     function lastExchangeRate(bytes32 currencyKey) external view returns (uint);
 
     // Mutative functions
-    function exchange(
+    function executeExchange(
         address exchangeForAddress,
         address from,
         bytes32 sourceCurrencyKey,

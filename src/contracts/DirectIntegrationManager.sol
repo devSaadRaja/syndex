@@ -13,7 +13,7 @@ import "../interfaces/IDirectIntegrationManager.sol";
  * https://sips.synthetix.io/sips/sip-267/
  *
  * Used by the Spartan Council to approve an external contract, (i.e. one which is not owned or managed by the Synthetix protocol),
- * to interact with Synthetix's core exchange functionalities with overridden parameters.
+ * to interact with Synthetix's core executeExchange functionalities with overridden parameters.
  * If no parameter overrides are specified, then the prevailing parameter configuration will be automatically used.
  */
 contract DirectIntegrationManager is

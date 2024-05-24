@@ -257,7 +257,7 @@ contract Collateral is ICollateralLoan, Ownable, MixinSystemSettings {
         }
 
         // ensure cache has the latest
-        rebuildCache();
+        refreshCache();
     }
 
     /* ---------- Rewards Contracts ---------- */

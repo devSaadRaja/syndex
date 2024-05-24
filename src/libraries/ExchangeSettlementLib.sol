@@ -71,7 +71,7 @@ library ExchangeSettlementLib {
             resolvedAddresses.debtCache.updateCachedSynthDebts(key);
         }
 
-        // emit settlement event for each settled exchange entry
+        // emit settlement event for each settled executeExchange entry
         for (uint i = 0; i < settlements.length; i++) {
             emit ExchangeEntrySettled(
                 from,
@@ -213,7 +213,7 @@ library ExchangeSettlementLib {
             currencyKey
         );
 
-        // For each unsettled exchange
+        // For each unsettled executeExchange
         IExchanger.ExchangeEntrySettlement[]
             memory settlements = new IExchanger.ExchangeEntrySettlement[](
                 numEntries

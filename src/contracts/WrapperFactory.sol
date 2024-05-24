@@ -94,7 +94,7 @@ contract WrapperFactory is Ownable, MixinResolver, IWrapperFactory {
         );
 
         // Rebuild caches immediately since it will almost certainly need to be done
-        wrapper.rebuildCache();
+        wrapper.refreshCache();
 
         // Register it so that MultiCollateralSynth knows to trust it
         flexibleStorage().setUIntValue(

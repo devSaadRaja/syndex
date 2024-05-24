@@ -14,7 +14,7 @@ contract AddressResolver is Ownable {
 
     /* ========== RESTRICTED FUNCTIONS ========== */
 
-    function importAddresses(
+    function loadAddresses(
         bytes32[] calldata names,
         address[] calldata destinations
     ) external onlyOwner {
@@ -35,7 +35,7 @@ contract AddressResolver is Ownable {
 
     function rebuildCaches(MixinResolver[] calldata destinations) external {
         for (uint i = 0; i < destinations.length; i++) {
-            destinations[i].rebuildCache();
+            destinations[i].refreshCache();
         }
     }
 

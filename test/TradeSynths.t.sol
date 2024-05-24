@@ -21,16 +21,16 @@ contract TradeSynthsTest is Setup {
         vm.stopPrank();
 
         vm.startPrank(user5);
-        synthetix.issueMaxSynths();
+        synthetix.createMaxSynths();
 
-        synthetix.exchange("sUSD", 100 ether, "sETH");
+        synthetix.executeExchange("sUSD", 100 ether, "sETH");
 
         tradingRewards.closeCurrentPeriodWithRewards(
             tradingRewards.getPeriodRecordedFees(0)
         );
 
         assertEq(tradingRewards.getPeriodAvailableRewards(0), 200);
-        assertEq(tradingRewards.getPeriodIsClaimable(0), true);
+        assertEq(tradingRewards.isPeriodClaimable(0), true);
         assertEq(tradingRewards.getPeriodRecordedFees(0), 200);
         assertEq(tradingRewards.getAvailableRewards(), 200);
         assertEq(
@@ -42,7 +42,7 @@ contract TradeSynthsTest is Setup {
         uint256 rewardAmount = tradingRewards
             .getAvailableRewardsForAccountForPeriod(user5, 0);
 
-        tradingRewards.claimRewardsForPeriod(0);
+        tradingRewards.redeemRewardsForPeriod(0);
         
         assertEq(
             IERC20(address(proxySNX)).balanceOf(user5),

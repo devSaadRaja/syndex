@@ -19,7 +19,7 @@ abstract contract State is Ownable {
     /* ========== SETTERS ========== */
 
     // Change the associated contract to a new address
-    function setAssociatedContract(
+    function linkContract(
         address _associatedContract
     ) external onlyOwner {
         associatedContract = _associatedContract;

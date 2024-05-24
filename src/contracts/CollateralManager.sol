@@ -431,7 +431,7 @@ contract CollateralManager is Ownable, Pausable, MixinResolver {
             }
         }
 
-        rebuildCache();
+        refreshCache();
     }
 
     function areSynthsAndCurrenciesSet(
@@ -500,7 +500,7 @@ contract CollateralManager is Ownable, Pausable, MixinResolver {
             }
         }
 
-        rebuildCache();
+        refreshCache();
     }
 
     function areShortableSynthsSet(

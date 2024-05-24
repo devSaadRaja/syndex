@@ -223,7 +223,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
 
         // when there isn't enough supply (either due to reclamation settlement or because the number is too high)
         if (amountAfterSettlement > balanceOfSourceAfterSettlement) {
-            // then the amount to exchange is reduced to their remaining supply
+            // then the amount to executeExchange is reduced to their remaining supply
             amountAfterSettlement = balanceOfSourceAfterSettlement;
         }
 
@@ -240,7 +240,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
     }
 
     /* ========== MUTATIVE FUNCTIONS ========== */
-    function exchange(
+    function executeExchange(
         address exchangeForAddress,
         address from,
         bytes32 sourceCurrencyKey,
@@ -347,7 +347,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         }
 
         // Note that exchanges can't invalidate the debt cache, since if a rate is invalid,
-        // the exchange will have failed already.
+        // the executeExchange will have failed already.
         debtCache().updateCachedSynthDebtsWithRates(keys, rates);
     }
 
@@ -452,7 +452,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         );
 
         if (tooVolatile) {
-            // do not exchange if rates are too volatile, this to prevent charging
+            // do not executeExchange if rates are too volatile, this to prevent charging
             // dynamic fees that are over the max value
             return (0, 0, IVirtualSynth(address(0)));
         }
@@ -501,14 +501,14 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         // Note: As of this point, `fee` is denominated in sUSD.
 
         // Nothing changes as far as issuance data goes because the total value in the system hasn't changed.
-        // But we will update the debt snapshot in case exchange rates have fluctuated since the last exchange
+        // But we will update the debt snapshot in case executeExchange rates have fluctuated since the last executeExchange
         // in these currencies
         _updateSNXIssuedDebtOnExchange(
             [sourceSettings.currencyKey, destinationSettings.currencyKey],
             [entry.sourceRate, entry.destinationRate]
         );
 
-        // Let the DApps know there was a Synth exchange
+        // Let the DApps know there was a Synth executeExchange
         ISynthetixInternal(address(synthetix())).emitSynthExchange(
             from,
             sourceSettings.currencyKey,
@@ -520,7 +520,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
 
         // iff the waiting period is gt 0
         if (getWaitingPeriodSecs() > 0) {
-            // persist the exchange information for the dest key
+            // persist the executeExchange information for the dest key
             ExchangeSettlementLib.appendExchange(
                 addrs,
                 destinationAddress,
@@ -592,7 +592,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
 
     /* ========== INTERNAL FUNCTIONS ========== */
 
-    // gets the exchange parameters for a given direct integration (returns default params if no overrides exist)
+    // gets the executeExchange parameters for a given direct integration (returns default params if no overrides exist)
     function _exchangeSettings(
         address from,
         bytes32 currencyKey
@@ -663,10 +663,10 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
     }
 
     /* ========== Exchange Related Fees ========== */
-    /// @notice public function to get the total fee rate for a given exchange
+    /// @notice public function to get the total fee rate for a given executeExchange
     /// @param sourceCurrencyKey The source currency key
     /// @param destinationCurrencyKey The destination currency key
-    /// @return The exchange fee rate, and whether the rates are too volatile
+    /// @return The executeExchange fee rate, and whether the rates are too volatile
     function feeRateForExchange(
         bytes32 sourceCurrencyKey,
         bytes32 destinationCurrencyKey
@@ -690,10 +690,10 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         return feeRate;
     }
 
-    /// @notice public function to get the dynamic fee rate for a given exchange
+    /// @notice public function to get the dynamic fee rate for a given executeExchange
     /// @param sourceCurrencyKey The source currency key
     /// @param destinationCurrencyKey The destination currency key
-    /// @return feeRate The exchange dynamic fee rate and if rates are too volatile
+    /// @return feeRate The executeExchange dynamic fee rate and if rates are too volatile
     function dynamicFeeRateForExchange(
         bytes32 sourceCurrencyKey,
         bytes32 destinationCurrencyKey
@@ -712,17 +712,17 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         return _dynamicFeeRateForExchange(sourceSettings, destinationSettings);
     }
 
-    /// @notice Calculate the exchange fee for a given source and destination currency key
+    /// @notice Calculate the executeExchange fee for a given source and destination currency key
     /// @param sourceSettings The source currency key
     /// @param destinationSettings The destination currency key
-    /// @return feeRate The exchange dynamic fee rate and if rates are too volatile
+    /// @return feeRate The executeExchange dynamic fee rate and if rates are too volatile
     function _feeRateForExchange(
         IDirectIntegrationManager.ParameterIntegrationSettings
             memory sourceSettings,
         IDirectIntegrationManager.ParameterIntegrationSettings
             memory destinationSettings
     ) internal view returns (uint feeRate, bool tooVolatile) {
-        // Get the exchange fee rate as per the source currencyKey and destination currencyKey
+        // Get the executeExchange fee rate as per the source currencyKey and destination currencyKey
         uint baseRate = sourceSettings.exchangeFeeRate.add(
             destinationSettings.exchangeFeeRate
         );
@@ -734,12 +734,12 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         return (baseRate.add(dynamicFee), tooVolatile);
     }
 
-    /// @notice Calculate the exchange fee for a given source and destination currency key
+    /// @notice Calculate the executeExchange fee for a given source and destination currency key
     /// @param sourceSettings The source currency key
     /// @param destinationSettings The destination currency key
     /// @param roundIdForSrc The round id of the source currency.
-    /// @param roundIdForDest The round id of the target currency.
-    /// @return feeRate The exchange dynamic fee rate
+    /// @param roundIdForDest The round id of the currentTarget currency.
+    /// @return feeRate The executeExchange dynamic fee rate
     function _feeRateForExchangeAtRounds(
         IDirectIntegrationManager.ParameterIntegrationSettings
             memory sourceSettings,
@@ -748,7 +748,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         uint roundIdForSrc,
         uint roundIdForDest
     ) internal view returns (uint feeRate, bool tooVolatile) {
-        // Get the exchange fee rate as per the source currencyKey and destination currencyKey
+        // Get the executeExchange fee rate as per the source currencyKey and destination currencyKey
         uint baseRate = sourceSettings.exchangeFeeRate.add(
             destinationSettings.exchangeFeeRate
         );
@@ -960,7 +960,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         );
 
         // check rates volatility result
-        require(!tooVolatile, "exchange rates too volatile");
+        require(!tooVolatile, "executeExchange rates too volatile");
 
         (uint destinationAmount, , ) = exchangeRates().effectiveValueAndRates(
             sourceCurrencyKey,

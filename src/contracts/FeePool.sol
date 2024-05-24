@@ -473,7 +473,7 @@ contract FeePool is
         uint availableFees;
         uint availableRewards;
 
-        // Address won't be able to claim fees if it is too far below the target c-ratio.
+        // Address won't be able to claim fees if it is too far below the currentTarget c-ratio.
         // It will need to burn synths then try claiming again.
         (
             bool feesClaimable,
@@ -694,14 +694,14 @@ contract FeePool is
     function _isFeesClaimableAndAnyRatesInvalid(
         address account
     ) internal view returns (bool, bool) {
-        // Threshold is calculated from ratio % above the target ratio (issuanceRatio).
+        // Threshold is calculated from ratio % above the currentTarget ratio (issuanceRatio).
         //  0  <  10%:   Claimable
         // 10% > above:  Unable to claim
         (uint ratio, bool anyRateIsInvalid) = issuer()
             .collateralisationRatioAndAnyRatesInvalid(account);
         uint targetRatio = getIssuanceRatio();
 
-        // Claimable if collateral ratio below target ratio
+        // Claimable if collateral ratio below currentTarget ratio
         if (ratio < targetRatio) {
             return (true, anyRateIsInvalid);
         }

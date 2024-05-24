@@ -11,18 +11,18 @@ contract ProxyERC20 is Proxy {
     // ------------- ERC20 Details ------------- //
 
     function name() public view returns (string memory) {
-        // Immutable static call from target contract
-        return IERC20(address(target)).name();
+        // Immutable static call from currentTarget contract
+        return IERC20(address(currentTarget)).name();
     }
 
     function symbol() public view returns (string memory) {
-        // Immutable static call from target contract
-        return IERC20(address(target)).symbol();
+        // Immutable static call from currentTarget contract
+        return IERC20(address(currentTarget)).symbol();
     }
 
     function decimals() public view returns (uint8) {
-        // Immutable static call from target contract
-        return IERC20(address(target)).decimals();
+        // Immutable static call from currentTarget contract
+        return IERC20(address(currentTarget)).decimals();
     }
 
     // ------------- ERC20 Interface ------------- //
@@ -31,8 +31,8 @@ contract ProxyERC20 is Proxy {
      * @dev Total number of tokens in existence
      */
     function totalSupply() public view returns (uint256) {
-        // Immutable static call from target contract
-        return IERC20(address(target)).totalSupply();
+        // Immutable static call from currentTarget contract
+        return IERC20(address(currentTarget)).totalSupply();
     }
 
     /**
@@ -41,8 +41,8 @@ contract ProxyERC20 is Proxy {
      * @return An uint256 representing the amount owned by the passed address.
      */
     function balanceOf(address account) public view returns (uint256) {
-        // Immutable static call from target contract
-        return IERC20(address(target)).balanceOf(account);
+        // Immutable static call from currentTarget contract
+        return IERC20(address(currentTarget)).balanceOf(account);
     }
 
     /**
@@ -55,8 +55,8 @@ contract ProxyERC20 is Proxy {
         address owner,
         address spender
     ) public view returns (uint256) {
-        // Immutable static call from target contract
-        return IERC20(address(target)).allowance(owner, spender);
+        // Immutable static call from currentTarget contract
+        return IERC20(address(currentTarget)).allowance(owner, spender);
     }
 
     /**
@@ -65,11 +65,11 @@ contract ProxyERC20 is Proxy {
      * @param value The amount to be transferred.
      */
     function transfer(address to, uint256 value) public returns (bool) {
-        // Mutable state call requires the proxy to tell the target who the msg.sender is.
-        target.setMessageSender(msg.sender);
+        // Mutable state call requires the proxy to tell the currentTarget who the msg.sender is.
+        currentTarget.setMessageSender(msg.sender);
 
-        // Forward the ERC20 call to the target contract
-        IERC20(address(target)).transfer(to, value);
+        // Forward the ERC20 call to the currentTarget contract
+        IERC20(address(currentTarget)).transfer(to, value);
 
         // Event emitting will occur via Synthetix.Proxy._emit()
         return true;
@@ -85,11 +85,11 @@ contract ProxyERC20 is Proxy {
      * @param value The amount of tokens to be spent.
      */
     function approve(address spender, uint256 value) public returns (bool) {
-        // Mutable state call requires the proxy to tell the target who the msg.sender is.
-        target.setMessageSender(msg.sender);
+        // Mutable state call requires the proxy to tell the currentTarget who the msg.sender is.
+        currentTarget.setMessageSender(msg.sender);
 
-        // Forward the ERC20 call to the target contract
-        IERC20(address(target)).approve(spender, value);
+        // Forward the ERC20 call to the currentTarget contract
+        IERC20(address(currentTarget)).approve(spender, value);
 
         // Event emitting will occur via Synthetix.Proxy._emit()
         return true;
@@ -106,11 +106,11 @@ contract ProxyERC20 is Proxy {
         address to,
         uint256 value
     ) public returns (bool) {
-        // Mutable state call requires the proxy to tell the target who the msg.sender is.
-        target.setMessageSender(msg.sender);
+        // Mutable state call requires the proxy to tell the currentTarget who the msg.sender is.
+        currentTarget.setMessageSender(msg.sender);
 
-        // Forward the ERC20 call to the target contract
-        IERC20(address(target)).transferFrom(from, to, value);
+        // Forward the ERC20 call to the currentTarget contract
+        IERC20(address(currentTarget)).transferFrom(from, to, value);
 
         // Event emitting will occur via Synthetix.Proxy._emit()
         return true;

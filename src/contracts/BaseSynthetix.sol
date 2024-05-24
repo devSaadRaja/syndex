@@ -260,7 +260,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver {
 
     // ========== MUTATIVE FUNCTIONS ==========
 
-    function exchange(
+    function executeExchange(
         bytes32 sourceCurrencyKey,
         uint sourceAmount,
         bytes32 destinationCurrencyKey
@@ -270,7 +270,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver {
         optionalProxy
         returns (uint amountReceived)
     {
-        (amountReceived, ) = exchanger().exchange(
+        (amountReceived, ) = exchanger().executeExchange(
             messageSender,
             messageSender,
             sourceCurrencyKey,
@@ -294,7 +294,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver {
         optionalProxy
         returns (uint amountReceived)
     {
-        (amountReceived, ) = exchanger().exchange(
+        (amountReceived, ) = exchanger().executeExchange(
             exchangeForAddress,
             messageSender,
             sourceCurrencyKey,
@@ -330,7 +330,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver {
         optionalProxy
         returns (uint amountReceived)
     {
-        (amountReceived, ) = exchanger().exchange(
+        (amountReceived, ) = exchanger().executeExchange(
             messageSender,
             messageSender,
             sourceCurrencyKey,
@@ -356,7 +356,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver {
         optionalProxy
         returns (uint amountReceived)
     {
-        (amountReceived, ) = exchanger().exchange(
+        (amountReceived, ) = exchanger().executeExchange(
             exchangeForAddress,
             messageSender,
             sourceCurrencyKey,
@@ -416,8 +416,8 @@ contract BaseSynthetix is ExternStateToken, MixinResolver {
         }
     }
 
-    function issueSynths(uint amount) external issuanceActive optionalProxy {
-        return issuer().issueSynths(messageSender, amount);
+    function createSynths(uint amount) external issuanceActive optionalProxy {
+        return issuer().createSynths(messageSender, amount);
     }
 
     function issueSynthsOnBehalf(
@@ -432,8 +432,8 @@ contract BaseSynthetix is ExternStateToken, MixinResolver {
             );
     }
 
-    function issueMaxSynths() external issuanceActive optionalProxy {
-        return issuer().issueMaxSynths(messageSender);
+    function createMaxSynths() external issuanceActive optionalProxy {
+        return issuer().createMaxSynths(messageSender);
     }
 
     function issueMaxSynthsOnBehalf(
@@ -568,7 +568,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver {
         return true;
     }
 
-    /// @notice Allows an account to self-liquidate anytime its c-ratio is below the target issuance ratio.
+    /// @notice Allows an account to self-liquidate anytime its c-ratio is below the currentTarget issuance ratio.
     function liquidateSelf()
         external
         systemActive

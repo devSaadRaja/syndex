@@ -48,10 +48,10 @@ contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
 
     /**
      * Records totalSupply as it changes from period to period
-     * Similar to `balances`, the `totalSupplyOnPeriod` at index `currentPeriodId` matches the current total supply
+     * Similar to `balances`, the `calculateTotalSupplyForPeriod` at index `currentPeriodId` matches the current total supply
      * Any other period ID would represent its most recent totalSupply before the period ID changed.
      */
-    mapping(uint => uint) public totalSupplyOnPeriod;
+    mapping(uint => uint) public calculateTotalSupplyForPeriod;
 
     /* ERC20 fields. */
     string public name;
@@ -130,7 +130,7 @@ contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
     }
 
     function totalSupply() public view returns (uint) {
-        return totalSupplyOnPeriod[currentPeriodId];
+        return calculateTotalSupplyForPeriod[currentPeriodId];
     }
 
     function sharePercent(address account) external view returns (uint) {
@@ -147,7 +147,7 @@ contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
             return 0;
         }
 
-        return balance.divideDecimal(totalSupplyOnPeriod[periodId]);
+        return balance.divideDecimal(calculateTotalSupplyForPeriod[periodId]);
     }
 
     function allowance(address, address spender) public view returns (uint) {
@@ -160,29 +160,29 @@ contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function addAuthorizedBroker(address target) external onlyOwner {
-        authorizedBrokers[target] = true;
-        emit ChangeAuthorizedBroker(target, true);
+    function addAuthorizedBroker(address currentTarget) external onlyOwner {
+        authorizedBrokers[currentTarget] = true;
+        emit ChangeAuthorizedBroker(currentTarget, true);
     }
 
-    function removeAuthorizedBroker(address target) external onlyOwner {
-        authorizedBrokers[target] = false;
-        emit ChangeAuthorizedBroker(target, false);
+    function removeAuthorizedBroker(address currentTarget) external onlyOwner {
+        authorizedBrokers[currentTarget] = false;
+        emit ChangeAuthorizedBroker(currentTarget, false);
     }
 
-    function addAuthorizedToSnapshot(address target) external onlyOwner {
-        authorizedToSnapshot[target] = true;
-        emit ChangeAuthorizedToSnapshot(target, true);
+    function addAuthorizedToSnapshot(address currentTarget) external onlyOwner {
+        authorizedToSnapshot[currentTarget] = true;
+        emit ChangeAuthorizedToSnapshot(currentTarget, true);
     }
 
-    function removeAuthorizedToSnapshot(address target) external onlyOwner {
-        authorizedToSnapshot[target] = false;
-        emit ChangeAuthorizedToSnapshot(target, false);
+    function removeAuthorizedToSnapshot(address currentTarget) external onlyOwner {
+        authorizedToSnapshot[currentTarget] = false;
+        emit ChangeAuthorizedToSnapshot(currentTarget, false);
     }
 
     function takeSnapshot(uint128 id) external onlyAuthorizedToSnapshot {
         require(id > currentPeriodId, "period id must always increase");
-        totalSupplyOnPeriod[id] = totalSupplyOnPeriod[currentPeriodId];
+        calculateTotalSupplyForPeriod[id] = calculateTotalSupplyForPeriod[currentPeriodId];
         currentPeriodId = id;
     }
 
@@ -191,7 +191,7 @@ contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
 
         _increaseBalance(account, amount);
 
-        totalSupplyOnPeriod[currentPeriodId] = totalSupplyOnPeriod[
+        calculateTotalSupplyForPeriod[currentPeriodId] = calculateTotalSupplyForPeriod[
             currentPeriodId
         ].add(amount);
 
@@ -204,7 +204,7 @@ contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
 
         _deductBalance(account, amount);
 
-        totalSupplyOnPeriod[currentPeriodId] = totalSupplyOnPeriod[
+        calculateTotalSupplyForPeriod[currentPeriodId] = calculateTotalSupplyForPeriod[
             currentPeriodId
         ].sub(amount);
         emit Transfer(account, address(0), amount);
@@ -234,11 +234,11 @@ contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
         return true;
     }
 
-    function importAddresses(
+    function loadAddresses(
         address[] calldata accounts,
         uint256[] calldata amounts
     ) external onlyOwner onlySetup {
-        uint supply = totalSupplyOnPeriod[currentPeriodId];
+        uint supply = calculateTotalSupplyForPeriod[currentPeriodId];
 
         for (uint i = 0; i < accounts.length; i++) {
             uint curBalance = balanceOf(accounts[i]);
@@ -257,7 +257,7 @@ contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
             }
         }
 
-        totalSupplyOnPeriod[currentPeriodId] = supply;
+        calculateTotalSupplyForPeriod[currentPeriodId] = supply;
     }
 
     function finishSetup() external onlyOwner {

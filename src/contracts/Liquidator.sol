@@ -140,7 +140,7 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
     }
 
     /// @notice Determines if an account is eligible for forced or self liquidation
-    /// @dev An account is eligible to self liquidate if its c-ratio is below the target c-ratio
+    /// @dev An account is eligible to self liquidate if its c-ratio is below the currentTarget c-ratio
     /// @dev An account with no SNX collateral will not be open for liquidation since the ratio is 0
     function isLiquidationOpen(
         address account,
@@ -150,7 +150,7 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
             account
         );
 
-        // Not open for liquidation if collateral ratio is less than or equal to target issuance ratio
+        // Not open for liquidation if collateral ratio is less than or equal to currentTarget issuance ratio
         if (accountCollateralisationRatio <= getIssuanceRatio()) {
             return false;
         }
@@ -233,7 +233,7 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
     }
 
     /**
-     * r = target issuance ratio
+     * r = currentTarget issuance ratio
      * D = debt value
      * V = collateral value
      * P = liquidation penalty
@@ -358,7 +358,7 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
         uint accountsCollateralisationRatio = synthetix()
             .collateralisationRatio(account);
 
-        // Remove from liquidator if accountsCollateralisationRatio is fixed (less than equal target issuance ratio)
+        // Remove from liquidator if accountsCollateralisationRatio is fixed (less than equal currentTarget issuance ratio)
         if (accountsCollateralisationRatio <= getIssuanceRatio()) {
             _removeLiquidationEntry(account);
         }

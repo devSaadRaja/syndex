@@ -6,12 +6,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Proxyable.sol";
 
 contract Proxy is Ownable {
-    Proxyable public target;
+    Proxyable public currentTarget;
 
     constructor(address _owner) Ownable(_owner) {}
 
-    function setTarget(address _target) external onlyOwner {
-        target = Proxyable(_target);
+    function updateTarget(address _target) external onlyOwner {
+        currentTarget = Proxyable(_target);
         emit TargetUpdated(Proxyable(_target));
     }
 
@@ -54,7 +54,7 @@ contract Proxy is Ownable {
     // solhint-disable no-complex-fallback
     fallback() external payable {
         // Mutable call setting Proxyable.messageSender as this is using call not delegatecall
-        target.setMessageSender(msg.sender);
+        currentTarget.setMessageSender(msg.sender);
 
         assembly {
             let free_ptr := mload(0x40)
@@ -63,7 +63,7 @@ contract Proxy is Ownable {
             /* We must explicitly forward ether to the underlying contract as well. */
             let result := call(
                 gas(),
-                sload(target.slot),
+                sload(currentTarget.slot),
                 callvalue(),
                 free_ptr,
                 calldatasize(),
@@ -82,7 +82,7 @@ contract Proxy is Ownable {
     receive() external payable {}
 
     modifier onlyTarget() {
-        require(Proxyable(msg.sender) == target, "Must be proxy target");
+        require(Proxyable(msg.sender) == currentTarget, "Must be proxy currentTarget");
         _;
     }
 

@@ -94,7 +94,7 @@ library SystemSettingsLib {
         );
     }
 
-    function setTradingRewardsEnabled(
+    function toggleTradingRewards(
         IFlexibleStorage flexibleStorage,
         bytes32 settingName,
         bool _tradingRewardsEnabled
@@ -118,7 +118,7 @@ library SystemSettingsLib {
         );
     }
 
-    function setPriceDeviationThresholdFactor(
+    function updatePriceDeviationThreshold(
         IFlexibleStorage flexibleStorage,
         bytes32 settingName,
         uint _priceDeviationThresholdFactor
@@ -166,7 +166,7 @@ library SystemSettingsLib {
         );
     }
 
-    function setLiquidationDelay(
+    function updateLiquidationDelay(
         IFlexibleStorage flexibleStorage,
         bytes32 settingName,
         uint time
@@ -198,7 +198,7 @@ library SystemSettingsLib {
             "liquidationRatio > MAX_LIQUIDATION_RATIO / (1 + penalty)"
         );
 
-        // MIN_LIQUIDATION_RATIO is a product of target issuance ratio * RATIO_FROM_TARGET_BUFFER
+        // MIN_LIQUIDATION_RATIO is a product of currentTarget issuance ratio * RATIO_FROM_TARGET_BUFFER
         // Ensures that liquidation ratio is set so that there is a buffer between the issuance ratio and liquidation ratio.
         uint MIN_LIQUIDATION_RATIO = getIssuanceRatio.multiplyDecimal(
             RATIO_FROM_TARGET_BUFFER
@@ -227,7 +227,7 @@ library SystemSettingsLib {
         );
     }
 
-    function setSnxLiquidationPenalty(
+    function updateSnxLiquidationPenalty(
         IFlexibleStorage flexibleStorage,
         bytes32 settingName,
         uint penalty
@@ -245,7 +245,7 @@ library SystemSettingsLib {
         );
     }
 
-    function setSelfLiquidationPenalty(
+    function updateSelfLiquidationPenalty(
         IFlexibleStorage flexibleStorage,
         bytes32 settingName,
         uint penalty
@@ -303,7 +303,7 @@ library SystemSettingsLib {
         );
     }
 
-    function setRateStalePeriod(
+    function updateRateStalePeriod(
         IFlexibleStorage flexibleStorage,
         bytes32 settingName,
         uint period
@@ -315,7 +315,7 @@ library SystemSettingsLib {
         );
     }
 
-    function setExchangeFeeRateForSynths(
+    function updateExchangeFeeRateForSynths(
         IFlexibleStorage flexibleStorage,
         bytes32 settingExchangeFeeRate,
         bytes32[] calldata synthKeys,
@@ -532,7 +532,7 @@ library SystemSettingsLib {
         );
     }
 
-    function setAtomicMaxVolumePerBlock(
+    function updateAtomicMaxVolumePerBlock(
         IFlexibleStorage flexibleStorage,
         bytes32 settingName,
         uint _maxVolume
@@ -548,7 +548,7 @@ library SystemSettingsLib {
         );
     }
 
-    function setAtomicTwapWindow(
+    function updateAtomicTwapWindow(
         IFlexibleStorage flexibleStorage,
         bytes32 settingName,
         uint _window
@@ -661,7 +661,7 @@ library SystemSettingsLib {
         );
     }
 
-    function setExchangeMaxDynamicFee(
+    function updateExchangeMaxDynamicFee(
         IFlexibleStorage flexibleStorage,
         bytes32 settingName,
         uint maxFee

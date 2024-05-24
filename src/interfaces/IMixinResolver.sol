@@ -5,7 +5,7 @@ interface IMixinResolver {
     // function getAddress(bytes32 name) external view returns (address);
     // function getSynth(bytes32 key) external view returns (address);
 
-    function rebuildCache() external;
+    function refreshCache() external;
 
     function requireAndGetAddress(bytes32 name) external view returns (address);
 }

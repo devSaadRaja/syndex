@@ -24,7 +24,7 @@ import "../libraries/SafeCast.sol";
 import "../libraries/SafeDecimalMath.sol";
 
 interface IProxy {
-    function target() external view returns (address);
+    function currentTarget() external view returns (address);
 }
 
 interface IIssuerInternalDebtCache {
@@ -329,7 +329,7 @@ contract Issuer is Ownable, MixinSystemSettings {
             return (0, snxBackedAmount, debtInfoStale);
         }
 
-        // existing functionality requires for us to convert into the exchange rate specified by `currencyKey`
+        // existing functionality requires for us to convert into the executeExchange rate specified by `currencyKey`
         (uint currencyRate, bool currencyRateInvalid) = _rateAndInvalid(
             currencyKey
         );
@@ -739,7 +739,7 @@ contract Issuer is Ownable, MixinSystemSettings {
         // Burn some synths
         synths[currencyKey].burn(from, amount);
 
-        // Account for the burnt debt in the cache. If rate is invalid, the user won't be able to exchange
+        // Account for the burnt debt in the cache. If rate is invalid, the user won't be able to executeExchange
         (uint rate, bool rateInvalid) = _rateAndInvalid(currencyKey);
         debtCache().updateCachedsUSDDebt(
             -SafeCast.toInt256(amount.multiplyDecimal(rate))
@@ -794,14 +794,14 @@ contract Issuer is Ownable, MixinSystemSettings {
         synths[sUSD].burn(short, amount);
     }
 
-    function issueSynths(address from, uint amount) external onlySynthetix {
+    function createSynths(address from, uint amount) external onlySynthetix {
         require(amount > 0, "cannot issue 0 synths");
 
-        _issueSynths(from, amount, false);
+        _createSynths(from, amount, false);
     }
 
-    function issueMaxSynths(address from) external onlySynthetix {
-        _issueSynths(from, 0, true);
+    function createMaxSynths(address from) external onlySynthetix {
+        _createSynths(from, 0, true);
     }
 
     function issueSynthsOnBehalf(
@@ -810,7 +810,7 @@ contract Issuer is Ownable, MixinSystemSettings {
         uint amount
     ) external onlySynthetix {
         _requireCanIssueOnBehalf(issueForAddress, from);
-        _issueSynths(issueForAddress, amount, false);
+        _createSynths(issueForAddress, amount, false);
     }
 
     function issueMaxSynthsOnBehalf(
@@ -818,7 +818,7 @@ contract Issuer is Ownable, MixinSystemSettings {
         address from
     ) external onlySynthetix {
         _requireCanIssueOnBehalf(issueForAddress, from);
-        _issueSynths(issueForAddress, 0, true);
+        _createSynths(issueForAddress, 0, true);
     }
 
     function burnSynths(address from, uint amount) external onlySynthetix {
@@ -851,7 +851,7 @@ contract Issuer is Ownable, MixinSystemSettings {
         address account,
         uint balance
     ) external onlySynthRedeemer {
-        ISynth(IProxy(deprecatedSynthProxy).target()).burn(account, balance);
+        ISynth(IProxy(deprecatedSynthProxy).currentTarget()).burn(account, balance);
     }
 
     // SIP-148: Upgraded Liquidation Mechanism
@@ -892,7 +892,7 @@ contract Issuer is Ownable, MixinSystemSettings {
             // In case of forced liquidation only, remove the liquidation flag.
             liquidator().removeAccountInLiquidation(account);
         }
-        // Note: To remove the flag after self liquidation, burn to target and then call Liquidator.checkAndRemoveAccountInLiquidation(account).
+        // Note: To remove the flag after self liquidation, burn to currentTarget and then call Liquidator.checkAndRemoveAccountInLiquidation(account).
     }
 
     function _liquidationAmounts(
@@ -1064,7 +1064,7 @@ contract Issuer is Ownable, MixinSystemSettings {
         );
     }
 
-    function _issueSynths(address from, uint amount, bool issueMax) internal {
+    function _createSynths(address from, uint amount, bool issueMax) internal {
         if (_verifyCircuitBreakers()) {
             return;
         }
@@ -1122,9 +1122,9 @@ contract Issuer is Ownable, MixinSystemSettings {
         debtCache().updateCachedsUSDDebt(-SafeCast.toInt256(amountBurnt));
     }
 
-    // If burning to target, `amount` is ignored, and the correct quantity of sUSD is burnt to reach the target
+    // If burning to currentTarget, `amount` is ignored, and the correct quantity of sUSD is burnt to reach the currentTarget
     // c-ratio, allowing fees to be claimed. In this case, pending settlements will be skipped as the user
-    // will still have debt remaining after reaching their target.
+    // will still have debt remaining after reaching their currentTarget.
     function _voluntaryBurnSynths(
         address from,
         uint amount,
@@ -1135,7 +1135,7 @@ contract Issuer is Ownable, MixinSystemSettings {
         }
 
         if (!burnToTarget) {
-            // If not burning to target, then burning requires that the minimum stake time has elapsed.
+            // If not burning to currentTarget, then burning requires that the minimum stake time has elapsed.
             require(_canBurnSynths(from), "Minimum stake time not reached");
             // First settle anything pending into sUSD as burning or issuing impacts the size of the debt pool
             (, uint refunded, uint numEntriesSettled) = exchanger().settle(
@@ -1178,7 +1178,7 @@ contract Issuer is Ownable, MixinSystemSettings {
     }
 
     function _setLastIssueEvent(address account) internal {
-        // Set the timestamp of the last issueSynths
+        // Set the timestamp of the last createSynths
         flexibleStorage().setUIntValue(
             CONTRACT_NAME,
             keccak256(abi.encodePacked(LAST_ISSUE_EVENT, account)),

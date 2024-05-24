@@ -14,7 +14,7 @@ interface ITradingRewards {
 
     function getCurrentPeriod() external view returns (uint);
 
-    function getPeriodIsClaimable(uint periodID) external view returns (bool);
+    function isPeriodClaimable(uint periodID) external view returns (bool);
 
     function getPeriodIsFinalized(uint periodID) external view returns (bool);
 
@@ -43,7 +43,7 @@ interface ITradingRewards {
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    function claimRewardsForPeriod(uint periodID) external;
+    function redeemRewardsForPeriod(uint periodID) external;
 
     function claimRewardsForPeriods(uint[] calldata periodIDs) external;
 

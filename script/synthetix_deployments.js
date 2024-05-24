@@ -673,12 +673,12 @@ async function main() {
   //   deployments["AddressResolver"],
   //   signer
   // );
-  // await addressResolver.importAddresses(names, addresses);
+  // await addressResolver.loadAddresses(names, addresses);
 
-  // const abi = ["function rebuildCache() public"];
+  // const abi = ["function refreshCache() public"];
   // for (let i = 14; i < addresses.length; i++) {
   //   const contract = new ethers.Contract(addresses[i], abi, signer);
-  //   await contract.rebuildCache();
+  //   await contract.refreshCache();
   // }
 
   // const TestToken = await contractDeploy("Token", [
@@ -732,28 +732,28 @@ async function main() {
   //   deployments["ProxySNX"],
   //   signer
   // );
-  // await proxySNX.setTarget(deployments["Synthetix"]);
+  // await proxySNX.updateTarget(deployments["Synthetix"]);
 
   // const proxysUSD = await ethers.getContractAt(
   //   contractsPath.ProxyERC20,
   //   deployments["ProxysUSD"],
   //   signer
   // );
-  // await proxysUSD.setTarget(deployments["SynthsUSD"]);
+  // await proxysUSD.updateTarget(deployments["SynthsUSD"]);
 
   // const proxysETH = await ethers.getContractAt(
   //   contractsPath.ProxyERC20,
   //   deployments["ProxysETH"],
   //   signer
   // );
-  // await proxysETH.setTarget(deployments["SynthsETH"]);
+  // await proxysETH.updateTarget(deployments["SynthsETH"]);
 
   // const proxyFeePool = await ethers.getContractAt(
   //   contractsPath.Proxy,
   //   deployments["ProxyFeePool"],
   //   signer
   // );
-  // await proxyFeePool.setTarget(deployments["FeePool"]);
+  // await proxyFeePool.updateTarget(deployments["FeePool"]);
 
   // const synthetix = await ethers.getContractAt(
   //   contractsPath.Synthetix,
@@ -767,7 +767,7 @@ async function main() {
   //   deployments["TokenStateSNX"],
   //   signer
   // );
-  // await tokenStateSNX.setAssociatedContract(deployments["Synthetix"]);
+  // await tokenStateSNX.linkContract(deployments["Synthetix"]);
   // await tokenStateSNX.setBalanceOf(deployer, parseEth(1000));
   // await tokenStateSNX.setBalanceOf(user, parseEth(1000));
   // await tokenStateSNX.setBalanceOf(
@@ -775,8 +775,8 @@ async function main() {
   //   parseEth(1000)
   // );
 
-  // await synthetix.issueMaxSynths();
-  // await synthetix.exchange(
+  // await synthetix.createMaxSynths();
+  // await synthetix.executeExchange(
   //   ethers.utils.formatBytes32String("sUSD"),
   //   parseEth(50),
   //   ethers.utils.formatBytes32String("sETH")
@@ -787,21 +787,21 @@ async function main() {
   //   deployments["TokenStatesUSD"],
   //   signer
   // );
-  // await tokenStatesUSD.setAssociatedContract(deployments["SynthsUSD"]);
+  // await tokenStatesUSD.linkContract(deployments["SynthsUSD"]);
 
   // const tokenStatesETH = await ethers.getContractAt(
   //   contractsPath.TokenState,
   //   deployments["TokenStatesETH"],
   //   signer
   // );
-  // await tokenStatesETH.setAssociatedContract(deployments["SynthsETH"]);
+  // await tokenStatesETH.linkContract(deployments["SynthsETH"]);
 
   // const collateralManagerState = await ethers.getContractAt(
   //   contractsPath.CollateralManagerState,
   //   deployments["CollateralManagerState"],
   //   signer
   // );
-  // await collateralManagerState.setAssociatedContract(
+  // await collateralManagerState.linkContract(
   //   deployments["CollateralManager"]
   // );
 
@@ -852,23 +852,23 @@ async function main() {
   // synthKeys.push(ethers.utils.formatBytes32String("sETH"));
   // exchangeFeeRates.push(1);
   // exchangeFeeRates.push(1);
-  // await systemSettings.setExchangeFeeRateForSynths(synthKeys, exchangeFeeRates);
+  // await systemSettings.updateExchangeFeeRateForSynths(synthKeys, exchangeFeeRates);
 
   // await systemSettings.setIssuanceRatio(parseEth(0.2));
   // await systemSettings.setLiquidationRatio(parseEth(0.625));
-  // await systemSettings.setSnxLiquidationPenalty(parseEth(0.6)); // forced
-  // await systemSettings.setSelfLiquidationPenalty(parseEth(0.5));
-  // await systemSettings.setLiquidationDelay(28800);
-  // await systemSettings.setRateStalePeriod(86400);
-  // await systemSettings.setPriceDeviationThresholdFactor(parseEth(100));
+  // await systemSettings.updateSnxLiquidationPenalty(parseEth(0.6)); // forced
+  // await systemSettings.updateSelfLiquidationPenalty(parseEth(0.5));
+  // await systemSettings.updateLiquidationDelay(28800);
+  // await systemSettings.updateRateStalePeriod(86400);
+  // await systemSettings.updatePriceDeviationThreshold(parseEth(100));
 
-  // await systemSettings.setAtomicTwapWindow(1800);
-  // await systemSettings.setAtomicMaxVolumePerBlock(parseEth(200000));
-  // await systemSettings.setExchangeMaxDynamicFee(parseEth(0.1));
-  // await systemSettings.setExchangeDynamicFeeRounds(6);
-  // await systemSettings.setExchangeDynamicFeeThreshold(parseEth(0.0025));
-  // await systemSettings.setExchangeDynamicFeeWeightDecay(parseEth(0.95));
-  // await systemSettings.setPriceDeviationThresholdFactor(parseEth(3));
+  // await systemSettings.updateAtomicTwapWindow(1800);
+  // await systemSettings.updateAtomicMaxVolumePerBlock(parseEth(200000));
+  // await systemSettings.updateExchangeMaxDynamicFee(parseEth(0.1));
+  // await systemSettings.updateExchangeDynamicFeeRounds(6);
+  // await systemSettings.updateExchangeDynamicFeeThreshold(parseEth(0.0025));
+  // await systemSettings.updateExchangeDynamicFeeWeightDecay(parseEth(0.95));
+  // await systemSettings.updatePriceDeviationThreshold(parseEth(3));
 
   // const RouterContract = new ethers.Contract(
   //   deployments["UniswapRouter"],
@@ -1295,13 +1295,13 @@ async function deploySynth(
     deployments["AddressResolver"],
     signer
   );
-  await addressResolver.importAddresses(names, addresses);
+  await addressResolver.loadAddresses(names, addresses);
 
   console.log("=== IMPORT ADDRESSES ===");
 
-  const abi = ["function rebuildCache() public"];
+  const abi = ["function refreshCache() public"];
   const contract = new ethers.Contract(deployments[synthName], abi, signer);
-  await contract.rebuildCache();
+  await contract.refreshCache();
 
   console.log("=== REBUILD CACHE ===");
 
@@ -1344,14 +1344,14 @@ async function deploySynth(
     deployments[proxyName],
     signer
   );
-  await proxy.setTarget(deployments[synthName]);
+  await proxy.updateTarget(deployments[synthName]);
 
   const tokenState = await ethers.getContractAt(
     contractsPath.TokenState,
     deployments[tokenStateName],
     signer
   );
-  await tokenState.setAssociatedContract(deployments[synthName]);
+  await tokenState.linkContract(deployments[synthName]);
 
   const exchangeRates = await ethers.getContractAt(
     contractsPath.ExchangeRates,
@@ -1377,9 +1377,9 @@ async function deploySynth(
     deployments["SystemSettings"],
     signer
   );
-  await systemSettings.setExchangeFeeRateForSynths(synthKey, exchangeFeeRates);
+  await systemSettings.updateExchangeFeeRateForSynths(synthKey, exchangeFeeRates);
 
-  console.log("=== systemSettings.setExchangeFeeRateForSynths ===");
+  console.log("=== systemSettings.updateExchangeFeeRateForSynths ===");
 
   console.log(`=== ${synthSymbol} DONE ===`);
 }

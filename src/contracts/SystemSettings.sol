@@ -33,7 +33,7 @@ contract SystemSettings is Ownable, MixinSystemSettings {
     }
 
     // SIP-37 Fee Reclamation
-    // The number of seconds after an exchange is executed that must be waited
+    // The number of seconds after an executeExchange is executed that must be waited
     // before settlement.
     function waitingPeriodSecs() external view returns (uint) {
         return getWaitingPeriodSecs();
@@ -60,7 +60,7 @@ contract SystemSettings is Ownable, MixinSystemSettings {
         return getFeePeriodDuration();
     }
 
-    // Users are unable to claim fees if their collateralisation ratio drifts out of target threshold
+    // Users are unable to claim fees if their collateralisation ratio drifts out of currentTarget threshold
     function targetThreshold() external view returns (uint) {
         return getTargetThreshold();
     }
@@ -79,13 +79,13 @@ contract SystemSettings is Ownable, MixinSystemSettings {
     }
 
     // SIP-97 Liquidations
-    // penalty taken away from target of Collateral liquidation (with 18 decimals). E.g. 10% is 0.1e18
+    // penalty taken away from currentTarget of Collateral liquidation (with 18 decimals). E.g. 10% is 0.1e18
     function liquidationPenalty() external view returns (uint) {
         return getLiquidationPenalty();
     }
 
     // SIP-251 Differentiate Liquidation Penalties
-    // penalty taken away from target of SNX liquidation (with 18 decimals). E.g. 30% is 0.3e18
+    // penalty taken away from currentTarget of SNX liquidation (with 18 decimals). E.g. 30% is 0.3e18
     function snxLiquidationPenalty() external view returns (uint) {
         return getSnxLiquidationPenalty();
     }
@@ -306,10 +306,10 @@ contract SystemSettings is Ownable, MixinSystemSettings {
         emit IssuanceRatioUpdated(ratio);
     }
 
-    function setTradingRewardsEnabled(
+    function toggleTradingRewards(
         bool _tradingRewardsEnabled
     ) external onlyOwner {
-        flexibleStorage().setTradingRewardsEnabled(
+        flexibleStorage().toggleTradingRewards(
             SETTING_TRADING_REWARDS_ENABLED,
             _tradingRewardsEnabled
         );
@@ -324,10 +324,10 @@ contract SystemSettings is Ownable, MixinSystemSettings {
         emit WaitingPeriodSecsUpdated(_waitingPeriodSecs);
     }
 
-    function setPriceDeviationThresholdFactor(
+    function updatePriceDeviationThreshold(
         uint _priceDeviationThresholdFactor
     ) external onlyOwner {
-        flexibleStorage().setPriceDeviationThresholdFactor(
+        flexibleStorage().updatePriceDeviationThreshold(
             SETTING_PRICE_DEVIATION_THRESHOLD_FACTOR,
             _priceDeviationThresholdFactor
         );
@@ -350,8 +350,8 @@ contract SystemSettings is Ownable, MixinSystemSettings {
         emit TargetThresholdUpdated(threshold);
     }
 
-    function setLiquidationDelay(uint time) external onlyOwner {
-        flexibleStorage().setLiquidationDelay(SETTING_LIQUIDATION_DELAY, time);
+    function updateLiquidationDelay(uint time) external onlyOwner {
+        flexibleStorage().updateLiquidationDelay(SETTING_LIQUIDATION_DELAY, time);
         emit LiquidationDelayUpdated(time);
     }
 
@@ -376,8 +376,8 @@ contract SystemSettings is Ownable, MixinSystemSettings {
         emit LiquidationEscrowDurationUpdated(duration);
     }
 
-    function setSnxLiquidationPenalty(uint penalty) external onlyOwner {
-        flexibleStorage().setSnxLiquidationPenalty(
+    function updateSnxLiquidationPenalty(uint penalty) external onlyOwner {
+        flexibleStorage().updateSnxLiquidationPenalty(
             SETTING_SNX_LIQUIDATION_PENALTY,
             penalty
         );
@@ -392,8 +392,8 @@ contract SystemSettings is Ownable, MixinSystemSettings {
         emit LiquidationPenaltyUpdated(penalty);
     }
 
-    function setSelfLiquidationPenalty(uint penalty) external onlyOwner {
-        flexibleStorage().setSelfLiquidationPenalty(
+    function updateSelfLiquidationPenalty(uint penalty) external onlyOwner {
+        flexibleStorage().updateSelfLiquidationPenalty(
             SETTING_SELF_LIQUIDATION_PENALTY,
             penalty
         );
@@ -418,17 +418,17 @@ contract SystemSettings is Ownable, MixinSystemSettings {
         emit LiquidateRewardUpdated(reward);
     }
 
-    function setRateStalePeriod(uint period) external onlyOwner {
-        flexibleStorage().setRateStalePeriod(SETTING_RATE_STALE_PERIOD, period);
+    function updateRateStalePeriod(uint period) external onlyOwner {
+        flexibleStorage().updateRateStalePeriod(SETTING_RATE_STALE_PERIOD, period);
         emit RateStalePeriodUpdated(period);
     }
 
     /* ========== Exchange Fees Related ========== */
-    function setExchangeFeeRateForSynths(
+    function updateExchangeFeeRateForSynths(
         bytes32[] calldata synthKeys,
         uint256[] calldata exchangeFeeRates
     ) external onlyOwner {
-        flexibleStorage().setExchangeFeeRateForSynths(
+        flexibleStorage().updateExchangeFeeRateForSynths(
             SETTING_EXCHANGE_FEE_RATE,
             synthKeys,
             exchangeFeeRates
@@ -438,9 +438,9 @@ contract SystemSettings is Ownable, MixinSystemSettings {
         }
     }
 
-    /// @notice Set exchange dynamic fee threshold constant in decimal ratio
-    /// @param threshold The exchange dynamic fee threshold
-    function setExchangeDynamicFeeThreshold(uint threshold) external onlyOwner {
+    /// @notice Set executeExchange dynamic fee threshold constant in decimal ratio
+    /// @param threshold The executeExchange dynamic fee threshold
+    function updateExchangeDynamicFeeThreshold(uint threshold) external onlyOwner {
         require(threshold != 0, "Threshold cannot be 0");
 
         flexibleStorage().setUIntValue(
@@ -452,9 +452,9 @@ contract SystemSettings is Ownable, MixinSystemSettings {
         emit ExchangeDynamicFeeThresholdUpdated(threshold);
     }
 
-    /// @notice Set exchange dynamic fee weight decay constant
-    /// @param weightDecay The exchange dynamic fee weight decay
-    function setExchangeDynamicFeeWeightDecay(
+    /// @notice Set executeExchange dynamic fee weight decay constant
+    /// @param weightDecay The executeExchange dynamic fee weight decay
+    function updateExchangeDynamicFeeWeightDecay(
         uint weightDecay
     ) external onlyOwner {
         require(weightDecay != 0, "Weight decay cannot be 0");
@@ -468,9 +468,9 @@ contract SystemSettings is Ownable, MixinSystemSettings {
         emit ExchangeDynamicFeeWeightDecayUpdated(weightDecay);
     }
 
-    /// @notice Set exchange dynamic fee last N rounds with minimum 2 rounds
-    /// @param rounds The exchange dynamic fee last N rounds
-    function setExchangeDynamicFeeRounds(uint rounds) external onlyOwner {
+    /// @notice Set executeExchange dynamic fee last N rounds with minimum 2 rounds
+    /// @param rounds The executeExchange dynamic fee last N rounds
+    function updateExchangeDynamicFeeRounds(uint rounds) external onlyOwner {
         flexibleStorage().setUIntValue(
             SETTING_CONTRACT_NAME,
             SETTING_EXCHANGE_DYNAMIC_FEE_ROUNDS,
@@ -480,10 +480,10 @@ contract SystemSettings is Ownable, MixinSystemSettings {
         emit ExchangeDynamicFeeRoundsUpdated(rounds);
     }
 
-    /// @notice Set max exchange dynamic fee
-    /// @param maxFee The max exchange dynamic fee
-    function setExchangeMaxDynamicFee(uint maxFee) external onlyOwner {
-        flexibleStorage().setExchangeMaxDynamicFee(
+    /// @notice Set max executeExchange dynamic fee
+    /// @param maxFee The max executeExchange dynamic fee
+    function updateExchangeMaxDynamicFee(uint maxFee) external onlyOwner {
+        flexibleStorage().updateExchangeMaxDynamicFee(
             SETTING_EXCHANGE_MAX_DYNAMIC_FEE,
             maxFee
         );
@@ -600,16 +600,16 @@ contract SystemSettings is Ownable, MixinSystemSettings {
         emit CollapseFeeRateUpdated(_collapseFeeRate);
     }
 
-    function setAtomicMaxVolumePerBlock(uint _maxVolume) external onlyOwner {
-        flexibleStorage().setAtomicMaxVolumePerBlock(
+    function updateAtomicMaxVolumePerBlock(uint _maxVolume) external onlyOwner {
+        flexibleStorage().updateAtomicMaxVolumePerBlock(
             SETTING_ATOMIC_MAX_VOLUME_PER_BLOCK,
             _maxVolume
         );
         emit AtomicMaxVolumePerBlockUpdated(_maxVolume);
     }
 
-    function setAtomicTwapWindow(uint _window) external onlyOwner {
-        flexibleStorage().setAtomicTwapWindow(
+    function updateAtomicTwapWindow(uint _window) external onlyOwner {
+        flexibleStorage().updateAtomicTwapWindow(
             SETTING_ATOMIC_TWAP_WINDOW,
             _window
         );

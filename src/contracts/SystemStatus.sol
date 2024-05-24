@@ -61,7 +61,7 @@ contract SystemStatus is Ownable, ISystemStatus {
     }
 
     function requireSynthExchangeActive(bytes32 currencyKey) external view {
-        // Synth exchange and transfer requires the system be active
+        // Synth executeExchange and transfer requires the system be active
         _internalRequireSystemActive();
         _internalRequireSynthExchangeActive(currencyKey);
     }
@@ -87,7 +87,7 @@ contract SystemStatus is Ownable, ISystemStatus {
     }
 
     function requireSynthActive(bytes32 currencyKey) external view {
-        // Synth exchange and transfer requires the system be active
+        // Synth executeExchange and transfer requires the system be active
         _internalRequireSystemActive();
         _internalRequireSynthActive(currencyKey);
     }
@@ -96,7 +96,7 @@ contract SystemStatus is Ownable, ISystemStatus {
         bytes32 sourceCurrencyKey,
         bytes32 destinationCurrencyKey
     ) external view {
-        // Synth exchange and transfer requires the system be active
+        // Synth executeExchange and transfer requires the system be active
         _internalRequireSystemActive();
         _internalRequireSynthActive(sourceCurrencyKey);
         _internalRequireSynthActive(destinationCurrencyKey);
@@ -106,7 +106,7 @@ contract SystemStatus is Ownable, ISystemStatus {
         bytes32 sourceCurrencyKey,
         bytes32 destinationCurrencyKey
     ) external view {
-        // Synth exchange and transfer requires the system be active
+        // Synth executeExchange and transfer requires the system be active
         _internalRequireSystemActive();
 
         // and exchanging must be active
@@ -392,7 +392,7 @@ contract SystemStatus is Ownable, ISystemStatus {
     ) internal view {
         require(
             !synthExchangeSuspension[currencyKey].suspended,
-            "Synth exchange suspended. Operation prohibited"
+            "Synth executeExchange suspended. Operation prohibited"
         );
     }
 

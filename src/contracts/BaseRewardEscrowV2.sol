@@ -320,7 +320,7 @@ contract BaseRewardEscrowV2 is
         // check total is indeed enough
         // the caller should have checked for the general amount of escrow
         // but only here we check that startIndex results in sufficient amount
-        require(total >= targetAmount, "entries sum less than target");
+        require(total >= targetAmount, "entries sum less than currentTarget");
 
         // if too much was revoked
         if (total > targetAmount) {
