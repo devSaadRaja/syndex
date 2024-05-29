@@ -1105,7 +1105,7 @@ async function addSynths() {
   //   "Gold",
   //   "TokenStateGold",
   //   "AggregatorGold",
-  //   1 * 10 ** 8
+  //   2344 * 10 ** 8
   // );
   // await deploySynth(
   //   "ProxyWheat",
@@ -1113,7 +1113,7 @@ async function addSynths() {
   //   "Wheat",
   //   "TokenStateWheat",
   //   "AggregatorWheat",
-  //   1 * 10 ** 8
+  //   729 * 10 ** 8
   // );
   // await deploySynth(
   //   "ProxyCrudeOil",
@@ -1121,7 +1121,7 @@ async function addSynths() {
   //   "CrudeOil",
   //   "TokenStateCrudeOil",
   //   "AggregatorCrudeOil",
-  //   1 * 10 ** 8
+  //   79 * 10 ** 8
   // );
   // await deploySynth(
   //   "ProxyOrangeJuice",
@@ -1129,7 +1129,7 @@ async function addSynths() {
   //   "OrangeJuice",
   //   "TokenStateOrangeJuice",
   //   "AggregatorOrangeJuice",
-  //   1 * 10 ** 8
+  //   477 * 10 ** 8
   // );
   // await deploySynth(
   //   "ProxySilver",
@@ -1137,7 +1137,7 @@ async function addSynths() {
   //   "Silver",
   //   "TokenStateSilver",
   //   "AggregatorSilver",
-  //   1 * 10 ** 8
+  //   32 * 10 ** 8
   // );
   // await deploySynth(
   //   "ProxyPlatinum",
@@ -1145,7 +1145,7 @@ async function addSynths() {
   //   "Platinum",
   //   "TokenStatePlatinum",
   //   "AggregatorPlatinum",
-  //   1 * 10 ** 8
+  //   1046 * 10 ** 8
   // );
   // await deploySynth(
   //   "ProxyPalladium",
@@ -1153,7 +1153,7 @@ async function addSynths() {
   //   "Palladium",
   //   "TokenStatePalladium",
   //   "AggregatorPalladium",
-  //   1 * 10 ** 8
+  //   957 * 10 ** 8
   // );
   // await deploySynth(
   //   "ProxyLivestock",
@@ -1169,7 +1169,7 @@ async function addSynths() {
   //   "Coffee",
   //   "TokenStateCoffee",
   //   "AggregatorCoffee",
-  //   1 * 10 ** 8
+  //   233 * 10 ** 8
   // );
   // await deploySynth(
   //   "ProxySugar",
@@ -1177,7 +1177,7 @@ async function addSynths() {
   //   "Sugar",
   //   "TokenStateSugar",
   //   "AggregatorSugar",
-  //   1 * 10 ** 8
+  //   18 * 10 ** 8
   // );
   // await deploySynth(
   //   "ProxyCotton",
@@ -1185,7 +1185,7 @@ async function addSynths() {
   //   "Cotton",
   //   "TokenStateCotton",
   //   "AggregatorCotton",
-  //   1 * 10 ** 8
+  //   81 * 10 ** 8
   // );
   // await deploySynth(
   //   "ProxySoybeans",
@@ -1201,7 +1201,7 @@ async function addSynths() {
   //   "NaturalGas",
   //   "TokenStateNaturalGas",
   //   "AggregatorNaturalGas",
-  //   1 * 10 ** 8
+  //   2.456 * 10 ** 8
   // );
   // await deploySynth(
   //   "ProxyIron",
@@ -1217,7 +1217,7 @@ async function addSynths() {
   //   "Cocoa",
   //   "TokenStateCocoa",
   //   "AggregatorCocoa",
-  //   1 * 10 ** 8
+  //   9423 * 10 ** 8
   // );
   // await deploySynth(
   //   "ProxySteel",
@@ -1233,7 +1233,7 @@ async function addSynths() {
   //   "Copper",
   //   "TokenStateCopper",
   //   "AggregatorCopper",
-  //   1 * 10 ** 8
+  //   4.7835 * 10 ** 8
   // );
 }
 
@@ -1377,7 +1377,10 @@ async function deploySynth(
     deployments["SystemSettings"],
     signer
   );
-  await systemSettings.updateExchangeFeeRateForSynths(synthKey, exchangeFeeRates);
+  await systemSettings.updateExchangeFeeRateForSynths(
+    synthKey,
+    exchangeFeeRates
+  );
 
   console.log("=== systemSettings.updateExchangeFeeRateForSynths ===");
 
