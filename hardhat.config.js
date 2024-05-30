@@ -59,6 +59,7 @@ module.exports = {
     tenderly: {
       url,
       chainId,
+      accounts: [process.env.PRIVATE_KEY],
     },
     // mainnet: {
     //   url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.MAINNET_ALCHEMY_API_KEY}`,
