@@ -379,7 +379,7 @@ contract SMXTest is Setup {
         smx.burn();
         vm.stopPrank();
 
-        vm.startPrank(user7);
+        vm.startPrank(owner);
         smx.grantRole(keccak256("BURNER_ROLE"), user8);
         vm.stopPrank();
 
@@ -635,7 +635,7 @@ contract SMXTest is Setup {
     }
 
     function testBlacklist() public {
-        vm.startPrank(user7);
+        vm.startPrank(owner);
         smx.updateBlacklist(user8, true);
         vm.stopPrank();
         vm.startPrank(user8);
