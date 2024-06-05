@@ -73,9 +73,12 @@ contract Setup is Test, Utils {
     address public user3 = vm.addr(4);
     address public user4 = vm.addr(5);
     address public user5 = vm.addr(6);
-    address public treasury = vm.addr(7);
-    address public reserveAddr = vm.addr(8);
-    address public stakingAddr = vm.addr(9);
+    address public user6 = vm.addr(7);
+    address public user7 = vm.addr(8);
+    address public user8 = vm.addr(9);
+    address public treasury = vm.addr(10);
+    address public reserveAddr = vm.addr(11);
+    address public stakingAddr = vm.addr(12);
 
     address public WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
@@ -152,11 +155,16 @@ contract Setup is Test, Utils {
         deal(user1, 100 ether);
         deal(user2, 100 ether);
         deal(user3, 100 ether);
+        deal(user6, 100 ether);
+        deal(user7, 100 ether);
+        deal(user8, 100 ether);
 
         deal(WETH, owner, 100 ether);
         deal(WETH, user1, 100 ether);
         deal(WETH, user2, 100 ether);
         deal(WETH, user3, 100 ether);
+        deal(WETH, user7, 100 ether);
+        deal(WETH, user8, 100 ether);
 
         vm.startPrank(owner); // OWNER
 
@@ -451,9 +459,7 @@ contract Setup is Test, Utils {
         tokenStateSNX.linkContract(address(synthetix));
         tokenStatesUSD.linkContract(address(synthsUSD));
         tokenStatesETH.linkContract(address(synthsETH));
-        collateralManagerState.linkContract(
-            address(collateralManager)
-        );
+        collateralManagerState.linkContract(address(collateralManager));
 
         rewardEscrowV2Storage.setFallbackRewardEscrow(
             address(rewardEscrowV2Frozen)
@@ -510,7 +516,10 @@ contract Setup is Test, Utils {
         synthKeys[1] = "sETH";
         exchangeFeeRates[0] = 1;
         exchangeFeeRates[1] = 1;
-        systemSettings.updateExchangeFeeRateForSynths(synthKeys, exchangeFeeRates);
+        systemSettings.updateExchangeFeeRateForSynths(
+            synthKeys,
+            exchangeFeeRates
+        );
 
         // // uint256 val = 100;
         // // uint256 minCratio = 150;
@@ -545,6 +554,9 @@ contract Setup is Test, Utils {
         tokenStateSNX.setBalanceOf(user3, 15 ether);
         tokenStateSNX.setBalanceOf(user4, 1000 ether);
         tokenStateSNX.setBalanceOf(user5, 1000 ether);
+        tokenStateSNX.setBalanceOf(user6, 1000 ether);
+        tokenStateSNX.setBalanceOf(user7, 5000 ether);
+        tokenStateSNX.setBalanceOf(user8, 5000 ether);
         vm.stopPrank();
     }
 }
