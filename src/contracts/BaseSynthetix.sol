@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "./Blacklist.sol";
 import "./TokenState.sol";
 import "./MixinResolver.sol";
 import "./ExternStateToken.sol";
@@ -15,7 +16,7 @@ import "../interfaces/IRewardEscrowV2.sol";
 import "../interfaces/ILiquidatorRewards.sol";
 import "../interfaces/IRewardsDistribution.sol";
 
-contract BaseSynthetix is ExternStateToken, MixinResolver {
+contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
     // ========== STATE VARIABLES ==========
 
     // Available Synths which can be used with the system
@@ -372,7 +373,14 @@ contract BaseSynthetix is ExternStateToken, MixinResolver {
     function transfer(
         address to,
         uint value
-    ) external onlyProxyOrInternal systemActive returns (bool) {
+    )
+        external
+        onlyProxyOrInternal
+        systemActive
+        notBlacklisted(messageSender)
+        notBlacklisted(to)
+        returns (bool)
+    {
         // Ensure they're not trying to exceed their locked amount -- only if they have debt.
         _canTransfer(messageSender, value);
 
@@ -386,7 +394,14 @@ contract BaseSynthetix is ExternStateToken, MixinResolver {
         address from,
         address to,
         uint value
-    ) external onlyProxyOrInternal systemActive returns (bool) {
+    )
+        external
+        onlyProxyOrInternal
+        systemActive
+        notBlacklisted(from)
+        notBlacklisted(to)
+        returns (bool)
+    {
         // Ensure they're not trying to exceed their locked amount -- only if they have debt.
         _canTransfer(from, value);
 
@@ -696,21 +711,21 @@ contract BaseSynthetix is ExternStateToken, MixinResolver {
         _notImplemented();
     }
 
-    function mint() external virtual returns (bool) {
-        _notImplemented();
-    }
+    // function mint() external virtual returns (bool) {
+    //     _notImplemented();
+    // }
 
-    function mintSecondary(address, uint) external virtual {
-        _notImplemented();
-    }
+    // function mintSecondary(address, uint) external virtual {
+    //     _notImplemented();
+    // }
 
-    function mintSecondaryRewards(uint) external virtual {
-        _notImplemented();
-    }
+    // function mintSecondaryRewards(uint) external virtual {
+    //     _notImplemented();
+    // }
 
-    function burnSecondary(address, uint) external virtual {
-        _notImplemented();
-    }
+    // function burnSecondary(address, uint) external virtual {
+    //     _notImplemented();
+    // }
 
     function _notImplemented() internal pure {
         revert("Cannot be run on this layer");

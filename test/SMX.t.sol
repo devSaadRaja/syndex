@@ -713,6 +713,33 @@ contract SMXTest is Setup {
         vm.stopPrank();
     }
 
+    function testSNXBlacklist() public {
+        vm.startPrank(owner);
+        synthetix.updateBlacklist(user1, true);
+        vm.stopPrank();
+        vm.startPrank(user1);
+        vm.expectRevert("Address is blacklisted");
+        proxySNX.transfer(reserveAddr, 1 ether);
+        vm.stopPrank();
+    }
+
+    function testSNXOnlyBurner() public {
+        vm.startPrank(user8);
+        vm.expectRevert();
+        synthetix.burn();
+        vm.stopPrank();
+
+        vm.startPrank(owner);
+        synthetix.grantRole(keccak256("BURNER_ROLE"), user8);
+        vm.stopPrank();
+
+        vm.startPrank(user8);
+        assertEq(proxySNX.balanceOf(reserveAddr), 200000 ether);
+        synthetix.burn();
+        assertEq(proxySNX.balanceOf(reserveAddr), 100000 ether);
+        vm.stopPrank();
+    }
+
     function _swap(
         address _tokenIn,
         address _tokenOut,
