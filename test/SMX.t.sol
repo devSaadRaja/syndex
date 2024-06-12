@@ -399,91 +399,160 @@ contract SMXTest is Setup {
         );
         vm.stopPrank();
 
+        // vm.startPrank(user4);
+        // synthetix.createMaxSynths();
+        // synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        // vm.stopPrank();
+
+        // vm.startPrank(user6);
+        // synthetix.createMaxSynths();
+        // // synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        // vm.stopPrank();
+
+        vm.startPrank(user8);
+
+        synthetix.executeExchange("sUSD", 100 ether, "sETH");
+        // ! synthetix.executeExchange("sUSD", 1 ether, "sETH");
+        // ! synthetix.executeExchange("sUSD", 1 ether, "sETH");
+        // ! synthetix.executeExchange("sUSD", 1 ether, "sETH");
+        // ! synthetix.executeExchange("sUSD", 1 ether, "sETH");
+
+        // // ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
+        // //     .ExactInputSingleParams({
+        // //         tokenIn: address(token),
+        // //         tokenOut: address(proxysUSD),
+        // //         fee: v3Pool.fee(),
+        // //         recipient: address(synthSwap),
+        // //         deadline: block.timestamp + 10 minutes,
+        // //         amountIn: 1 ether,
+        // //         amountOutMinimum: 0,
+        // //         sqrtPriceLimitX96: 0
+        // //     });
+        // // bytes memory _data = abi.encodeWithSelector(
+        // //     ISwapRouter.exactInputSingle.selector,
+        // //     inputParams
+        // // );
+
+        // // IERC20(address(token)).approve(address(synthSwap), 1 ether);
+        // // synthSwap.uniswapSwapInto("sETH", address(token), 1 ether, _data);
+
+        vm.stopPrank();
+
+        vm.startPrank(user7);
+        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        vm.stopPrank();
+
         vm.startPrank(user5);
-
-        ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
-            .ExactInputSingleParams({
-                tokenIn: address(token),
-                tokenOut: address(proxysUSD),
-                fee: v3Pool.fee(),
-                recipient: address(synthSwap),
-                deadline: block.timestamp + 10 minutes,
-                amountIn: 1 ether,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
-            });
-        bytes memory _data = abi.encodeWithSelector(
-            ISwapRouter.exactInputSingle.selector,
-            inputParams
-        );
-
-        console.log();
-        console.log("--- BEFORE ---");
-        console.log(
-            "token balanceOf(user5)",
-            IERC20(address(token)).balanceOf(user5)
-        );
-        console.log(
-            "sETH balanceOf(user5)",
-            IERC20(address(proxysETH)).balanceOf(user5)
-        );
-
-        IERC20(address(token)).approve(address(synthSwap), 1 ether);
-        synthSwap.uniswapSwapInto("sETH", address(token), 1 ether, _data);
-
-        console.log();
-        console.log("--- AFTER ---");
-        console.log(
-            "token balanceOf(user5)",
-            IERC20(address(token)).balanceOf(user5)
-        );
-        console.log(
-            "sETH balanceOf(user5)",
-            IERC20(address(proxysETH)).balanceOf(user5)
-        );
-
         tradingRewards.closeCurrentPeriodWithRewards(
             tradingRewards.getPeriodRecordedFees(0)
         );
+        vm.stopPrank();
 
         // assertEq(tradingRewards.getPeriodAvailableRewards(0), 1002);
         // assertEq(tradingRewards.isPeriodClaimable(0), true);
         // assertEq(tradingRewards.getPeriodRecordedFees(0), 1002);
         // assertEq(tradingRewards.getAvailableRewards(), 1002);
         // assertEq(
-        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user5, 0),
+        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user8, 0),
         //     1002
         // );
 
-        // uint256 amountBefore = IERC20(address(proxySNX)).balanceOf(user5);
+        // uint256 amountBefore = IERC20(address(proxySNX)).balanceOf(user8);
         // uint256 rewardAmount = tradingRewards
-        //     .getAvailableRewardsForAccountForPeriod(user5, 0);
+        //     .getAvailableRewardsForAccountForPeriod(user8, 0);
 
         // tradingRewards.redeemRewardsForPeriod(0);
 
         // assertEq(
-        //     IERC20(address(proxySNX)).balanceOf(user5),
+        //     IERC20(address(proxySNX)).balanceOf(user8),
         //     amountBefore + rewardAmount
         // );
 
-        console.log(tradingRewards.getPeriodRecordedFees(0));
-        console.log(tradingRewards.isPeriodClaimable(0));
-        console.log(tradingRewards.getAvailableRewards());
+        console.log();
+
+        // console.log(
+        //     tradingRewards.getPeriodRecordedFees(0),
+        //     "<-- tradingRewards.getPeriodRecordedFees(0)"
+        // );
+        // console.log(
+        //     tradingRewards.isPeriodClaimable(0),
+        //     "< -- tradingRewards.isPeriodClaimable(0)"
+        // );
+        // console.log(
+        //     tradingRewards.getPeriodAvailableRewards(0),
+        //     "<-- getPeriodAvailableRewards(0)"
+        // );
         console.log(
-            "getPeriodAvailableRewards(0)",
-            tradingRewards.getPeriodAvailableRewards(0)
+            tradingRewards.getAvailableRewards(),
+            "<-- tradingRewards.getAvailableRewards()"
         );
         console.log();
         console.log(
-            "getAvailableRewardsForAccountForPeriod(user5, 0)",
-            tradingRewards.getAvailableRewardsForAccountForPeriod(user5, 0)
+            tradingRewards.getAvailableRewardsForAccountForPeriod(owner, 0),
+            "<-- getAvailableRewardsForAccountForPeriod(owner, 0)"
+        );
+        // console.log(
+        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user1, 0),
+        //     "<-- getAvailableRewardsForAccountForPeriod(user1, 0)"
+        // );
+        // console.log(
+        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user2, 0),
+        //     "<-- getAvailableRewardsForAccountForPeriod(user2, 0)"
+        // );
+        // console.log(
+        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user3, 0),
+        //     "<-- getAvailableRewardsForAccountForPeriod(user3, 0)"
+        // );
+        // console.log(
+        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user4, 0),
+        //     "<-- getAvailableRewardsForAccountForPeriod(user4, 0)"
+        // );
+        // console.log(
+        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user5, 0),
+        //     "<-- getAvailableRewardsForAccountForPeriod(user5, 0)"
+        // );
+        console.log(
+            tradingRewards.getAvailableRewardsForAccountForPeriod(user4, 0),
+            "<-- getAvailableRewardsForAccountForPeriod(user4, 0)"
         );
         console.log(
-            "getAvailableRewardsForAccountForPeriod(user7, 0)",
-            tradingRewards.getAvailableRewardsForAccountForPeriod(user7, 0)
+            tradingRewards.getAvailableRewardsForAccountForPeriod(user6, 0),
+            "<-- getAvailableRewardsForAccountForPeriod(user6, 0)"
         );
-
-        vm.stopPrank();
+        console.log(
+            tradingRewards.getAvailableRewardsForAccountForPeriod(user7, 0),
+            "<-- getAvailableRewardsForAccountForPeriod(user7, 0)"
+        );
+        console.log(
+            tradingRewards.getAvailableRewardsForAccountForPeriod(user8, 0),
+            "<-- getAvailableRewardsForAccountForPeriod(user8, 0)"
+        );
+        console.log();
+        console.log(
+            synthetixDebtShare.totalSupply(),
+            "<-- synthetixDebtShare.totalSupply()"
+        );
+        console.log();
+        // console.log(
+        //     synthetixDebtShare.calculateTotalSupplyForPeriod(1),
+        //     "<-- synthetixDebtShare.calculateTotalSupplyForPeriod(1)"
+        // );
+        console.log(
+            synthetixDebtShare.balanceOf(user4),
+            "<-- synthetixDebtShare.balanceOf(user4)"
+        );
+        console.log(
+            synthetixDebtShare.balanceOf(user6),
+            "<-- synthetixDebtShare.balanceOf(user6)"
+        );
+        console.log(
+            synthetixDebtShare.balanceOf(user7),
+            "<-- synthetixDebtShare.balanceOf(user7)"
+        );
+        console.log(
+            synthetixDebtShare.balanceOf(user8),
+            "<-- synthetixDebtShare.balanceOf(user8)"
+        );
     }
 
     function _consoleData(string memory str) internal view {
@@ -578,7 +647,7 @@ contract SMXTest is Setup {
             ISwapRouter.exactInputSingle.selector,
             inputParams
         );
-        
+
         IERC20(address(token)).approve(address(synthSwap), 1 ether);
         synthSwap.uniswapSwapInto("sETH", address(token), 1 ether, _data);
 
