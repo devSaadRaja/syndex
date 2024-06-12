@@ -514,8 +514,8 @@ contract Setup is Test, Utils {
         uint256[] memory exchangeFeeRates = new uint256[](2);
         synthKeys[0] = "sUSD";
         synthKeys[1] = "sETH";
-        exchangeFeeRates[0] = 1;
-        exchangeFeeRates[1] = 1;
+        exchangeFeeRates[0] = 0;
+        exchangeFeeRates[1] = 0.001 ether; // 0.0035
         systemSettings.updateExchangeFeeRateForSynths(
             synthKeys,
             exchangeFeeRates
@@ -553,7 +553,7 @@ contract Setup is Test, Utils {
         tokenStateSNX.setBalanceOf(user2, 10 ether);
         tokenStateSNX.setBalanceOf(user3, 15 ether);
         tokenStateSNX.setBalanceOf(user4, 1000 ether);
-        tokenStateSNX.setBalanceOf(user5, 1000 ether);
+        tokenStateSNX.setBalanceOf(user5, 5000 ether);
         tokenStateSNX.setBalanceOf(user6, 1000 ether);
         tokenStateSNX.setBalanceOf(user7, 5000 ether);
         tokenStateSNX.setBalanceOf(user8, 5000 ether);

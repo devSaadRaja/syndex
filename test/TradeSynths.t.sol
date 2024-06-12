@@ -29,13 +29,16 @@ contract TradeSynthsTest is Setup {
             tradingRewards.getPeriodRecordedFees(0)
         );
 
-        assertEq(tradingRewards.getPeriodAvailableRewards(0), 200);
+        assertEq(
+            tradingRewards.getPeriodAvailableRewards(0),
+            100000000000000000
+        );
         assertEq(tradingRewards.isPeriodClaimable(0), true);
-        assertEq(tradingRewards.getPeriodRecordedFees(0), 200);
-        assertEq(tradingRewards.getAvailableRewards(), 200);
+        assertEq(tradingRewards.getPeriodRecordedFees(0), 100000000000000000);
+        assertEq(tradingRewards.getAvailableRewards(), 100000000000000000);
         assertEq(
             tradingRewards.getAvailableRewardsForAccountForPeriod(user5, 0),
-            200
+            100000000000000000
         );
 
         uint256 amountBefore = IERC20(address(proxySNX)).balanceOf(user5);
@@ -43,7 +46,7 @@ contract TradeSynthsTest is Setup {
             .getAvailableRewardsForAccountForPeriod(user5, 0);
 
         tradingRewards.redeemRewardsForPeriod(0);
-        
+
         assertEq(
             IERC20(address(proxySNX)).balanceOf(user5),
             amountBefore + rewardAmount
