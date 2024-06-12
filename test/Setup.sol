@@ -266,7 +266,7 @@ contract Setup is Test, Utils {
             payable(address(proxySNX)),
             address(tokenStateSNX),
             owner,
-            1_000_000 ether,
+            0,
             address(addressResolver)
         );
         synthsUSD = new MultiCollateralSynth(
@@ -545,25 +545,23 @@ contract Setup is Test, Utils {
         smx.setDeploy(true);
         smx.setTrade(true);
 
+        synthetix.mint(owner, 1_000_000 ether);
         proxySNX.transfer(reserveAddr, 200000 ether);
         synthetix.setReserveAddress(reserveAddr);
+
+        proxySNX.transfer(user1, 5 ether);
+        proxySNX.transfer(user2, 10 ether);
+        proxySNX.transfer(user3, 15 ether);
+        proxySNX.transfer(user4, 1000 ether);
+        proxySNX.transfer(user5, 5000 ether);
+        proxySNX.transfer(user6, 1000 ether);
+        proxySNX.transfer(user7, 5000 ether);
+        proxySNX.transfer(user8, 5000 ether);
 
         vm.stopPrank(); // OWNER
 
         vm.startPrank(address(reserveAddr));
         proxySNX.approve(user8, 1_000_000_000 ether);
-        vm.stopPrank();
-
-        vm.startPrank(address(synthetix));
-        tokenStateSNX.setBalanceOf(owner, 1000 ether);
-        tokenStateSNX.setBalanceOf(user1, 5 ether);
-        tokenStateSNX.setBalanceOf(user2, 10 ether);
-        tokenStateSNX.setBalanceOf(user3, 15 ether);
-        tokenStateSNX.setBalanceOf(user4, 1000 ether);
-        tokenStateSNX.setBalanceOf(user5, 5000 ether);
-        tokenStateSNX.setBalanceOf(user6, 1000 ether);
-        tokenStateSNX.setBalanceOf(user7, 5000 ether);
-        tokenStateSNX.setBalanceOf(user8, 5000 ether);
         vm.stopPrank();
     }
 }
