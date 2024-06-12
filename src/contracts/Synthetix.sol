@@ -51,14 +51,18 @@ contract Synthetix is AccessControl, BaseSynthetix {
         _grantRole(DEFAULT_ADMIN_ROLE, _owner);
         _grantRole(MINTER_ROLE, _owner);
         _grantRole(BURNER_ROLE, _owner);
-
-        tokenState.setBalanceOf(_owner, _totalSupply);
     }
 
     function setReserveAddress(
         address _reserveAddr
     ) external onlyRole(DEFAULT_ADMIN_ROLE) isValidAddress(_reserveAddr) {
         reserveAddr = _reserveAddr;
+    }
+
+    function setBurnAmount(
+        uint256 _amount
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        burnAmount = _amount;
     }
 
     function resolverAddressesRequired()

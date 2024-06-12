@@ -23,9 +23,7 @@ contract LegacyTokenState is LegacyOwned {
     /* ========== SETTERS ========== */
 
     // Change the associated contract to a new address
-    function linkContract(
-        address _associatedContract
-    ) external onlyOwner {
+    function linkContract(address _associatedContract) external onlyOwner {
         associatedContract = _associatedContract;
         emit AssociatedContractUpdated(_associatedContract);
     }
@@ -38,8 +36,10 @@ contract LegacyTokenState is LegacyOwned {
         allowance[tokenOwner][spender] = value;
     }
 
-    function setBalanceOf(address account, uint value) external {
-        // onlyAssociatedContract
+    function setBalanceOf(
+        address account,
+        uint value
+    ) external onlyAssociatedContract {
         balanceOf[account] = value;
     }
 
