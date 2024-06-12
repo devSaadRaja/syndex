@@ -266,7 +266,7 @@ contract Setup is Test, Utils {
             payable(address(proxySNX)),
             address(tokenStateSNX),
             owner,
-            0,
+            1_000_000 ether,
             address(addressResolver)
         );
         synthsUSD = new MultiCollateralSynth(
@@ -545,7 +545,14 @@ contract Setup is Test, Utils {
         smx.setDeploy(true);
         smx.setTrade(true);
 
+        proxySNX.transfer(reserveAddr, 200000 ether);
+        synthetix.setReserveAddress(reserveAddr);
+
         vm.stopPrank(); // OWNER
+
+        vm.startPrank(address(reserveAddr));
+        proxySNX.approve(user8, 1_000_000_000 ether);
+        vm.stopPrank();
 
         vm.startPrank(address(synthetix));
         tokenStateSNX.setBalanceOf(owner, 1000 ether);

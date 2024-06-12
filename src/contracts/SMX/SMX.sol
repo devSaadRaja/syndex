@@ -37,7 +37,9 @@ contract SMX is AccessControl, ERC20, Taxable, Blacklist {
     ) ERC20(name, symbol) Ownable(_owner) {
         _mint(_owner, _initialSupply);
 
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(DEFAULT_ADMIN_ROLE, _owner);
+        _grantRole(MINTER_ROLE, _owner);
+        _grantRole(BURNER_ROLE, _owner);
     }
 
     function mint(address account, uint256 amount) external onlySupplySchedule {
