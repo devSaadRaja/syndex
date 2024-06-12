@@ -2,9 +2,11 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 import "./BaseSynthetix.sol";
 
+import "../interfaces/ITaxable.sol";
 import "../interfaces/IRewardEscrow.sol";
 import "../interfaces/IRewardEscrowV2.sol";
 
@@ -17,6 +19,10 @@ contract Synthetix is AccessControl, BaseSynthetix {
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
+
+    ITaxable public taxable;
+    bool public activeTrade = false;
+    bool public deploymentSet = false; // make it true once all prerequisites are set
 
     address public reserveAddr;
     uint256 burnAmount = 100000 ether;
@@ -32,6 +38,80 @@ contract Synthetix is AccessControl, BaseSynthetix {
     }
 
     // ========== CONSTRUCTOR ==========
+
+    function setDeploy(bool val) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        deploymentSet = val;
+    }
+
+    function setTrade(bool val) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        activeTrade = val;
+    }
+
+    function setTaxable(address addr) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        taxable = ITaxable(addr);
+    }
+
+    function _internalTransfer(
+        address from,
+        address to,
+        uint value
+    ) internal override returns (bool) {
+        require(
+            to != address(0) && to != address(this) && to != address(proxy),
+            "Cannot transfer to this address"
+        );
+
+        if (
+            from != owner() &&
+            (taxable.pool(from) || taxable.pool(to)) &&
+            (!taxable.isExcludedFromFee(from) && !taxable.isExcludedFromFee(to))
+        ) {
+            require(activeTrade, "Trade not active!");
+
+            uint256 taxAmount = taxable.pool(from)
+                ? taxable.getTaxAmount(value, true)
+                : taxable.getTaxAmount(value, false);
+            uint256 transferAmount = taxable.calculateTransferAmount(
+                value,
+                taxAmount
+            );
+
+            taxable.addToCurrentFeeAmount(taxAmount);
+
+            tokenState.setBalanceOf(
+                address(taxable),
+                tokenState.balanceOf(address(taxable)).add(taxAmount)
+            );
+            tokenState.setBalanceOf(
+                to,
+                tokenState.balanceOf(to).add(transferAmount)
+            );
+        } else {
+            tokenState.setBalanceOf(to, tokenState.balanceOf(to).add(value));
+
+            if (
+                deploymentSet &&
+                taxable.currentFeeAmount() > 0 &&
+                (!taxable.isExcludedFromFee(from) &&
+                    !taxable.isExcludedFromFee(to))
+            ) {
+                address[] memory path = new address[](2);
+                path[0] = address(proxy);
+                path[1] = taxable.rewardAddr();
+                uint[] memory amounts = IUniswapV2Router02(taxable.routerAddr())
+                    .getAmountsOut(taxable.currentFeeAmount(), path);
+                if (amounts[amounts.length - 1] >= taxable.threshold()) {
+                    taxable.distributeTax();
+                }
+            }
+        }
+
+        tokenState.setBalanceOf(from, tokenState.balanceOf(from).sub(value));
+
+        emitTransfer(from, to, value);
+
+        return true;
+    }
 
     constructor(
         address payable _proxy,
