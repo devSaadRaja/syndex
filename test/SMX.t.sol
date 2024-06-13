@@ -92,19 +92,6 @@ contract SMXTest is Setup {
             address(rewardEscrow2)
         );
 
-        smx.approve(address(router), 50 ether);
-        IERC20(WETH).approve(address(router), 50 ether);
-        router.addLiquidity(
-            address(smx),
-            WETH,
-            50 ether,
-            50 ether,
-            0,
-            0,
-            user7,
-            block.timestamp + 10 minutes
-        );
-
         supplySchedule2.setSMX(address(smx));
         supplySchedule2.setStakingRewards(address(stakingAddr));
         supplySchedule2.setTradingRewards(address(multipleMerkleDistributor));
@@ -417,30 +404,50 @@ contract SMXTest is Setup {
         // ! synthetix.executeExchange("sUSD", 1 ether, "sETH");
         // ! synthetix.executeExchange("sUSD", 1 ether, "sETH");
 
-        // // ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
-        // //     .ExactInputSingleParams({
-        // //         tokenIn: address(token),
-        // //         tokenOut: address(proxysUSD),
-        // //         fee: v3Pool.fee(),
-        // //         recipient: address(synthSwap),
-        // //         deadline: block.timestamp + 10 minutes,
-        // //         amountIn: 1 ether,
-        // //         amountOutMinimum: 0,
-        // //         sqrtPriceLimitX96: 0
-        // //     });
-        // // bytes memory _data = abi.encodeWithSelector(
-        // //     ISwapRouter.exactInputSingle.selector,
-        // //     inputParams
-        // // );
-
-        // // IERC20(address(token)).approve(address(synthSwap), 1 ether);
-        // // synthSwap.uniswapSwapInto("sETH", address(token), 1 ether, _data);
-
         vm.stopPrank();
 
         vm.startPrank(user7);
         synthetix.executeExchange("sUSD", 50 ether, "sETH");
         vm.stopPrank();
+
+        console.log(
+            feePool.isFeesClaimable(user8),
+            "<-- feePool.isFeesClaimable(user8)"
+        );
+        console.log();
+        console.log(
+            feePool.totalFeesAvailable(),
+            "<-- feePool.totalFeesAvailable()"
+        );
+        console.log(
+            feePool.totalRewardsAvailable(),
+            "<-- feePool.totalRewardsAvailable()"
+        );
+        (uint256 totalFees, uint256 totalRewards) = feePool.feesAvailable(
+            user8
+        );
+        console.log(totalFees, "<-- totalFees");
+        console.log(totalRewards, "<-- totalRewards");
+
+        _passTime(7 days);
+
+        vm.startPrank(owner);
+        feePool.closeCurrentFeePeriod();
+        vm.stopPrank();
+
+        console.log();
+        console.log("AFTER CLOSING");
+        console.log(
+            feePool.totalFeesAvailable(),
+            "<-- feePool.totalFeesAvailable()"
+        );
+        console.log(
+            feePool.totalRewardsAvailable(),
+            "<-- feePool.totalRewardsAvailable()"
+        );
+        (totalFees, totalRewards) = feePool.feesAvailable(user8);
+        console.log(totalFees, "<-- totalFees");
+        console.log(totalRewards, "<-- totalRewards");
 
         vm.startPrank(user5);
         tradingRewards.closeCurrentPeriodWithRewards(
@@ -468,20 +475,16 @@ contract SMXTest is Setup {
         //     amountBefore + rewardAmount
         // );
 
+        console.log(
+            IERC20(address(proxysUSD)).balanceOf(address(feePool)),
+            "<-- proxysUSD balanceOf(address(feePool))"
+        );
+
         console.log();
 
-        // console.log(
-        //     tradingRewards.getPeriodRecordedFees(0),
-        //     "<-- tradingRewards.getPeriodRecordedFees(0)"
-        // );
-        // console.log(
-        //     tradingRewards.isPeriodClaimable(0),
-        //     "< -- tradingRewards.isPeriodClaimable(0)"
-        // );
-        // console.log(
-        //     tradingRewards.getPeriodAvailableRewards(0),
-        //     "<-- getPeriodAvailableRewards(0)"
-        // );
+        // "<-- tradingRewards.getPeriodRecordedFees(0)"
+        // "<-- tradingRewards.isPeriodClaimable(0)"
+        // "<-- getPeriodAvailableRewards(0)"
         console.log(
             tradingRewards.getAvailableRewards(),
             "<-- tradingRewards.getAvailableRewards()"
@@ -491,26 +494,6 @@ contract SMXTest is Setup {
             tradingRewards.getAvailableRewardsForAccountForPeriod(owner, 0),
             "<-- getAvailableRewardsForAccountForPeriod(owner, 0)"
         );
-        // console.log(
-        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user1, 0),
-        //     "<-- getAvailableRewardsForAccountForPeriod(user1, 0)"
-        // );
-        // console.log(
-        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user2, 0),
-        //     "<-- getAvailableRewardsForAccountForPeriod(user2, 0)"
-        // );
-        // console.log(
-        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user3, 0),
-        //     "<-- getAvailableRewardsForAccountForPeriod(user3, 0)"
-        // );
-        // console.log(
-        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user4, 0),
-        //     "<-- getAvailableRewardsForAccountForPeriod(user4, 0)"
-        // );
-        // console.log(
-        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user5, 0),
-        //     "<-- getAvailableRewardsForAccountForPeriod(user5, 0)"
-        // );
         console.log(
             tradingRewards.getAvailableRewardsForAccountForPeriod(user4, 0),
             "<-- getAvailableRewardsForAccountForPeriod(user4, 0)"
@@ -533,10 +516,7 @@ contract SMXTest is Setup {
             "<-- synthetixDebtShare.totalSupply()"
         );
         console.log();
-        // console.log(
-        //     synthetixDebtShare.calculateTotalSupplyForPeriod(1),
-        //     "<-- synthetixDebtShare.calculateTotalSupplyForPeriod(1)"
-        // );
+        // "<-- synthetixDebtShare.calculateTotalSupplyForPeriod(1)"
         console.log(
             synthetixDebtShare.balanceOf(user4),
             "<-- synthetixDebtShare.balanceOf(user4)"
@@ -667,6 +647,21 @@ contract SMXTest is Setup {
     }
 
     function testTax() public {
+        vm.startPrank(owner);
+        smx.approve(address(router), 50 ether);
+        IERC20(WETH).approve(address(router), 50 ether);
+        router.addLiquidity(
+            address(smx),
+            WETH,
+            50 ether,
+            50 ether,
+            0,
+            0,
+            user7,
+            block.timestamp + 10 minutes
+        );
+        vm.stopPrank();
+
         vm.startPrank(user8);
 
         _swap(WETH, address(smx), 10 ether, user8); // BUY

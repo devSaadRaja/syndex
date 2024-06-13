@@ -235,7 +235,7 @@ contract Setup is Test, Utils {
             address(addressResolver)
         );
         feePool = new FeePool(
-            payable(address(proxysUSD)),
+            payable(address(proxyFeePool)),
             owner,
             address(addressResolver)
         );
@@ -519,6 +519,7 @@ contract Setup is Test, Utils {
         systemSettings.updateExchangeDynamicFeeThreshold(0.0025 ether);
         systemSettings.updateExchangeDynamicFeeWeightDecay(0.95 ether);
         systemSettings.toggleTradingRewards(true);
+        systemSettings.setFeePeriodDuration(7 days);
 
         bytes32[] memory synthKeys = new bytes32[](2);
         uint256[] memory exchangeFeeRates = new uint256[](2);

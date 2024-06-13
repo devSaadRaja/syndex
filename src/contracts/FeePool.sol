@@ -352,13 +352,13 @@ contract FeePool is
         // close on this chain
         _closeSecondary(snxBackedDebt, debtSharesSupply);
 
-        // inform other chain of the chosen values
-        ISynthetixBridgeToOptimism(
-            resolver.requireAndGetAddress(
-                CONTRACT_SYNTHETIX_BRIDGE_TO_OPTIMISM,
-                "Missing contract: SynthetixBridgeToOptimism"
-            )
-        ).closeFeePeriod(snxBackedDebt, debtSharesSupply);
+        // // inform other chain of the chosen values
+        // ISynthetixBridgeToOptimism(
+        //     resolver.requireAndGetAddress(
+        //         CONTRACT_SYNTHETIX_BRIDGE_TO_OPTIMISM,
+        //         "Missing contract: SynthetixBridgeToOptimism"
+        //     )
+        // ).closeFeePeriod(snxBackedDebt, debtSharesSupply);
     }
 
     function closeSecondary(
