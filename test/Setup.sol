@@ -19,6 +19,7 @@ import {SMX} from "../src/contracts/SMX/SMX.sol";
 import {Proxy} from "../src/contracts/Proxy.sol";
 import {Issuer} from "../src/contracts/Issuer.sol";
 import {FeePool} from "../src/contracts/FeePool.sol";
+import {Taxable} from "../src/contracts/tax/Taxable.sol";
 import {Proxyable} from "../src/contracts/Proxyable.sol";
 import {Synthetix} from "../src/contracts/Synthetix.sol";
 import {DebtCache} from "../src/contracts/DebtCache.sol";
@@ -98,6 +99,7 @@ contract Setup is Test, Utils {
     SMX public smx;
     Issuer public issuer;
     FeePool public feePool;
+    Taxable public taxable;
     Proxy public proxyFeePool;
     DebtCache public debtCache;
     Synthetix public synthetix;
@@ -163,6 +165,7 @@ contract Setup is Test, Utils {
         deal(WETH, user1, 100 ether);
         deal(WETH, user2, 100 ether);
         deal(WETH, user3, 100 ether);
+        deal(WETH, user6, 100 ether);
         deal(WETH, user7, 100 ether);
         deal(WETH, user8, 100 ether);
 
@@ -330,6 +333,13 @@ contract Setup is Test, Utils {
         aggregatorIssuedSynths = new AggregatorIssuedSynths(addressResolver);
         aggregatorCollateral = new AggregatorCollateral(
             address(addressResolver)
+        );
+
+        taxable = new Taxable(
+            address(proxySNX),
+            address(synthetix),
+            WETH,
+            address(router)
         );
 
         // // ------------------------------
@@ -545,9 +555,20 @@ contract Setup is Test, Utils {
         smx.setDeploy(true);
         smx.setTrade(true);
 
+        factory.createPair(address(proxySNX), WETH);
+        address pairSNXWETH = factory.getPair(address(proxySNX), WETH);
+
+        taxable.setExcludeFromFee(address(taxable), true);
+        taxable.setRewardAddress(address(WETH));
+        taxable.setRouter(address(router));
+        taxable.setFeeTaker(user2, 100);
+        taxable.setPool(pairSNXWETH, true);
+
         synthetix.mint(owner, 1_000_000 ether);
-        proxySNX.transfer(reserveAddr, 200000 ether);
         synthetix.setReserveAddress(reserveAddr);
+        synthetix.setTaxable(address(taxable));
+        synthetix.setDeploy(true);
+        synthetix.setTrade(true);
 
         proxySNX.transfer(user1, 5 ether);
         proxySNX.transfer(user2, 10 ether);
@@ -557,6 +578,7 @@ contract Setup is Test, Utils {
         proxySNX.transfer(user6, 1000 ether);
         proxySNX.transfer(user7, 5000 ether);
         proxySNX.transfer(user8, 5000 ether);
+        proxySNX.transfer(reserveAddr, 200000 ether);
 
         vm.stopPrank(); // OWNER
 

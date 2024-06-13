@@ -10,8 +10,6 @@ import "../interfaces/ITaxable.sol";
 import "../interfaces/IRewardEscrow.sol";
 import "../interfaces/IRewardEscrowV2.sol";
 
-// import "../interfaces/ISupplySchedule.sol";
-
 contract Synthetix is AccessControl, BaseSynthetix {
     using SafeMath for uint;
 
@@ -30,14 +28,10 @@ contract Synthetix is AccessControl, BaseSynthetix {
     // ========== ADDRESS RESOLVER CONFIGURATION ==========
     bytes32 private constant CONTRACT_REWARD_ESCROW = "RewardEscrow";
 
-    // bytes32 private constant CONTRACT_SUPPLYSCHEDULE = "SupplySchedule";
-
     modifier isValidAddress(address _address) {
         require(_address != address(0), "Invalid address");
         _;
     }
-
-    // ========== CONSTRUCTOR ==========
 
     function setDeploy(bool val) external onlyRole(DEFAULT_ADMIN_ROLE) {
         deploymentSet = val;
@@ -113,6 +107,8 @@ contract Synthetix is AccessControl, BaseSynthetix {
         return true;
     }
 
+    // ========== CONSTRUCTOR ==========
+
     constructor(
         address payable _proxy,
         address _tokenState,
@@ -155,7 +151,6 @@ contract Synthetix is AccessControl, BaseSynthetix {
             .resolverAddressesRequired();
         bytes32[] memory newAddresses = new bytes32[](1);
         newAddresses[0] = CONTRACT_REWARD_ESCROW;
-        // newAddresses[1] = CONTRACT_SUPPLYSCHEDULE;
         return combineArrays(existingAddresses, newAddresses);
     }
 
@@ -164,10 +159,6 @@ contract Synthetix is AccessControl, BaseSynthetix {
     function rewardEscrow() internal view returns (IRewardEscrow) {
         return IRewardEscrow(requireAndGetAddress(CONTRACT_REWARD_ESCROW));
     }
-
-    // function supplySchedule() internal view returns (ISupplySchedule) {
-    //     return ISupplySchedule(requireAndGetAddress(CONTRACT_SUPPLYSCHEDULE));
-    // }
 
     // ========== OVERRIDDEN FUNCTIONS ==========
 
@@ -303,56 +294,6 @@ contract Synthetix is AccessControl, BaseSynthetix {
 
         emitTransfer(reserveAddr, address(0), burnAmount);
     }
-
-    // function mint() external override issuanceActive returns (bool) {
-    //     require(
-    //         address(rewardsDistribution()) != address(0),
-    //         "RewardsDistribution not set"
-    //     );
-
-    //     ISupplySchedule _supplySchedule = supplySchedule();
-    //     IRewardsDistribution _rewardsDistribution = rewardsDistribution();
-
-    //     uint supplyToMint = _supplySchedule.mintableSupply();
-    //     require(supplyToMint > 0, "No supply is mintable");
-
-    //     emitTransfer(address(0), address(this), supplyToMint);
-
-    //     // record minting event before mutation to token supply
-    //     uint minterReward = _supplySchedule.recordMintEvent(supplyToMint);
-
-    //     // Set minted SNX balance to RewardEscrow's balance
-    //     // Minus the minterReward and set balance of minter to add reward
-    //     uint amountToDistribute = supplyToMint.sub(minterReward);
-
-    //     // Set the token balance to the RewardsDistribution contract
-    //     tokenState.setBalanceOf(
-    //         address(_rewardsDistribution),
-    //         tokenState.balanceOf(address(_rewardsDistribution)).add(
-    //             amountToDistribute
-    //         )
-    //     );
-    //     emitTransfer(
-    //         address(this),
-    //         address(_rewardsDistribution),
-    //         amountToDistribute
-    //     );
-
-    //     // Kick off the distribution of rewards
-    //     _rewardsDistribution.distributeRewards(amountToDistribute);
-
-    //     // Assign the minters reward.
-    //     tokenState.setBalanceOf(
-    //         msg.sender,
-    //         tokenState.balanceOf(msg.sender).add(minterReward)
-    //     );
-    //     emitTransfer(address(this), msg.sender, minterReward);
-
-    //     // Increase total supply by minted amount
-    //     totalSupply = totalSupply.add(supplyToMint);
-
-    //     return true;
-    // }
 
     /* Once off function for SIP-60 to migrate SNX balances in the RewardEscrow contract
      * To the new RewardEscrowV2 contract

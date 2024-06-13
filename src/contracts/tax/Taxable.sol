@@ -154,11 +154,16 @@ contract Taxable is Ownable {
     }
 
     function distributeTax() external {
-        require(_taxEqualsHundred(), "Total tax percentage should be 100");
         _distribute();
     }
 
+    function rescueFunds(address token, uint256 amount) external onlyOwner {
+        IERC20(token).transfer(msg.sender, amount);
+    }
+
     function _distribute() internal {
+        require(_taxEqualsHundred(), "Total tax percentage should be 100");
+        
         address[] memory path = new address[](2);
         path[0] = tokenProxy;
         path[1] = rewardAddr;

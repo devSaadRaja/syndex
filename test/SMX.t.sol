@@ -666,22 +666,6 @@ contract SMXTest is Setup {
         vm.stopPrank();
     }
 
-    function testSwap() public {
-        vm.startPrank(user8);
-
-        console.log("BEFORE");
-        console.log("SMX", smx.balanceOf(user8));
-        console.log("WETH", IERC20(WETH).balanceOf(user8));
-
-        _swap(WETH, address(smx), 10 ether, user8);
-
-        console.log("AFTER");
-        console.log("SMX", smx.balanceOf(user8));
-        console.log("WETH", IERC20(WETH).balanceOf(user8));
-
-        vm.stopPrank();
-    }
-
     function testTax() public {
         vm.startPrank(user8);
 
@@ -738,6 +722,63 @@ contract SMXTest is Setup {
         synthetix.burn();
         assertEq(proxySNX.balanceOf(reserveAddr), 100000 ether);
         vm.stopPrank();
+    }
+
+    function testTaxSNX() public {
+        vm.startPrank(owner);
+        proxySNX.approve(address(router), 50 ether);
+        IERC20(WETH).approve(address(router), 50 ether);
+        router.addLiquidity(
+            address(proxySNX),
+            WETH,
+            50 ether,
+            50 ether,
+            0,
+            0,
+            owner,
+            block.timestamp + 10 minutes
+        );
+        vm.stopPrank();
+
+        vm.startPrank(user6);
+
+        console.log(taxable.threshold(), "<-- threshold");
+        console.log(taxable.currentFeeAmount(), "<-- currentFeeAmount");
+        console.log(
+            proxySNX.balanceOf(address(taxable)),
+            "<-- SNX balanceOf taxable"
+        );
+        console.log(IERC20(WETH).balanceOf(user6), "<-- WETH balanceOf user6");
+        console.log(IERC20(WETH).balanceOf(user2), "<-- WETH balanceOf user2");
+
+        _swap(WETH, address(proxySNX), 10 ether, user6); // BUY
+        _swap(address(proxySNX), WETH, 8 ether, user6); // SELL
+
+        console.log();
+        console.log("BEFORE TRANSFER");
+        console.log(taxable.threshold(), "<-- threshold");
+        console.log(taxable.currentFeeAmount(), "<-- currentFeeAmount");
+        console.log(
+            proxySNX.balanceOf(address(taxable)),
+            "<-- SNX balanceOf taxable"
+        );
+        console.log(IERC20(WETH).balanceOf(user6), "<-- WETH balanceOf user6");
+        console.log(IERC20(WETH).balanceOf(user2), "<-- WETH balanceOf user2");
+
+        proxySNX.transfer(user3, 1 ether);
+
+        vm.stopPrank();
+
+        console.log();
+        console.log("AFTER");
+        console.log(taxable.threshold(), "<-- threshold");
+        console.log(taxable.currentFeeAmount(), "<-- currentFeeAmount");
+        console.log(
+            proxySNX.balanceOf(address(taxable)),
+            "<-- SNX balanceOf taxable"
+        );
+        console.log(IERC20(WETH).balanceOf(user6), "<-- WETH balanceOf user6");
+        console.log(IERC20(WETH).balanceOf(user2), "<-- WETH balanceOf user2");
     }
 
     function _swap(
