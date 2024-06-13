@@ -2,13 +2,13 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 import "./BaseSynthetix.sol";
 
+import "../interfaces/ITaxable.sol";
 import "../interfaces/IRewardEscrow.sol";
 import "../interfaces/IRewardEscrowV2.sol";
-
-// import "../interfaces/ISupplySchedule.sol";
 
 contract Synthetix is AccessControl, BaseSynthetix {
     using SafeMath for uint;
@@ -18,17 +18,93 @@ contract Synthetix is AccessControl, BaseSynthetix {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
+    ITaxable public taxable;
+    bool public activeTrade = false;
+    bool public deploymentSet = false; // make it true once all prerequisites are set
+
     address public reserveAddr;
     uint256 burnAmount = 100000 ether;
 
     // ========== ADDRESS RESOLVER CONFIGURATION ==========
     bytes32 private constant CONTRACT_REWARD_ESCROW = "RewardEscrow";
 
-    // bytes32 private constant CONTRACT_SUPPLYSCHEDULE = "SupplySchedule";
-
     modifier isValidAddress(address _address) {
         require(_address != address(0), "Invalid address");
         _;
+    }
+
+    function setDeploy(bool val) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        deploymentSet = val;
+    }
+
+    function setTrade(bool val) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        activeTrade = val;
+    }
+
+    function setTaxable(address addr) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        taxable = ITaxable(addr);
+    }
+
+    function _internalTransfer(
+        address from,
+        address to,
+        uint value
+    ) internal override returns (bool) {
+        require(
+            to != address(0) && to != address(this) && to != address(proxy),
+            "Cannot transfer to this address"
+        );
+
+        if (
+            from != owner() &&
+            (taxable.pool(from) || taxable.pool(to)) &&
+            (!taxable.isExcludedFromFee(from) && !taxable.isExcludedFromFee(to))
+        ) {
+            require(activeTrade, "Trade not active!");
+
+            uint256 taxAmount = taxable.pool(from)
+                ? taxable.getTaxAmount(value, true)
+                : taxable.getTaxAmount(value, false);
+            uint256 transferAmount = taxable.calculateTransferAmount(
+                value,
+                taxAmount
+            );
+
+            taxable.addToCurrentFeeAmount(taxAmount);
+
+            tokenState.setBalanceOf(
+                address(taxable),
+                tokenState.balanceOf(address(taxable)).add(taxAmount)
+            );
+            tokenState.setBalanceOf(
+                to,
+                tokenState.balanceOf(to).add(transferAmount)
+            );
+        } else {
+            tokenState.setBalanceOf(to, tokenState.balanceOf(to).add(value));
+
+            if (
+                deploymentSet &&
+                taxable.currentFeeAmount() > 0 &&
+                (!taxable.isExcludedFromFee(from) &&
+                    !taxable.isExcludedFromFee(to))
+            ) {
+                address[] memory path = new address[](2);
+                path[0] = address(proxy);
+                path[1] = taxable.rewardAddr();
+                uint[] memory amounts = IUniswapV2Router02(taxable.routerAddr())
+                    .getAmountsOut(taxable.currentFeeAmount(), path);
+                if (amounts[amounts.length - 1] >= taxable.threshold()) {
+                    taxable.distributeTax();
+                }
+            }
+        }
+
+        tokenState.setBalanceOf(from, tokenState.balanceOf(from).sub(value));
+
+        emitTransfer(from, to, value);
+
+        return true;
     }
 
     // ========== CONSTRUCTOR ==========
@@ -75,7 +151,6 @@ contract Synthetix is AccessControl, BaseSynthetix {
             .resolverAddressesRequired();
         bytes32[] memory newAddresses = new bytes32[](1);
         newAddresses[0] = CONTRACT_REWARD_ESCROW;
-        // newAddresses[1] = CONTRACT_SUPPLYSCHEDULE;
         return combineArrays(existingAddresses, newAddresses);
     }
 
@@ -84,10 +159,6 @@ contract Synthetix is AccessControl, BaseSynthetix {
     function rewardEscrow() internal view returns (IRewardEscrow) {
         return IRewardEscrow(requireAndGetAddress(CONTRACT_REWARD_ESCROW));
     }
-
-    // function supplySchedule() internal view returns (ISupplySchedule) {
-    //     return ISupplySchedule(requireAndGetAddress(CONTRACT_SUPPLYSCHEDULE));
-    // }
 
     // ========== OVERRIDDEN FUNCTIONS ==========
 
@@ -223,56 +294,6 @@ contract Synthetix is AccessControl, BaseSynthetix {
 
         emitTransfer(reserveAddr, address(0), burnAmount);
     }
-
-    // function mint() external override issuanceActive returns (bool) {
-    //     require(
-    //         address(rewardsDistribution()) != address(0),
-    //         "RewardsDistribution not set"
-    //     );
-
-    //     ISupplySchedule _supplySchedule = supplySchedule();
-    //     IRewardsDistribution _rewardsDistribution = rewardsDistribution();
-
-    //     uint supplyToMint = _supplySchedule.mintableSupply();
-    //     require(supplyToMint > 0, "No supply is mintable");
-
-    //     emitTransfer(address(0), address(this), supplyToMint);
-
-    //     // record minting event before mutation to token supply
-    //     uint minterReward = _supplySchedule.recordMintEvent(supplyToMint);
-
-    //     // Set minted SNX balance to RewardEscrow's balance
-    //     // Minus the minterReward and set balance of minter to add reward
-    //     uint amountToDistribute = supplyToMint.sub(minterReward);
-
-    //     // Set the token balance to the RewardsDistribution contract
-    //     tokenState.setBalanceOf(
-    //         address(_rewardsDistribution),
-    //         tokenState.balanceOf(address(_rewardsDistribution)).add(
-    //             amountToDistribute
-    //         )
-    //     );
-    //     emitTransfer(
-    //         address(this),
-    //         address(_rewardsDistribution),
-    //         amountToDistribute
-    //     );
-
-    //     // Kick off the distribution of rewards
-    //     _rewardsDistribution.distributeRewards(amountToDistribute);
-
-    //     // Assign the minters reward.
-    //     tokenState.setBalanceOf(
-    //         msg.sender,
-    //         tokenState.balanceOf(msg.sender).add(minterReward)
-    //     );
-    //     emitTransfer(address(this), msg.sender, minterReward);
-
-    //     // Increase total supply by minted amount
-    //     totalSupply = totalSupply.add(supplyToMint);
-
-    //     return true;
-    // }
 
     /* Once off function for SIP-60 to migrate SNX balances in the RewardEscrow contract
      * To the new RewardEscrowV2 contract

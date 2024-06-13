@@ -210,24 +210,11 @@ contract Staking is Ownable, ReentrancyGuard {
      * @param token The token to withdraw.
      * @param amount The amount to withdraw.
      */
-    function withdrawFunds(
+    function rescueFunds(
         address account,
         address token,
         uint256 amount
     ) external onlyOwner isValidAddress(account) {
         IERC20(token).transfer(account, amount);
-    }
-
-    /**
-     * @dev Withdraws ETH from the contract to an external account.
-     * @param account The recipient's address.
-     * @param amount The amount to withdraw.
-     */
-    function withdrawETH(
-        address account,
-        uint256 amount
-    ) external onlyOwner isValidAddress(account) {
-        (bool success, ) = account.call{value: amount}("");
-        require(success, "Transfer failed");
     }
 }
