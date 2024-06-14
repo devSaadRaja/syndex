@@ -26,6 +26,9 @@ import {AggregationRouterV4} from "../src/contracts/SMX/AggregationRouterV4.sol"
 import {IClipperExchangeInterface} from "../src/contracts/SMX/interfaces/IClipperExchangeInterface.sol";
 
 contract SMXTest is Setup {
+    address public constant FEE_ADDRESS =
+        0xfeEFEEfeefEeFeefEEFEEfEeFeefEEFeeFEEFEeF;
+
     IUniswapV3Factory v3factory =
         IUniswapV3Factory(0x1F98431c8aD98523631AE4a59f267346ea31F984);
     INonfungiblePositionManager nonfungiblePositionManager =
@@ -45,11 +48,6 @@ contract SMXTest is Setup {
     function setUp() public override {
         super.setUp();
 
-        // vm.startPrank(address(issuer));
-        // synthsUSD.issue(owner, 1000 ether);
-        // synthsUSD.issue(user1, 1000 ether);
-        // vm.stopPrank();
-
         vm.startPrank(owner);
         smx.transfer(user6, 1000 ether);
         smx.transfer(user7, 1000 ether);
@@ -65,23 +63,6 @@ contract SMXTest is Setup {
         vm.stopPrank();
 
         vm.startPrank(user7);
-
-        synthetix.executeExchange("sUSD", 500 ether, "sETH");
-
-        factory.createPair(address(proxysUSD), address(proxysETH));
-
-        IERC20(address(proxysUSD)).approve(address(router), 50 ether);
-        IERC20(address(proxysETH)).approve(address(router), 50 ether);
-        router.addLiquidity(
-            address(proxysUSD),
-            address(proxysETH),
-            50 ether,
-            50 ether,
-            0,
-            0,
-            user7,
-            block.timestamp + 10 minutes
-        );
 
         supplySchedule2 = new SupplySchedule(user7, treasury);
         // vSmxRedeemer = new vSMXRedeemer(address(smx), address(smx));
@@ -377,36 +358,66 @@ contract SMXTest is Setup {
         vm.stopPrank();
     }
 
-    function testTradeSynths() public {
-        vm.startPrank(user4);
-        IERC20(address(proxySNX)).transfer(address(tradingRewards), 250 ether);
-        IERC20(address(proxySNX)).transfer(
-            address(rewardsDistribution),
-            250 ether
-        );
+    function testClaimTimeEnded() public {
+        vm.startPrank(user7);
+        proxysUSD.transfer(user6, 100 ether);
+        synthetix.executeExchange("sUSD", 50 ether, "sETH");
         vm.stopPrank();
 
-        // vm.startPrank(user4);
-        // synthetix.createMaxSynths();
-        // synthetix.executeExchange("sUSD", 50 ether, "sETH");
-        // vm.stopPrank();
-
-        // vm.startPrank(user6);
-        // synthetix.createMaxSynths();
-        // // synthetix.executeExchange("sUSD", 50 ether, "sETH");
-        // vm.stopPrank();
+        vm.startPrank(user6);
+        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        vm.stopPrank();
 
         vm.startPrank(user8);
-
-        synthetix.executeExchange("sUSD", 100 ether, "sETH");
-        // ! synthetix.executeExchange("sUSD", 1 ether, "sETH");
-        // ! synthetix.executeExchange("sUSD", 1 ether, "sETH");
-        // ! synthetix.executeExchange("sUSD", 1 ether, "sETH");
-        // ! synthetix.executeExchange("sUSD", 1 ether, "sETH");
-
+        synthetix.executeExchange("sUSD", 50 ether, "sETH");
         vm.stopPrank();
 
+        _passTime(7 days);
+
+        vm.startPrank(owner);
+        feePool.closeCurrentFeePeriod();
+        vm.stopPrank();
+
+        (uint256 totalFees, uint256 totalRewards) = feePool.feesAvailable(
+            user7
+        );
+        assertEq(totalFees, 0.075 ether);
+        assertEq(totalRewards, 0);
+
+        (totalFees, totalRewards) = feePool.feesAvailable(user8);
+        assertEq(totalFees, 0.075 ether);
+        assertEq(totalRewards, 0);
+
+        _passTime(7 days);
+
+        vm.startPrank(owner);
+        feePool.closeCurrentFeePeriod();
+        vm.stopPrank();
+
+        (totalFees, totalRewards) = feePool.feesAvailable(user7);
+        assertEq(totalFees, 0);
+        assertEq(totalRewards, 0);
+
+        (totalFees, totalRewards) = feePool.feesAvailable(user8);
+        assertEq(totalFees, 0);
+        assertEq(totalRewards, 0);
+    }
+
+    function testStakersTradeFee() public {
+        // vm.startPrank(user7);
+        // IERC20(address(proxysUSD)).transfer(address(feePool), 10 ether);
+        // vm.stopPrank();
+
         vm.startPrank(user7);
+        proxysUSD.transfer(user6, 100 ether);
+        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        vm.stopPrank();
+
+        vm.startPrank(user6);
+        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        vm.stopPrank();
+
+        vm.startPrank(user8);
         synthetix.executeExchange("sUSD", 50 ether, "sETH");
         vm.stopPrank();
 
@@ -414,7 +425,37 @@ contract SMXTest is Setup {
             feePool.isFeesClaimable(user8),
             "<-- feePool.isFeesClaimable(user8)"
         );
+
+        _passTime(7 days);
+
+        vm.startPrank(owner);
+        feePool.closeCurrentFeePeriod();
+        vm.stopPrank();
+
+        console.log(
+            IERC20(address(proxysUSD)).balanceOf(address(user7)),
+            "<-- proxysUSD balanceOf(address(user7))"
+        );
+        console.log(
+            IERC20(address(proxysETH)).balanceOf(address(user7)),
+            "<-- proxysETH balanceOf(address(user7))"
+        );
+
+        // vm.startPrank(user7);
+        // feePool.claimFees();
+        // vm.stopPrank();
+
+        console.log(
+            IERC20(address(proxysUSD)).balanceOf(address(user7)),
+            "<-- proxysUSD balanceOf(address(user7))"
+        );
+        console.log(
+            IERC20(address(proxysETH)).balanceOf(address(user7)),
+            "<-- proxysETH balanceOf(address(user7))"
+        );
+
         console.log();
+        console.log("AFTER CLOSING");
         console.log(
             feePool.totalFeesAvailable(),
             "<-- feePool.totalFeesAvailable()"
@@ -423,16 +464,104 @@ contract SMXTest is Setup {
             feePool.totalRewardsAvailable(),
             "<-- feePool.totalRewardsAvailable()"
         );
+
+        console.log();
+        uint[2][2] memory results = feePool.feesByPeriod(user7);
+        console.log(results[0][0], "<-- feesFromPeriod user7");
+        console.log(results[0][1], "<-- rewardsFromPeriod user7");
+
+        console.log();
         (uint256 totalFees, uint256 totalRewards) = feePool.feesAvailable(
-            user8
+            user7
         );
-        console.log(totalFees, "<-- totalFees");
-        console.log(totalRewards, "<-- totalRewards");
+        console.log(totalFees, "<-- totalFees user7");
+        console.log(totalRewards, "<-- totalRewards user7");
+        (totalFees, totalRewards) = feePool.feesAvailable(user8);
+        console.log(totalFees, "<-- totalFees user8");
+        console.log(totalRewards, "<-- totalRewards user8");
+
+        console.log();
+        console.log(
+            IERC20(address(proxysUSD)).balanceOf(address(feePool)),
+            "<-- proxysUSD balanceOf(address(feePool))"
+        );
+        console.log(
+            IERC20(address(proxysUSD)).balanceOf(address(tradingRewards)),
+            "<-- proxysUSD balanceOf(address(tradingRewards))"
+        );
+        console.log(
+            IERC20(address(proxysUSD)).balanceOf(FEE_ADDRESS),
+            "<-- proxysUSD balanceOf(FEE_ADDRESS)"
+        );
+    }
+
+    function testTradersTradeFee() public {
+        // vm.startPrank(user4);
+        // IERC20(address(proxySNX)).transfer(address(tradingRewards), 250 ether);
+        // IERC20(address(proxySNX)).transfer(
+        //     address(rewardsDistribution),
+        //     250 ether
+        // );
+        // vm.stopPrank();
+
+        console.log("----------");
+        console.log(
+            IERC20(address(proxysUSD)).balanceOf(address(user6)),
+            "<-- proxysUSD balanceOf(address(user6))"
+        );
+        console.log(
+            IERC20(address(proxysUSD)).balanceOf(address(user7)),
+            "<-- proxysUSD balanceOf(address(user7))"
+        );
+        console.log(
+            IERC20(address(proxysUSD)).balanceOf(address(user8)),
+            "<-- proxysUSD balanceOf(address(user8))"
+        );
+
+        vm.startPrank(user7);
+        proxysUSD.transfer(user6, 100 ether);
+        vm.stopPrank();
+
+        console.log("----------");
+        console.log(
+            IERC20(address(proxysUSD)).balanceOf(address(user6)),
+            "<-- proxysUSD balanceOf(address(user6))"
+        );
+        console.log(
+            IERC20(address(proxysUSD)).balanceOf(address(user7)),
+            "<-- proxysUSD balanceOf(address(user7))"
+        );
+        console.log(
+            IERC20(address(proxysUSD)).balanceOf(address(user8)),
+            "<-- proxysUSD balanceOf(address(user8))"
+        );
+        console.log();
+
+        vm.startPrank(user6);
+        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        vm.stopPrank();
+
+        vm.startPrank(user7);
+        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        vm.stopPrank();
+
+        vm.startPrank(user8);
+        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        vm.stopPrank();
+
+        console.log(
+            feePool.isFeesClaimable(user8),
+            "<-- feePool.isFeesClaimable(user8)"
+        );
 
         _passTime(7 days);
 
         vm.startPrank(owner);
         feePool.closeCurrentFeePeriod();
+        vm.stopPrank();
+
+        vm.startPrank(user7);
+        feePool.claimFees();
         vm.stopPrank();
 
         console.log();
@@ -445,15 +574,20 @@ contract SMXTest is Setup {
             feePool.totalRewardsAvailable(),
             "<-- feePool.totalRewardsAvailable()"
         );
-        (totalFees, totalRewards) = feePool.feesAvailable(user8);
-        console.log(totalFees, "<-- totalFees");
-        console.log(totalRewards, "<-- totalRewards");
-
-        vm.startPrank(user5);
-        tradingRewards.closeCurrentPeriodWithRewards(
-            tradingRewards.getPeriodRecordedFees(0)
+        (uint256 totalFees, uint256 totalRewards) = feePool.feesAvailable(
+            user7
         );
-        vm.stopPrank();
+        console.log(totalFees, "<-- totalFees user7");
+        console.log(totalRewards, "<-- totalRewards user7");
+        (totalFees, totalRewards) = feePool.feesAvailable(user8);
+        console.log(totalFees, "<-- totalFees user8");
+        console.log(totalRewards, "<-- totalRewards user8");
+
+        // vm.startPrank(user5);
+        // tradingRewards.closeCurrentPeriodWithRewards(
+        //     tradingRewards.getPeriodRecordedFees(0)
+        // );
+        // vm.stopPrank();
 
         // assertEq(tradingRewards.getPeriodAvailableRewards(0), 1002);
         // assertEq(tradingRewards.isPeriodClaimable(0), true);
@@ -475,41 +609,47 @@ contract SMXTest is Setup {
         //     amountBefore + rewardAmount
         // );
 
+        console.log();
         console.log(
             IERC20(address(proxysUSD)).balanceOf(address(feePool)),
             "<-- proxysUSD balanceOf(address(feePool))"
         );
+        console.log(
+            IERC20(address(proxysUSD)).balanceOf(address(tradingRewards)),
+            "<-- proxysUSD balanceOf(address(tradingRewards))"
+        );
+        console.log(
+            IERC20(address(proxysUSD)).balanceOf(address(FEE_ADDRESS)),
+            "<-- proxysUSD balanceOf(address(FEE_ADDRESS))"
+        );
 
         console.log();
-
-        // "<-- tradingRewards.getPeriodRecordedFees(0)"
-        // "<-- tradingRewards.isPeriodClaimable(0)"
-        // "<-- getPeriodAvailableRewards(0)"
-        console.log(
-            tradingRewards.getAvailableRewards(),
-            "<-- tradingRewards.getAvailableRewards()"
-        );
-        console.log();
-        console.log(
-            tradingRewards.getAvailableRewardsForAccountForPeriod(owner, 0),
-            "<-- getAvailableRewardsForAccountForPeriod(owner, 0)"
-        );
-        console.log(
-            tradingRewards.getAvailableRewardsForAccountForPeriod(user4, 0),
-            "<-- getAvailableRewardsForAccountForPeriod(user4, 0)"
-        );
-        console.log(
-            tradingRewards.getAvailableRewardsForAccountForPeriod(user6, 0),
-            "<-- getAvailableRewardsForAccountForPeriod(user6, 0)"
-        );
-        console.log(
-            tradingRewards.getAvailableRewardsForAccountForPeriod(user7, 0),
-            "<-- getAvailableRewardsForAccountForPeriod(user7, 0)"
-        );
-        console.log(
-            tradingRewards.getAvailableRewardsForAccountForPeriod(user8, 0),
-            "<-- getAvailableRewardsForAccountForPeriod(user8, 0)"
-        );
+        // ! ---
+        // // "<-- tradingRewards.getPeriodRecordedFees(0)"
+        // // "<-- tradingRewards.isPeriodClaimable(0)"
+        // // "<-- getPeriodAvailableRewards(0)"
+        // console.log(
+        //     tradingRewards.getAvailableRewards(),
+        //     "<-- tradingRewards.getAvailableRewards()"
+        // );
+        // console.log();
+        // console.log(
+        //     tradingRewards.getAvailableRewardsForAccountForPeriod(owner, 0),
+        //     "<-- getAvailableRewardsForAccountForPeriod(owner, 0)"
+        // );
+        // console.log(
+        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user6, 0),
+        //     "<-- getAvailableRewardsForAccountForPeriod(user6, 0)"
+        // );
+        // console.log(
+        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user7, 0),
+        //     "<-- getAvailableRewardsForAccountForPeriod(user7, 0)"
+        // );
+        // console.log(
+        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user8, 0),
+        //     "<-- getAvailableRewardsForAccountForPeriod(user8, 0)"
+        // );
+        // ! ---
         console.log();
         console.log(
             synthetixDebtShare.totalSupply(),
@@ -517,10 +657,6 @@ contract SMXTest is Setup {
         );
         console.log();
         // "<-- synthetixDebtShare.calculateTotalSupplyForPeriod(1)"
-        console.log(
-            synthetixDebtShare.balanceOf(user4),
-            "<-- synthetixDebtShare.balanceOf(user4)"
-        );
         console.log(
             synthetixDebtShare.balanceOf(user6),
             "<-- synthetixDebtShare.balanceOf(user6)"

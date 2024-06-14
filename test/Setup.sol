@@ -525,7 +525,7 @@ contract Setup is Test, Utils {
         uint256[] memory exchangeFeeRates = new uint256[](2);
         synthKeys[0] = "sUSD";
         synthKeys[1] = "sETH";
-        exchangeFeeRates[0] = 0;
+        exchangeFeeRates[0] = 0.001 ether;
         exchangeFeeRates[1] = 0.001 ether; // 0.0035
         systemSettings.updateExchangeFeeRateForSynths(
             synthKeys,
