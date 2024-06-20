@@ -233,7 +233,7 @@ contract Synthetix is AccessControl, BaseSynthetix {
         emitTransfer(reserveAddr, address(0), burnAmount);
     }
 
-    /* Once off function for SIP-60 to migrate SNX balances in the RewardEscrow contract
+    /* Once off function for SIP-60 to migrate SCFX balances in the RewardEscrow contract
      * To the new RewardEscrowV2 contract
      */
     function migrateEscrowBalanceToRewardEscrowV2()

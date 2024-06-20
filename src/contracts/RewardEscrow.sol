@@ -19,7 +19,7 @@ contract RewardEscrow is Ownable, IRewardEscrow {
     IFeePool public feePool;
 
     /* Lists of (timestamp, quantity) pairs per account, sorted in ascending time order.
-     * These are the times at which each given quantity of SNX vests. */
+     * These are the times at which each given quantity of SCFX vests. */
     mapping(address => uint[2][]) public vestingSchedules;
 
     /* An account's total escrowed synthetix balance to save recomputing this for fee extraction purposes. */
@@ -52,7 +52,7 @@ contract RewardEscrow is Ownable, IRewardEscrow {
     /* ========== SETTERS ========== */
 
     /**
-     * @notice set the synthetix contract address as we need to transfer SNX when the user vests
+     * @notice set the synthetix contract address as we need to transfer SCFX when the user vests
      */
     function setSynthetix(ISynthetix _synthetix) external onlyOwner {
         synthetix = _synthetix;
@@ -110,7 +110,7 @@ contract RewardEscrow is Ownable, IRewardEscrow {
     }
 
     /**
-     * @notice Get the quantity of SNX associated with a given schedule entry.
+     * @notice Get the quantity of SCFX associated with a given schedule entry.
      */
     function getVestingQuantity(
         address account,
@@ -207,7 +207,7 @@ contract RewardEscrow is Ownable, IRewardEscrow {
         if (scheduleLength == 0) {
             totalEscrowedAccountBalance[account] = quantity;
         } else {
-            /* Disallow adding new vested SNX earlier than the last one.
+            /* Disallow adding new vested SCFX earlier than the last one.
              * Since entries are only appended, this means that no vesting date can be repeated. */
             require(
                 getVestingTime(account, scheduleLength - 1) < time,
@@ -230,7 +230,7 @@ contract RewardEscrow is Ownable, IRewardEscrow {
      * Note; although this function could technically be used to produce unbounded
      * arrays, it's only withinn the 4 year period of the weekly inflation schedule.
      * @param account The account to append a new vesting entry to.
-     * @param quantity The quantity of SNX that will be escrowed.
+     * @param quantity The quantity of SCFX that will be escrowed.
      */
     function appendVestingEntry(
         address account,
@@ -240,7 +240,7 @@ contract RewardEscrow is Ownable, IRewardEscrow {
     }
 
     /**
-     * @notice Allow a user to withdraw any SNX in their schedule that have vested.
+     * @notice Allow a user to withdraw any SCFX in their schedule that have vested.
      */
     function vest() external {
         uint numEntries = _numVestingEntries(msg.sender);

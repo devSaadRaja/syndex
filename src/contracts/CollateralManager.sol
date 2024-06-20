@@ -58,7 +58,7 @@ contract CollateralManager is Ownable, Pausable, MixinResolver {
     // The factor that will scale the utilisation ratio.
     uint public utilisationMultiplier = 1e18;
 
-    // The maximum amount of debt in sUSD that can be issued by non snx collateral.
+    // The maximum amount of debt in sUSD that can be issued by non scfx collateral.
     uint public maxDebt;
 
     // The rate that determines the skew limit maximum.
@@ -256,14 +256,14 @@ contract CollateralManager is Ownable, Pausable, MixinResolver {
         view
         returns (uint borrowRate, bool anyRateIsInvalid)
     {
-        // get the snx backed debt.
-        uint snxDebt = _issuer().totalIssuedSynths(sUSD, true);
+        // get the scfx backed debt.
+        uint scfxDebt = _issuer().totalIssuedSynths(sUSD, true);
 
-        // now get the non snx backed debt.
+        // now get the non scfx backed debt.
         (uint nonSnxDebt, bool ratesInvalid) = totalLong();
 
         // the total.
-        uint totalDebt = snxDebt.add(nonSnxDebt);
+        uint totalDebt = scfxDebt.add(nonSnxDebt);
 
         // now work out the utilisation ratio, and divide through to get a per second value.
         uint utilisation = nonSnxDebt.divideDecimal(totalDebt).divideDecimal(

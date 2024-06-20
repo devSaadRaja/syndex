@@ -289,7 +289,7 @@ contract Collateral is ICollateralLoan, Ownable, MixinSystemSettings {
         // 3. Collateral >= minimum collateral size.
         require(collateral >= minCollateral, "Not enough collateral");
 
-        // 4. Check we haven't hit the debt cap for non snx collateral.
+        // 4. Check we haven't hit the debt cap for non scfx collateral.
         (bool canIssue, bool anyRateIsInvalid) = manager.exceedsDebtLimit(
             amount,
             currency

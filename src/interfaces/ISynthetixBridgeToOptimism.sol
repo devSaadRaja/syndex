@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 interface ISynthetixBridgeToOptimism {
-    function closeFeePeriod(uint snxBackedDebt, uint debtSharesSupply) external;
+    function closeFeePeriod(uint scfxBackedDebt, uint debtSharesSupply) external;
 
     function migrateEscrow(uint256[][] calldata entryIDs) external;
 

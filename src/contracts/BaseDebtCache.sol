@@ -174,7 +174,7 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
         internal
         view
         returns (
-            uint[] memory snxIssuedDebts,
+            uint[] memory scfxIssuedDebts,
             uint _futuresDebt,
             uint _excludedDebt,
             bool anyRateIsInvalid
@@ -226,7 +226,7 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
 
     function cachedSynthDebts(
         bytes32[] calldata currencyKeys
-    ) external view returns (uint[] memory snxIssuedDebts) {
+    ) external view returns (uint[] memory scfxIssuedDebts) {
         return _cachedSynthDebts(currencyKeys);
     }
 
@@ -286,7 +286,7 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
         }
     }
 
-    // Returns the total sUSD debt backed by non-SNX collateral.
+    // Returns the total sUSD debt backed by non-SCFX collateral.
     function totalNonSnxBackedDebt()
         external
         view
@@ -360,7 +360,7 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
             .totalDebt();
         total = total.add(futuresDebt);
 
-        // Ensure that if the excluded non-SNX debt exceeds SNX-backed debt, no overflow occurs
+        // Ensure that if the excluded non-SCFX debt exceeds SCFX-backed debt, no overflow occurs
         total = total < excludedDebt ? 0 : total.sub(excludedDebt);
 
         return (

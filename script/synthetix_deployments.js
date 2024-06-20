@@ -168,9 +168,9 @@ async function main() {
   // await verify("CollateralEth", CollateralEth.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
-  // const ProxySNX = await contractDeploy("ProxyERC20", [deployer]);
-  // deployments["ProxySNX"] = ProxySNX.address;
-  // await verify("ProxyERC20", ProxySNX.address);
+  // const ProxySCFX = await contractDeploy("ProxyERC20", [deployer]);
+  // deployments["ProxySCFX"] = ProxySCFX.address;
+  // await verify("ProxyERC20", ProxySCFX.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const ProxysUSD = await contractDeploy("ProxyERC20", [deployer]);
@@ -293,12 +293,12 @@ async function main() {
   // await verify("CircuitBreaker", CircuitBreaker.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
-  // const TokenStateSNX = await contractDeploy("LegacyTokenState", [
+  // const TokenStateSCFX = await contractDeploy("LegacyTokenState", [
   //   deployer,
   //   ADDRESS_ZERO, // synthetix
   // ]);
-  // deployments["TokenStateSNX"] = TokenStateSNX.address;
-  // await verify("LegacyTokenState", TokenStateSNX.address);
+  // deployments["TokenStateSCFX"] = TokenStateSCFX.address;
+  // await verify("LegacyTokenState", TokenStateSCFX.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const TokenStatesUSD = await contractDeploy("TokenState", [
@@ -367,8 +367,8 @@ async function main() {
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const Synthetix = await contractDeploy("Synthetix", [
-  //   deployments["ProxySNX"],
-  //   deployments["TokenStateSNX"],
+  //   deployments["ProxySCFX"],
+  //   deployments["TokenStateSCFX"],
   //   deployer,
   //   0,
   //   deployments["AddressResolver"],
@@ -487,7 +487,7 @@ async function main() {
   // const RewardsDistribution = await contractDeploy("RewardsDistribution", [
   //   deployer,
   //   deployments["Synthetix"],
-  //   deployments["ProxySNX"],
+  //   deployments["ProxySCFX"],
   //   deployments["RewardEscrowV2"],
   //   deployments["ProxyFeePool"],
   // ]);
@@ -596,8 +596,8 @@ async function main() {
   // addresses.push(deployments["AddressResolver"]);
   // names.push(ethers.utils.formatBytes32String("SystemStatus"));
   // addresses.push(deployments["SystemStatus"]);
-  // names.push(ethers.utils.formatBytes32String("TokenStateSNX"));
-  // addresses.push(deployments["TokenStateSNX"]);
+  // names.push(ethers.utils.formatBytes32String("TokenStateSCFX"));
+  // addresses.push(deployments["TokenStateSCFX"]);
   // names.push(ethers.utils.formatBytes32String("TokenStatesUSD"));
   // addresses.push(deployments["TokenStatesUSD"]);
   // names.push(ethers.utils.formatBytes32String("ext:AggregatorIssuedSynths"));
@@ -727,12 +727,12 @@ async function main() {
   // await issuer.addSynth(deployments["SynthsUSD"]);
   // await issuer.addSynth(deployments["SynthsETH"]);
 
-  // const proxySNX = await ethers.getContractAt(
+  // const proxySCFX = await ethers.getContractAt(
   //   contractsPath.ProxyERC20,
-  //   deployments["ProxySNX"],
+  //   deployments["ProxySCFX"],
   //   signer
   // );
-  // await proxySNX.updateTarget(deployments["Synthetix"]);
+  // await proxySCFX.updateTarget(deployments["Synthetix"]);
 
   // const proxysUSD = await ethers.getContractAt(
   //   contractsPath.ProxyERC20,
@@ -760,17 +760,17 @@ async function main() {
   //   deployments["Synthetix"],
   //   signer
   // );
-  // await synthetix.setTokenState(deployments["TokenStateSNX"]);
+  // await synthetix.setTokenState(deployments["TokenStateSCFX"]);
 
-  // const tokenStateSNX = await ethers.getContractAt(
+  // const tokenStateSCFX = await ethers.getContractAt(
   //   contractsPath.TokenState,
-  //   deployments["TokenStateSNX"],
+  //   deployments["TokenStateSCFX"],
   //   signer
   // );
-  // await tokenStateSNX.linkContract(deployments["Synthetix"]);
-  // await tokenStateSNX.setBalanceOf(deployer, parseEth(1000));
-  // await tokenStateSNX.setBalanceOf(user, parseEth(1000));
-  // await tokenStateSNX.setBalanceOf(
+  // await tokenStateSCFX.linkContract(deployments["Synthetix"]);
+  // await tokenStateSCFX.setBalanceOf(deployer, parseEth(1000));
+  // await tokenStateSCFX.setBalanceOf(user, parseEth(1000));
+  // await tokenStateSCFX.setBalanceOf(
   //   "0xAfdb49aF7e7BDE7e99589DF3831d849b7a55dE34",
   //   parseEth(1000)
   // );
@@ -820,7 +820,7 @@ async function main() {
   //   signer
   // );
   // await exchangeRates.addAggregator(
-  //   ethers.utils.formatBytes32String("SNX"),
+  //   ethers.utils.formatBytes32String("SCFX"),
   //   deployments["AggregatorCollateral"]
   // );
   // await exchangeRates.addAggregator(
@@ -837,7 +837,7 @@ async function main() {
   //   deployments["SupplySchedule"],
   //   signer
   // );
-  // await supplySchedule.setSynthetixProxy(deployments["ProxySNX"]);
+  // await supplySchedule.setSynthetixProxy(deployments["ProxySCFX"]);
   // await supplySchedule.setInflationAmount(parseEth(3000000));
 
   // const systemSettings = await ethers.getContractAt(

@@ -328,7 +328,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         }
     }
 
-    function _updateSNXIssuedDebtOnExchange(
+    function _updateSCFXIssuedDebtOnExchange(
         bytes32[2] memory currencyKeys,
         uint[2] memory currencyRates
     ) internal {
@@ -508,7 +508,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         // Nothing changes as far as issuance data goes because the total value in the system hasn't changed.
         // But we will update the debt snapshot in case executeExchange rates have fluctuated since the last executeExchange
         // in these currencies
-        _updateSNXIssuedDebtOnExchange(
+        _updateSCFXIssuedDebtOnExchange(
             [sourceSettings.currencyKey, destinationSettings.currencyKey],
             [entry.sourceRate, entry.destinationRate]
         );

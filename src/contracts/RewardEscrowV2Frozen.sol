@@ -18,7 +18,7 @@ contract RewardEscrowV2Frozen is BaseRewardEscrowV2Frozen {
 
     // note that the actual deployed RewardEscrowV2 uses SafeDecimalMath to get this value,
     // and this is different in order to simplify deployment for testing
-    uint public migrateEntriesThresholdAmount = (10 ** 18) * 1000; // Default 1000 SNX
+    uint public migrateEntriesThresholdAmount = (10 ** 18) * 1000; // Default 1000 SCFX
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
     bytes32 private constant CONTRACT_SYNTHETIX_BRIDGE_OPTIMISM =
@@ -90,7 +90,7 @@ contract RewardEscrowV2Frozen is BaseRewardEscrowV2Frozen {
             "Address escrow balance is 0"
         );
 
-        /* Add a vestable entry for addresses with totalBalancePendingMigration <= migrateEntriesThreshold amount of SNX */
+        /* Add a vestable entry for addresses with totalBalancePendingMigration <= migrateEntriesThreshold amount of SCFX */
         if (
             totalBalancePendingMigration[addressToMigrate] <=
             migrateEntriesThresholdAmount
@@ -303,7 +303,7 @@ contract RewardEscrowV2Frozen is BaseRewardEscrowV2Frozen {
 
         /**
          *  update account total escrow balances for migration
-         *  transfer the escrowed SNX being migrated to the L2 deposit contract
+         *  transfer the escrowed SCFX being migrated to the L2 deposit contract
          */
         if (escrowedAccountBalance > 0) {
             _reduceAccountEscrowBalances(account, escrowedAccountBalance);

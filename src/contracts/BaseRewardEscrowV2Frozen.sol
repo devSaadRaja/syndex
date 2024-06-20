@@ -270,7 +270,7 @@ contract BaseRewardEscrowV2Frozen is
     }
 
     /**
-     * @notice Create an escrow entry to lock SNX for a given duration in seconds
+     * @notice Create an escrow entry to lock SCFX for a given duration in seconds
      * @dev This call expects that the depositor (msg.sender) has already approved the Reward escrow contract
      to spend the the amount being escrowed.
      */
@@ -284,7 +284,7 @@ contract BaseRewardEscrowV2Frozen is
             "Cannot create escrow with address(0)"
         );
 
-        /* Transfer SNX from msg.sender */
+        /* Transfer SCFX from msg.sender */
         require(
             IERC20(address(synthetix())).transferFrom(
                 msg.sender,
@@ -303,8 +303,8 @@ contract BaseRewardEscrowV2Frozen is
      * @dev A call to this should accompany a previous successful call to synthetix.transfer(rewardEscrow, amount),
      * to ensure that when the funds are withdrawn, there is enough balance.
      * @param account The account to append a new vesting entry to.
-     * @param quantity The quantity of SNX that will be escrowed.
-     * @param duration The duration that SNX will be emitted.
+     * @param quantity The quantity of SCFX that will be escrowed.
+     * @param duration The duration that SCFX will be emitted.
      */
     function appendVestingEntry(
         address account,

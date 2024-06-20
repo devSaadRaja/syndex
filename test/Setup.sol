@@ -105,7 +105,7 @@ contract Setup is Test, Utils {
     Synthetix public synthetix;
     Exchanger public exchanger;
     SynthSwap public synthSwap;
-    ProxyERC20 public proxySNX;
+    ProxyERC20 public proxySCFX;
     SynthUtil public synthUtil;
     ProxyERC20 public proxysUSD;
     ProxyERC20 public proxysETH;
@@ -128,7 +128,7 @@ contract Setup is Test, Utils {
     SystemSettings public systemSettings;
     CircuitBreaker public circuitBreaker;
     WrapperFactory public wrapperFactory;
-    LegacyTokenState public tokenStateSNX;
+    LegacyTokenState public tokenStateSCFX;
     MultiCollateralSynth public synthsUSD;
     MultiCollateralSynth public synthsETH;
     DappMaintenance public dappMaintenance;
@@ -212,7 +212,7 @@ contract Setup is Test, Utils {
         );
 
         proxyFeePool = new Proxy(owner);
-        proxySNX = new ProxyERC20(owner);
+        proxySCFX = new ProxyERC20(owner);
         proxysUSD = new ProxyERC20(owner);
         proxysETH = new ProxyERC20(owner);
         systemStatus = new SystemStatus(owner);
@@ -225,7 +225,7 @@ contract Setup is Test, Utils {
         flexibleStorage = new FlexibleStorage(address(addressResolver));
         systemSettings = new SystemSettings(owner, address(addressResolver));
         circuitBreaker = new CircuitBreaker(owner, address(addressResolver));
-        tokenStateSNX = new LegacyTokenState(owner, address(synthetix));
+        tokenStateSCFX = new LegacyTokenState(owner, address(synthetix));
         tokenStatesUSD = new TokenState(owner, address(synthsUSD));
         tokenStatesETH = new TokenState(owner, address(synthsETH));
         wrapperFactory = new WrapperFactory(owner, address(addressResolver));
@@ -266,8 +266,8 @@ contract Setup is Test, Utils {
             address(addressResolver)
         );
         synthetix = new Synthetix(
-            payable(address(proxySNX)),
-            address(tokenStateSNX),
+            payable(address(proxySCFX)),
+            address(tokenStateSCFX),
             owner,
             0,
             address(addressResolver)
@@ -300,7 +300,7 @@ contract Setup is Test, Utils {
         rewardsDistribution = new RewardsDistribution(
             owner,
             owner, // synthetix
-            address(proxySNX),
+            address(proxySCFX),
             address(rewardEscrowV2),
             address(proxyFeePool)
         );
@@ -336,7 +336,7 @@ contract Setup is Test, Utils {
         );
 
         taxable = new Taxable(
-            address(proxySNX),
+            address(proxySCFX),
             address(synthetix),
             WETH,
             address(router)
@@ -350,12 +350,12 @@ contract Setup is Test, Utils {
         addresses.push(address(addressResolver));
         names.push("MixinResolver");
         addresses.push(address(mixinResolver));
-        names.push("ProxySNX");
-        addresses.push(address(proxySNX));
+        names.push("ProxySCFX");
+        addresses.push(address(proxySCFX));
         names.push("SystemStatus");
         addresses.push(address(systemStatus));
         names.push("TokenStateSynthetix");
-        addresses.push(address(tokenStateSNX));
+        addresses.push(address(tokenStateSCFX));
         names.push("TokenStatesUSD");
         addresses.push(address(tokenStatesUSD));
         names.push("ext:AggregatorIssuedSynths");
@@ -378,6 +378,8 @@ contract Setup is Test, Utils {
         addresses.push(address(supplySchedule));
         names.push("FeePoolEternalStorage");
         addresses.push(address(feePoolEternalStorage));
+        names.push("SynthetixBridgeToOptimism");
+        addresses.push(owner);
         // ---
         names.push("DirectIntegrationManager");
         addresses.push(address(directIntegrationManager));
@@ -429,7 +431,7 @@ contract Setup is Test, Utils {
         addresses.push(address(tradingRewards));
 
         addressResolver.loadAddresses(names, addresses);
-        for (uint i = 16; i < addresses.length; i++) {
+        for (uint i = 17; i < addresses.length; i++) {
             MixinResolver(addresses[i]).refreshCache();
         }
 
@@ -461,12 +463,12 @@ contract Setup is Test, Utils {
         issuer.addSynth(address(synthsUSD));
         issuer.addSynth(address(synthsETH));
 
-        proxySNX.updateTarget(address(synthetix));
+        proxySCFX.updateTarget(address(synthetix));
         proxysUSD.updateTarget(address(synthsUSD));
         proxysETH.updateTarget(address(synthsETH));
         proxyFeePool.updateTarget(address(feePool));
 
-        tokenStateSNX.linkContract(address(synthetix));
+        tokenStateSCFX.linkContract(address(synthetix));
         tokenStatesUSD.linkContract(address(synthsUSD));
         tokenStatesETH.linkContract(address(synthsETH));
         collateralManagerState.linkContract(address(collateralManager));
@@ -477,7 +479,7 @@ contract Setup is Test, Utils {
 
         exchangeRates.addAggregator("SMX", address(aggregatorETH));
         exchangeRates.addAggregator("sETH", address(aggregatorETH));
-        exchangeRates.addAggregator("SNX", address(aggregatorCollateral));
+        exchangeRates.addAggregator("SCFX", address(aggregatorCollateral));
         // exchangeRates.addAggregator(
         //     "ext:AggregatorDebtRatio",
         //     address(aggregatorDebtRatio)
@@ -540,7 +542,7 @@ contract Setup is Test, Utils {
         // systemSettings.updateLiquidationDelay(28800); // 8 hours
         // systemSettings.updateRateStalePeriod(86400); // 1 day
 
-        supplySchedule.setSynthetixProxy(address(proxySNX));
+        supplySchedule.setSynthetixProxy(address(proxySCFX));
         supplySchedule.setInflationAmount(3000000 * 10 ** 18);
 
         factory.createPair(address(smx), WETH);
@@ -556,14 +558,14 @@ contract Setup is Test, Utils {
         smx.setDeploy(true);
         smx.setTrade(true);
 
-        factory.createPair(address(proxySNX), WETH);
-        address pairSNXWETH = factory.getPair(address(proxySNX), WETH);
+        factory.createPair(address(proxySCFX), WETH);
+        address pairSCFXWETH = factory.getPair(address(proxySCFX), WETH);
 
         taxable.setExcludeFromFee(address(taxable), true);
         taxable.setRewardAddress(address(WETH));
         taxable.setRouter(address(router));
         taxable.setFeeTaker(user2, 100);
-        taxable.setPool(pairSNXWETH, true);
+        taxable.setPool(pairSCFXWETH, true);
 
         synthetix.mint(owner, 1_000_000 ether);
         synthetix.setReserveAddress(reserveAddr);
@@ -571,20 +573,20 @@ contract Setup is Test, Utils {
         synthetix.setDeploy(true);
         synthetix.setTrade(true);
 
-        proxySNX.transfer(user1, 5 ether);
-        proxySNX.transfer(user2, 10 ether);
-        proxySNX.transfer(user3, 15 ether);
-        proxySNX.transfer(user4, 1000 ether);
-        proxySNX.transfer(user5, 5000 ether);
-        proxySNX.transfer(user6, 1000 ether);
-        proxySNX.transfer(user7, 5000 ether);
-        proxySNX.transfer(user8, 5000 ether);
-        proxySNX.transfer(reserveAddr, 200000 ether);
+        proxySCFX.transfer(user1, 5 ether);
+        proxySCFX.transfer(user2, 10 ether);
+        proxySCFX.transfer(user3, 15 ether);
+        proxySCFX.transfer(user4, 1000 ether);
+        proxySCFX.transfer(user5, 5000 ether);
+        proxySCFX.transfer(user6, 1000 ether);
+        proxySCFX.transfer(user7, 5000 ether);
+        proxySCFX.transfer(user8, 5000 ether);
+        proxySCFX.transfer(reserveAddr, 200000 ether);
 
         vm.stopPrank(); // OWNER
 
         vm.startPrank(address(reserveAddr));
-        proxySNX.approve(user8, 1_000_000_000 ether);
+        proxySCFX.approve(user8, 1_000_000_000 ether);
         vm.stopPrank();
     }
 }
