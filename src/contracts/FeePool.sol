@@ -320,14 +320,14 @@ contract FeePool is
     }
 
     /**
-     * @notice The RewardsDistribution contract informs us how many SNX rewards are sent to RewardEscrow to be claimed.
+     * @notice The RewardsDistribution contract informs us how many SCFX rewards are sent to RewardEscrow to be claimed.
      */
     function setRewardsToDistribute(uint amount) external optionalProxy {
         require(
             messageSender == address(rewardsDistribution()),
             "RewardsDistribution only"
         );
-        // Add the amount of SNX rewards to distribute on top of any rolling unclaimed amount
+        // Add the amount of SCFX rewards to distribute on top of any rolling unclaimed amount
         _recentFeePeriodsStorage(0)
             .rewardsToDistribute = _recentFeePeriodsStorage(0)
             .rewardsToDistribute
@@ -346,11 +346,11 @@ contract FeePool is
         );
 
         // get current oracle values
-        (uint snxBackedDebt, ) = allNetworksSnxBackedDebt();
+        (uint scfxBackedDebt, ) = allNetworksSnxBackedDebt();
         (uint debtSharesSupply, ) = allNetworksDebtSharesSupply();
 
         // close on this chain
-        _closeSecondary(snxBackedDebt, debtSharesSupply);
+        _closeSecondary(scfxBackedDebt, debtSharesSupply);
 
         // // inform other chain of the chosen values
         // ISynthetixBridgeToOptimism(
@@ -358,7 +358,7 @@ contract FeePool is
         //         CONTRACT_SYNTHETIX_BRIDGE_TO_OPTIMISM,
         //         "Missing contract: SynthetixBridgeToOptimism"
         //     )
-        // ).closeFeePeriod(snxBackedDebt, debtSharesSupply);
+        // ).closeFeePeriod(scfxBackedDebt, debtSharesSupply);
     }
 
     function closeSecondary(
@@ -378,7 +378,7 @@ contract FeePool is
         etherWrapper().distributeFees();
         wrapperFactory().distributeFees();
 
-        // before closing the current fee period, set the recorded snxBackedDebt and debtSharesSupply
+        // before closing the current fee period, set the recorded scfxBackedDebt and debtSharesSupply
         _recentFeePeriodsStorage(0)
             .allNetworksDebtSharesSupply = allNetworksDebtSharesSupply;
         _recentFeePeriodsStorage(0)
@@ -482,7 +482,7 @@ contract FeePool is
 
         require(feesClaimable, "C-Ratio below penalty threshold");
 
-        require(!anyRateIsInvalid, "A synth or SNX rate is invalid");
+        require(!anyRateIsInvalid, "A synth or SCFX rate is invalid");
 
         // Get the claimingAddress available fees and rewards
         (availableFees, availableRewards) = feesAvailable(claimingAddress);
@@ -547,11 +547,11 @@ contract FeePool is
 
     /**
      * @notice Record the reward payment in our recentFeePeriods.
-     * @param snxAmount The amount of SNX tokens.
+     * @param scfxAmount The amount of SCFX tokens.
      */
-    function _recordRewardPayment(uint snxAmount) internal returns (uint) {
+    function _recordRewardPayment(uint scfxAmount) internal returns (uint) {
         // Don't assign to the parameter
-        uint remainingToAllocate = snxAmount;
+        uint remainingToAllocate = scfxAmount;
 
         uint rewardPaid;
 
@@ -586,18 +586,18 @@ contract FeePool is
     /**
      * @notice Send the rewards to claiming address - will be locked in rewardEscrow.
      * @param account The address to send the fees to.
-     * @param snxAmount The amount of SNX.
+     * @param scfxAmount The amount of SCFX.
      */
     function _payRewards(
         address account,
-        uint snxAmount
+        uint scfxAmount
     ) internal notFeeAddress(account) {
         /* Escrow the tokens for 1 year. */
         uint escrowDuration = 52 weeks;
 
         // Record vesting entry for claiming address and amount
-        // SNX already minted to rewardEscrow balance
-        rewardEscrowV2().appendVestingEntry(account, snxAmount, escrowDuration);
+        // SCFX already minted to rewardEscrow balance
+        rewardEscrowV2().appendVestingEntry(account, scfxAmount, escrowDuration);
     }
 
     /**
@@ -625,7 +625,7 @@ contract FeePool is
     }
 
     /**
-     * @notice The total SNX rewards available in the system to be withdrawn
+     * @notice The total SCFX rewards available in the system to be withdrawn
      */
     function totalRewardsAvailable() external view returns (uint) {
         uint totalRewards = 0;
@@ -645,7 +645,7 @@ contract FeePool is
 
     /**
      * @notice The fees available to be withdrawn by a specific account, priced in sUSD
-     * @dev Returns two amounts, one for fees and one for SNX rewards
+     * @dev Returns two amounts, one for fees and one for SCFX rewards
      */
     function feesAvailable(address account) public view returns (uint, uint) {
         // Add up the fees
@@ -661,7 +661,7 @@ contract FeePool is
         }
 
         // And convert totalFees to sUSD
-        // Return totalRewards as is in SNX amount
+        // Return totalRewards as is in SCFX amount
         return (totalFees, totalRewards);
     }
 
@@ -911,17 +911,17 @@ contract FeePool is
         proxy._emit(abi.encode(feePeriodId), 1, FEEPERIODCLOSED_SIG, 0, 0, 0);
     }
 
-    event FeesClaimed(address account, uint sUSDAmount, uint snxRewards);
+    event FeesClaimed(address account, uint sUSDAmount, uint scfxRewards);
     bytes32 private constant FEESCLAIMED_SIG =
         keccak256("FeesClaimed(address,uint256,uint256)");
 
     function emitFeesClaimed(
         address account,
         uint sUSDAmount,
-        uint snxRewards
+        uint scfxRewards
     ) internal {
         proxy._emit(
-            abi.encode(account, sUSDAmount, snxRewards),
+            abi.encode(account, sUSDAmount, scfxRewards),
             1,
             FEESCLAIMED_SIG,
             0,

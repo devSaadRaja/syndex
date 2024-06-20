@@ -45,7 +45,7 @@ contract TradingRewards is
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
     bytes32 private constant CONTRACT_EXCHANGER = "Exchanger";
-    bytes32 private constant CONTRACT_SYNTHETIX = "ProxySNX"; // ProxySNX, Synthetix
+    bytes32 private constant CONTRACT_SYNTHETIX = "ProxySCFX"; // ProxySCFX, Synthetix
 
     /* ========== CONSTRUCTOR ========== */
 

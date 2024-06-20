@@ -85,8 +85,8 @@ contract SystemSettings is Ownable, MixinSystemSettings {
     }
 
     // SIP-251 Differentiate Liquidation Penalties
-    // penalty taken away from currentTarget of SNX liquidation (with 18 decimals). E.g. 30% is 0.3e18
-    function snxLiquidationPenalty() external view returns (uint) {
+    // penalty taken away from currentTarget of SCFX liquidation (with 18 decimals). E.g. 30% is 0.3e18
+    function scfxLiquidationPenalty() external view returns (uint) {
         return getSnxLiquidationPenalty();
     }
 
@@ -378,7 +378,7 @@ contract SystemSettings is Ownable, MixinSystemSettings {
 
     function updateSnxLiquidationPenalty(uint penalty) external onlyOwner {
         flexibleStorage().updateSnxLiquidationPenalty(
-            SETTING_SNX_LIQUIDATION_PENALTY,
+            SETTING_SCFX_LIQUIDATION_PENALTY,
             penalty
         );
         emit SnxLiquidationPenaltyUpdated(penalty);

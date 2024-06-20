@@ -33,7 +33,7 @@ contract DeployScript is Script {
     address[] public addresses;
 
     Issuer public issuer;
-    ProxyERC20 public proxySNX;
+    ProxyERC20 public proxySCFX;
     Synthetix public synthetix;
     TokenState public tokenState;
     SystemStatus public systemStatus;
@@ -63,30 +63,30 @@ contract DeployScript is Script {
             address(addressResolver)
         );
         exchangeRates = new ExchangeRates(deployer, address(addressResolver));
-        proxySNX = new ProxyERC20(deployer);
+        proxySCFX = new ProxyERC20(deployer);
         tokenState = new TokenState(deployer, address(synthetix));
         synthetix = new Synthetix(
-            payable(address(proxySNX)),
+            payable(address(proxySCFX)),
             address(tokenState),
             deployer,
             100_000_000 ether,
             address(addressResolver)
         );
-        staking = new Staking(address(proxySNX), address(proxySNX));
+        staking = new Staking(address(proxySCFX), address(proxySCFX));
 
         // ? SETUP ---
 
         // // issuer.addSynth(address(synthsUSD));
         // // issuer.addSynth(address(synthsETH));
 
-        // exchangeRates.addAggregator("SNX", address(aggregatorCollateral));
+        // exchangeRates.addAggregator("SCFX", address(aggregatorCollateral));
 
-        // proxySNX.updateTarget(Proxyable(address(synthetix)));
+        // proxySCFX.updateTarget(Proxyable(address(synthetix)));
 
         // tokenState.linkContract(address(synthetix));
 
-        // // factory.createPair(address(proxySNX), WETH);
-        // // address pair = factory.getPair(address(proxySNX), WETH);
+        // // factory.createPair(address(proxySCFX), WETH);
+        // // address pair = factory.getPair(address(proxySCFX), WETH);
         // // taxable.setPool(pair, true);
 
         // ? TRANSACTIONS ---
@@ -112,12 +112,12 @@ contract DeployScript is Script {
 
         // synthetix.mint(deployer, 100_000_000 ether);
 
-        // proxySNX.transfer(address(staking), 30 * 10 ** 18);
+        // proxySCFX.transfer(address(staking), 30 * 10 ** 18);
 
-        // // proxySNX.approve(address(router), 50 * 10 ** 18);
+        // // proxySCFX.approve(address(router), 50 * 10 ** 18);
         // // IERC20(WETH).approve(address(router), 50 * 10 ** 18);
         // // router.addLiquidity(
-        // //     address(proxySNX),
+        // //     address(proxySCFX),
         // //     WETH,
         // //     50 * 10 ** 18,
         // //     50 * 10 ** 18,

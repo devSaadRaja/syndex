@@ -6,7 +6,7 @@ import "./IVirtualSynth.sol";
 
 interface ISynthetix {
     // Views
-    function anySynthOrSNXRateIsInvalid()
+    function anySynthOrSCFXRateIsInvalid()
         external
         view
         returns (bool anyRateInvalid);

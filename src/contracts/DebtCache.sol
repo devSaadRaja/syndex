@@ -43,19 +43,19 @@ contract DebtCache is BaseDebtCache {
             bool isInvalid
         ) = _currentSynthDebts(currencyKeys);
 
-        // The total SNX-backed debt is the debt of futures markets plus the debt of circulating synths.
-        uint snxCollateralDebt = futuresDebt;
+        // The total SCFX-backed debt is the debt of futures markets plus the debt of circulating synths.
+        uint scfxCollateralDebt = futuresDebt;
         _cachedSynthDebt[FUTURES_DEBT_KEY] = futuresDebt;
         uint numValues = values.length;
         for (uint i; i < numValues; i++) {
             uint value = values[i];
-            snxCollateralDebt = snxCollateralDebt.add(value);
+            scfxCollateralDebt = scfxCollateralDebt.add(value);
             _cachedSynthDebt[currencyKeys[i]] = value;
         }
 
-        // Subtract out the excluded non-SNX backed debt from our total
+        // Subtract out the excluded non-SCFX backed debt from our total
         _cachedSynthDebt[EXCLUDED_DEBT_KEY] = excludedDebt;
-        uint newDebt = snxCollateralDebt.floorsub(excludedDebt);
+        uint newDebt = scfxCollateralDebt.floorsub(excludedDebt);
         _cachedDebt = newDebt;
         _cacheTimestamp = block.timestamp;
         emit DebtCacheUpdated(newDebt);

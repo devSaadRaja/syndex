@@ -103,7 +103,7 @@ interface IRewardEscrowV2Frozen {
         VestingEntries.VestingEntry[] calldata vestingEntries
     ) external;
 
-    // Return amount of SNX transfered to SynthetixBridgeToOptimism deposit contract
+    // Return amount of SCFX transfered to SynthetixBridgeToOptimism deposit contract
     function burnForMigration(
         address account,
         uint256[] calldata entryIDs

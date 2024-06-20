@@ -21,7 +21,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
 
     // Available Synths which can be used with the system
     string public constant TOKEN_NAME = "Synthetix Network Token";
-    string public constant TOKEN_SYMBOL = "SNX";
+    string public constant TOKEN_SYMBOL = "SCFX";
     uint8 public constant DECIMALS = 18;
     bytes32 public constant sUSD = "sUSD";
 
@@ -164,12 +164,12 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
             0;
     }
 
-    function anySynthOrSNXRateIsInvalid()
+    function anySynthOrSCFXRateIsInvalid()
         external
         view
         returns (bool anyRateInvalid)
     {
-        return issuer().anySynthOrSNXRateIsInvalid();
+        return issuer().anySynthOrSCFXRateIsInvalid();
     }
 
     function maxIssuableSynths(
@@ -251,9 +251,9 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
                 );
             require(
                 value <= transferable,
-                "Cannot transfer staked or escrowed SNX"
+                "Cannot transfer staked or escrowed SCFX"
             );
-            require(!anyRateIsInvalid, "A synth or SNX rate is invalid");
+            require(!anyRateIsInvalid, "A synth or SCFX rate is invalid");
         }
 
         return true;
@@ -410,7 +410,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
         return _transferFromByProxy(messageSender, from, to, value);
     }
 
-    // SIP-252: migration of SNX token balance from old to new escrow rewards contract
+    // SIP-252: migration of SCFX token balance from old to new escrow rewards contract
     function migrateEscrowContractBalance() external onlyOwner {
         address from = resolver.requireAndGetAddress(
             "RewardEscrowV2Frozen",
@@ -480,8 +480,8 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
             issuer().burnSynthsToTargetOnBehalf(burnForAddress, messageSender);
     }
 
-    /// @notice Force liquidate a delinquent account and distribute the redeemed SNX rewards amongst the appropriate recipients.
-    /// @dev The SNX transfers will revert if the amount to send is more than balanceOf account (i.e. due to escrowed balance).
+    /// @notice Force liquidate a delinquent account and distribute the redeemed SCFX rewards amongst the appropriate recipients.
+    /// @dev The SCFX transfers will revert if the amount to send is more than balanceOf account (i.e. due to escrowed balance).
     function liquidateDelinquentAccount(
         address account
     ) external systemActive optionalProxy returns (bool) {
@@ -502,8 +502,8 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
             );
     }
 
-    /// @notice Force liquidate a delinquent account and distribute the redeemed SNX rewards amongst the appropriate recipients.
-    /// @dev The SNX transfers will revert if the amount to send is more than balanceOf account (i.e. due to escrowed balance).
+    /// @notice Force liquidate a delinquent account and distribute the redeemed SCFX rewards amongst the appropriate recipients.
+    /// @dev The SCFX transfers will revert if the amount to send is more than balanceOf account (i.e. due to escrowed balance).
     function _liquidateDelinquentAccount(
         address account,
         uint escrowStartIndex,
@@ -518,7 +518,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
             uint escrowToLiquidate
         ) = issuer().liquidateAccount(account, false);
 
-        // This transfers the to-be-liquidated part of escrow to the account (!) as liquid SNX.
+        // This transfers the to-be-liquidated part of escrow to the account (!) as liquid SCFX.
         // It is transferred to the account instead of to the rewards because of the liquidator / flagger
         // rewards that may need to be paid (so need to be transferrable, to avoid edge cases)
         if (escrowToLiquidate > 0) {
@@ -565,7 +565,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
         );
 
         if (totalRedeemed > 0) {
-            // Send the remaining SNX to the LiquidatorRewards contract.
+            // Send the remaining SCFX to the LiquidatorRewards contract.
             bool liquidatorRewardTransferSucceeded = _transferByProxy(
                 account,
                 address(liquidatorRewards()),
@@ -576,7 +576,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
                 "Transfer to LiquidatorRewards failed"
             );
 
-            // Inform the LiquidatorRewards contract about the incoming SNX rewards.
+            // Inform the LiquidatorRewards contract about the incoming SCFX rewards.
             liquidatorRewards().notifyRewardAmount(totalRedeemed);
         }
 
@@ -590,7 +590,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
         optionalProxy
         returns (bool)
     {
-        // must store liquidated account address because below functions may attempt to transfer SNX which changes messageSender
+        // must store liquidated account address because below functions may attempt to transfer SCFX which changes messageSender
         address liquidatedAccount = messageSender;
 
         // ensure the user has no liquidation rewards (also counted towards collateral) outstanding
@@ -611,7 +611,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
             liquidatedAccount
         );
 
-        // Transfer the redeemed SNX to the LiquidatorRewards contract.
+        // Transfer the redeemed SCFX to the LiquidatorRewards contract.
         // Reverts if amount to redeem is more than balanceOf account (i.e. due to escrowed balance).
         bool success = _transferByProxy(
             liquidatedAccount,
@@ -620,7 +620,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
         );
         require(success, "Transfer to LiquidatorRewards failed");
 
-        // Inform the LiquidatorRewards contract about the incoming SNX rewards.
+        // Inform the LiquidatorRewards contract about the incoming SCFX rewards.
         liquidatorRewards().notifyRewardAmount(totalRedeemed);
 
         return success;
@@ -657,7 +657,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
         );
         require(msg.sender == debtMigratorOnEthereum, "Only L1 DebtMigrator");
 
-        // get their liquid SNX balance and transfer it to the migrator contract
+        // get their liquid SCFX balance and transfer it to the migrator contract
         totalLiquidBalance = tokenState.balanceOf(account);
         if (totalLiquidBalance > 0) {
             bool succeeded = _transferByProxy(
@@ -665,10 +665,10 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
                 debtMigratorOnEthereum,
                 totalLiquidBalance
             );
-            require(succeeded, "snx transfer failed");
+            require(succeeded, "scfx transfer failed");
         }
 
-        // get their escrowed SNX balance and revoke it all
+        // get their escrowed SCFX balance and revoke it all
         totalEscrowRevoked = rewardEscrowV2().totalEscrowedAccountBalance(
             account
         );
@@ -810,7 +810,7 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
     // ========== EVENTS ==========
     event AccountLiquidated(
         address indexed account,
-        uint snxRedeemed,
+        uint scfxRedeemed,
         uint amountLiquidated,
         address liquidator
     );
@@ -819,12 +819,12 @@ contract BaseSynthetix is ExternStateToken, MixinResolver, Blacklist {
 
     function emitAccountLiquidated(
         address account,
-        uint256 snxRedeemed,
+        uint256 scfxRedeemed,
         uint256 amountLiquidated,
         address liquidatorAddress
     ) internal {
         proxy._emit(
-            abi.encode(snxRedeemed, amountLiquidated, liquidatorAddress),
+            abi.encode(scfxRedeemed, amountLiquidated, liquidatorAddress),
             2,
             ACCOUNTLIQUIDATED_SIG,
             addressToBytes32(account),

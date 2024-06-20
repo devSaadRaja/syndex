@@ -62,7 +62,7 @@ contract AddressResolver is Ownable {
         string calldata reason
     ) external view returns (address) {
         address _foundAddress = repository[name];
-        // require(_foundAddress != address(0), reason); // ---
+        require(_foundAddress != address(0), reason);
         return _foundAddress;
     }
 

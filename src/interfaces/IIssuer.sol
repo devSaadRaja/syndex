@@ -11,7 +11,7 @@ interface IIssuer {
         view
         returns (uint256 debt, uint256 sharesSupply, bool isStale);
 
-    function anySynthOrSNXRateIsInvalid()
+    function anySynthOrSCFXRateIsInvalid()
         external
         view
         returns (bool anyRateInvalid);

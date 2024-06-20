@@ -381,11 +381,11 @@ contract SMXTest is Setup {
         (uint256 totalFees, uint256 totalRewards) = feePool.feesAvailable(
             user7
         );
-        assertEq(totalFees, 0.075 ether);
+        assertEq(totalFees, 0.15 ether);
         assertEq(totalRewards, 0);
 
         (totalFees, totalRewards) = feePool.feesAvailable(user8);
-        assertEq(totalFees, 0.075 ether);
+        assertEq(totalFees, 0.15 ether);
         assertEq(totalRewards, 0);
 
         _passTime(7 days);
@@ -497,8 +497,8 @@ contract SMXTest is Setup {
 
     function testTradersTradeFee() public {
         // vm.startPrank(user4);
-        // IERC20(address(proxySNX)).transfer(address(tradingRewards), 250 ether);
-        // IERC20(address(proxySNX)).transfer(
+        // IERC20(address(proxySCFX)).transfer(address(tradingRewards), 250 ether);
+        // IERC20(address(proxySCFX)).transfer(
         //     address(rewardsDistribution),
         //     250 ether
         // );
@@ -598,14 +598,14 @@ contract SMXTest is Setup {
         //     1002
         // );
 
-        // uint256 amountBefore = IERC20(address(proxySNX)).balanceOf(user8);
+        // uint256 amountBefore = IERC20(address(proxySCFX)).balanceOf(user8);
         // uint256 rewardAmount = tradingRewards
         //     .getAvailableRewardsForAccountForPeriod(user8, 0);
 
         // tradingRewards.redeemRewardsForPeriod(0);
 
         // assertEq(
-        //     IERC20(address(proxySNX)).balanceOf(user8),
+        //     IERC20(address(proxySCFX)).balanceOf(user8),
         //     amountBefore + rewardAmount
         // );
 
@@ -683,8 +683,8 @@ contract SMXTest is Setup {
             "<-- synthetix transferableSynthetix(user6)"
         );
         console.log(
-            IERC20(address(proxySNX)).balanceOf(user6),
-            "<-- SNX balanceOf(user6)"
+            IERC20(address(proxySCFX)).balanceOf(user6),
+            "<-- SCFX balanceOf(user6)"
         );
         console.log(
             IERC20(address(proxysUSD)).balanceOf(user6),
@@ -828,17 +828,17 @@ contract SMXTest is Setup {
         vm.stopPrank();
     }
 
-    function testSNXBlacklist() public {
+    function testSCFXBlacklist() public {
         vm.startPrank(owner);
         synthetix.updateBlacklist(user1, true);
         vm.stopPrank();
         vm.startPrank(user1);
         vm.expectRevert("Address is blacklisted");
-        proxySNX.transfer(reserveAddr, 1 ether);
+        proxySCFX.transfer(reserveAddr, 1 ether);
         vm.stopPrank();
     }
 
-    function testSNXOnlyBurner() public {
+    function testSCFXOnlyBurner() public {
         vm.startPrank(user8);
         vm.expectRevert();
         synthetix.burn();
@@ -849,18 +849,18 @@ contract SMXTest is Setup {
         vm.stopPrank();
 
         vm.startPrank(user8);
-        assertEq(proxySNX.balanceOf(reserveAddr), 200000 ether);
+        assertEq(proxySCFX.balanceOf(reserveAddr), 200000 ether);
         synthetix.burn();
-        assertEq(proxySNX.balanceOf(reserveAddr), 100000 ether);
+        assertEq(proxySCFX.balanceOf(reserveAddr), 100000 ether);
         vm.stopPrank();
     }
 
-    function testTaxSNX() public {
+    function testTaxSCFX() public {
         vm.startPrank(owner);
-        proxySNX.approve(address(router), 50 ether);
+        proxySCFX.approve(address(router), 50 ether);
         IERC20(WETH).approve(address(router), 50 ether);
         router.addLiquidity(
-            address(proxySNX),
+            address(proxySCFX),
             WETH,
             50 ether,
             50 ether,
@@ -876,27 +876,27 @@ contract SMXTest is Setup {
         console.log(taxable.threshold(), "<-- threshold");
         console.log(taxable.currentFeeAmount(), "<-- currentFeeAmount");
         console.log(
-            proxySNX.balanceOf(address(taxable)),
-            "<-- SNX balanceOf taxable"
+            proxySCFX.balanceOf(address(taxable)),
+            "<-- SCFX balanceOf taxable"
         );
         console.log(IERC20(WETH).balanceOf(user6), "<-- WETH balanceOf user6");
         console.log(IERC20(WETH).balanceOf(user2), "<-- WETH balanceOf user2");
 
-        _swap(WETH, address(proxySNX), 10 ether, user6); // BUY
-        _swap(address(proxySNX), WETH, 8 ether, user6); // SELL
+        _swap(WETH, address(proxySCFX), 10 ether, user6); // BUY
+        _swap(address(proxySCFX), WETH, 8 ether, user6); // SELL
 
         console.log();
         console.log("BEFORE TRANSFER");
         console.log(taxable.threshold(), "<-- threshold");
         console.log(taxable.currentFeeAmount(), "<-- currentFeeAmount");
         console.log(
-            proxySNX.balanceOf(address(taxable)),
-            "<-- SNX balanceOf taxable"
+            proxySCFX.balanceOf(address(taxable)),
+            "<-- SCFX balanceOf taxable"
         );
         console.log(IERC20(WETH).balanceOf(user6), "<-- WETH balanceOf user6");
         console.log(IERC20(WETH).balanceOf(user2), "<-- WETH balanceOf user2");
 
-        proxySNX.transfer(user3, 1 ether);
+        proxySCFX.transfer(user3, 1 ether);
 
         vm.stopPrank();
 
@@ -905,8 +905,8 @@ contract SMXTest is Setup {
         console.log(taxable.threshold(), "<-- threshold");
         console.log(taxable.currentFeeAmount(), "<-- currentFeeAmount");
         console.log(
-            proxySNX.balanceOf(address(taxable)),
-            "<-- SNX balanceOf taxable"
+            proxySCFX.balanceOf(address(taxable)),
+            "<-- SCFX balanceOf taxable"
         );
         console.log(IERC20(WETH).balanceOf(user6), "<-- WETH balanceOf user6");
         console.log(IERC20(WETH).balanceOf(user2), "<-- WETH balanceOf user2");

@@ -14,7 +14,7 @@ contract IssuerTest is Setup {
         vm.stopPrank();
     }
 
-    function testSNXIssueSynths() public {
+    function testSCFXIssueSynths() public {
         console.log();
         console.log("---USER 1---");
         vm.startPrank(user1);
@@ -49,7 +49,7 @@ contract IssuerTest is Setup {
         assertEq(synthetixDebtShare.balanceOf(user2), 1 ether);
     }
 
-    function testSNXBurnSynths() public {
+    function testSCFXBurnSynths() public {
         console.log();
         console.log("---ISSUE USER 1---");
         vm.startPrank(user1);
@@ -79,7 +79,7 @@ contract IssuerTest is Setup {
         vm.stopPrank();
     }
 
-    function testSNXLiquidateSelf() public {
+    function testSCFXLiquidateSelf() public {
         vm.startPrank(user1);
 
         console.log("ISSUE");
@@ -94,7 +94,7 @@ contract IssuerTest is Setup {
         vm.stopPrank();
     }
 
-    function testSNXForceLiquidate() public {
+    function testSCFXForceLiquidate() public {
         vm.startPrank(user1);
         console.log("ISSUE");
         synthetix.createSynths(1 ether);

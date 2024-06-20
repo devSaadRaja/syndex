@@ -13,8 +13,8 @@ contract TradeSynthsTest is Setup {
 
     function testTradeSynths() public {
         vm.startPrank(user4);
-        IERC20(address(proxySNX)).transfer(address(tradingRewards), 250 ether);
-        IERC20(address(proxySNX)).transfer(
+        IERC20(address(proxySCFX)).transfer(address(tradingRewards), 250 ether);
+        IERC20(address(proxySCFX)).transfer(
             address(rewardsDistribution),
             250 ether
         );
@@ -29,26 +29,23 @@ contract TradeSynthsTest is Setup {
             tradingRewards.getPeriodRecordedFees(0)
         );
 
-        assertEq(
-            tradingRewards.getPeriodAvailableRewards(0),
-            100000000000000000
-        );
+        assertEq(tradingRewards.getPeriodAvailableRewards(0), 0.2 ether);
         assertEq(tradingRewards.isPeriodClaimable(0), true);
-        assertEq(tradingRewards.getPeriodRecordedFees(0), 100000000000000000);
-        assertEq(tradingRewards.getAvailableRewards(), 100000000000000000);
+        assertEq(tradingRewards.getPeriodRecordedFees(0), 0.2 ether);
+        assertEq(tradingRewards.getAvailableRewards(), 0.2 ether);
         assertEq(
             tradingRewards.getAvailableRewardsForAccountForPeriod(user5, 0),
-            100000000000000000
+            0.2 ether
         );
 
-        uint256 amountBefore = IERC20(address(proxySNX)).balanceOf(user5);
+        uint256 amountBefore = IERC20(address(proxySCFX)).balanceOf(user5);
         uint256 rewardAmount = tradingRewards
             .getAvailableRewardsForAccountForPeriod(user5, 0);
 
         tradingRewards.redeemRewardsForPeriod(0);
 
         assertEq(
-            IERC20(address(proxySNX)).balanceOf(user5),
+            IERC20(address(proxySCFX)).balanceOf(user5),
             amountBefore + rewardAmount
         );
 

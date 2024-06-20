@@ -141,7 +141,7 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
 
     /// @notice Determines if an account is eligible for forced or self liquidation
     /// @dev An account is eligible to self liquidate if its c-ratio is below the currentTarget c-ratio
-    /// @dev An account with no SNX collateral will not be open for liquidation since the ratio is 0
+    /// @dev An account with no SCFX collateral will not be open for liquidation since the ratio is 0
     function isLiquidationOpen(
         address account,
         bool isSelfLiquidation
@@ -159,10 +159,10 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
             LiquidationEntry
                 memory liquidation = _getLiquidationEntryForAccount(account);
 
-            // Open for liquidation if the deadline has passed and the user has enough SNX collateral.
+            // Open for liquidation if the deadline has passed and the user has enough SCFX collateral.
             if (
                 _deadlinePassed(liquidation.deadline) &&
-                _hasEnoughSNXForRewards(account)
+                _hasEnoughSCFXForRewards(account)
             ) {
                 return true;
             }
@@ -184,9 +184,9 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
     /// be removed.
     /// @param account The account to be liquidated
     /// @param isSelfLiquidation boolean to determine if this is a forced or self-invoked liquidation
-    /// @return totalRedeemed the total amount of collateral (SNX) to redeem (liquid and escrow)
+    /// @return totalRedeemed the total amount of collateral (SCFX) to redeem (liquid and escrow)
     /// @return debtToRemove the amount of debt (sUSD) to burn in order to fix the account's c-ratio
-    /// @return escrowToLiquidate the amount of escrow SNX that will be revoked during liquidation
+    /// @return escrowToLiquidate the amount of escrow SCFX that will be revoked during liquidation
     /// @return initialDebtBalance the amount of initial (sUSD) debt the account has
     function liquidationAmounts(
         address account,
@@ -224,8 +224,8 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
         return deadline > 0 && block.timestamp > deadline;
     }
 
-    /// @notice Checks if an account has enough SNX balance to be considered open for forced liquidation.
-    function _hasEnoughSNXForRewards(
+    /// @notice Checks if an account has enough SCFX balance to be considered open for forced liquidation.
+    function _hasEnoughSCFXForRewards(
         address account
     ) internal view returns (bool) {
         uint balance = issuer().collateral(account);
@@ -289,10 +289,10 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
     /* ========== MUTATIVE FUNCTIONS ========== */
 
     // totalIssuedSynths checks synths for staleness
-    // check snx rate is not stale
+    // check scfx rate is not stale
     function flagAccountForLiquidation(
         address account
-    ) external rateNotInvalid("SNX") {
+    ) external rateNotInvalid("SCFX") {
         systemStatus().requireSystemActive();
 
         require(
@@ -322,7 +322,7 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
 
         // if account doesn't have enough liquidatable collateral for rewards the liquidation transaction
         // is not possible
-        require(_hasEnoughSNXForRewards(account), "not enough SNX for rewards");
+        require(_hasEnoughSCFXForRewards(account), "not enough SCFX for rewards");
 
         uint deadline = block.timestamp.add(getLiquidationDelay());
 
@@ -343,10 +343,10 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
     }
 
     /// @notice External function to allow anyone to remove an account's liquidation entry
-    /// @dev This function checks if the account's c-ratio is OK and that the rate of SNX is not stale
+    /// @dev This function checks if the account's c-ratio is OK and that the rate of SCFX is not stale
     function checkAndRemoveAccountInLiquidation(
         address account
-    ) external rateNotInvalid("SNX") {
+    ) external rateNotInvalid("SCFX") {
         systemStatus().requireSystemActive();
 
         LiquidationEntry memory liquidation = _getLiquidationEntryForAccount(
