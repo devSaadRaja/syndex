@@ -298,14 +298,7 @@ contract Synthetix is AccessControl, BaseSynthetix {
                 (!taxable.isExcludedFromFee(from) &&
                     !taxable.isExcludedFromFee(to))
             ) {
-                address[] memory path = new address[](2);
-                path[0] = address(proxy);
-                path[1] = taxable.rewardAddr();
-                uint[] memory amounts = IUniswapV2Router02(taxable.routerAddr())
-                    .getAmountsOut(taxable.currentFeeAmount(), path);
-                if (amounts[amounts.length - 1] >= taxable.threshold()) {
-                    taxable.distributeTax();
-                }
+                taxable.distribute();
             }
         }
 

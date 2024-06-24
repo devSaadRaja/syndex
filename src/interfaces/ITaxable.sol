@@ -2,6 +2,8 @@
 pragma solidity ^0.8.17;
 
 interface ITaxable {
+    function distribute() external;
+
     function distributeTax() external;
 
     function threshold() external returns (uint256);
