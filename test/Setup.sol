@@ -346,40 +346,62 @@ contract Setup is Test, Utils {
         // RESOLVER ADDRESSES ---
         // // ------------------------------
 
+        uint8 count = 0;
+
         names.push("AddressResolver");
         addresses.push(address(addressResolver));
+        count++;
         names.push("MixinResolver");
         addresses.push(address(mixinResolver));
+        count++;
         names.push("ProxySCFX");
         addresses.push(address(proxySCFX));
+        count++;
         names.push("SystemStatus");
         addresses.push(address(systemStatus));
+        count++;
         names.push("TokenStateSynthetix");
         addresses.push(address(tokenStateSCFX));
+        count++;
         names.push("TokenStatesUSD");
         addresses.push(address(tokenStatesUSD));
+        count++;
         names.push("ext:AggregatorIssuedSynths");
         addresses.push(address(aggregatorIssuedSynths));
+        count++;
         names.push("ext:AggregatorDebtRatio");
         addresses.push(address(aggregatorDebtRatio));
+        count++;
         names.push("FlexibleStorage");
         addresses.push(address(flexibleStorage));
+        count++;
         names.push("ExchangeState");
         addresses.push(address(exchangeState));
+        count++;
         names.push("DelegateApprovals");
         addresses.push(address(delegateApprovals));
+        count++;
         names.push("RewardsDistribution");
         addresses.push(address(rewardsDistribution));
+        count++;
         names.push("RewardEscrowV2Storage");
         addresses.push(address(rewardEscrowV2Storage));
+        count++;
         names.push("RewardEscrow");
         addresses.push(address(rewardEscrow));
+        count++;
         names.push("SupplySchedule");
         addresses.push(address(supplySchedule));
+        count++;
         names.push("FeePoolEternalStorage");
         addresses.push(address(feePoolEternalStorage));
+        count++;
         names.push("SynthetixBridgeToOptimism");
         addresses.push(owner);
+        count++;
+        // names.push("LegacyMarket");
+        // addresses.push(owner); // address(legacyMarket)
+        // count++;
         // ---
         names.push("DirectIntegrationManager");
         addresses.push(address(directIntegrationManager));
@@ -431,7 +453,7 @@ contract Setup is Test, Utils {
         addresses.push(address(tradingRewards));
 
         addressResolver.loadAddresses(names, addresses);
-        for (uint i = 17; i < addresses.length; i++) {
+        for (uint i = count; i < addresses.length; i++) {
             MixinResolver(addresses[i]).refreshCache();
         }
 

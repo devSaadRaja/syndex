@@ -157,13 +157,24 @@ contract Taxable is Ownable {
         _distribute();
     }
 
+    function distribute() external onlyToken {
+        address[] memory path = new address[](2);
+        path[0] = tokenProxy;
+        path[1] = rewardAddr;
+        uint[] memory amounts = IUniswapV2Router02(routerAddr).getAmountsOut(
+            currentFeeAmount,
+            path
+        );
+        if (amounts[amounts.length - 1] >= threshold) _distribute();
+    }
+
     function rescueFunds(address token, uint256 amount) external onlyOwner {
         IERC20(token).transfer(msg.sender, amount);
     }
 
     function _distribute() internal {
         require(_taxEqualsHundred(), "Total tax percentage should be 100");
-        
+
         address[] memory path = new address[](2);
         path[0] = tokenProxy;
         path[1] = rewardAddr;
