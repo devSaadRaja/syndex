@@ -297,76 +297,75 @@ async function main() {
   // console.log("[[[ COMPLETED ]]]");
 
   // ! ----------------------------------
-  await testCases();
+  // await testCases();
   // ! ----------------------------------
 }
 
 const testCases = async () => {
-  // const proxySCFX = await ethers.getContractAt(
-  //   contractsPath.ProxyERC20,
-  //   deployments["ProxySCFX"],
-  //   signer
-  // );
-  // await proxySCFX.approve(reserveAddr, parseEth(1000));
+  const proxySCFX = await ethers.getContractAt(
+    contractsPath.ProxyERC20,
+    deployments["ProxySCFX"],
+    signer
+  );
+  await proxySCFX.approve(reserveAddr, parseEth(1000));
 
-  // const proxySCFXReserve = await ethers.getContractAt(
-  //   contractsPath.ProxyERC20,
-  //   deployments["ProxySCFX"],
-  //   signer3
-  // );
-  // await proxySCFXReserve.transferFrom(deployer, user2, parseEth(10));
+  const proxySCFXReserve = await ethers.getContractAt(
+    contractsPath.ProxyERC20,
+    deployments["ProxySCFX"],
+    signer3
+  );
+  await proxySCFXReserve.transferFrom(deployer, user2, parseEth(10));
 
-  // console.log(
-  //   formatEth(await proxySCFX.balanceOf(deployer)),
-  //   "<<< balanceOf(deployer)"
-  // );
-  // console.log(
-  //   formatEth(await proxySCFX.balanceOf(user2)),
-  //   "<<< balanceOf(user2)"
-  // );
+  console.log(
+    formatEth(await proxySCFX.balanceOf(deployer)),
+    "<<< balanceOf(deployer)"
+  );
+  console.log(
+    formatEth(await proxySCFX.balanceOf(user2)),
+    "<<< balanceOf(user2)"
+  );
 
-  // console.log(formatEth(await proxySCFX.totalSupply()), "<<< totalSupply");
+  console.log(formatEth(await proxySCFX.totalSupply()), "<<< totalSupply");
 
   // ! SWAP ---
 
-  // const weth = new ethers.Contract(deployments["WETH"], WETH, signer);
-  // const taxable = await ethers.getContractAt(
-  //   contractsPath.Taxable,
-  //   deployments["Taxable"],
-  //   signer
-  // );
-  // const proxySCFX = await ethers.getContractAt(
-  //   contractsPath.ProxyERC20,
-  //   deployments["ProxySCFX"],
-  //   signer
-  // );
+  const weth = new ethers.Contract(deployments["WETH"], WETH, signer);
+  const taxable = await ethers.getContractAt(
+    contractsPath.Taxable,
+    deployments["Taxable"],
+    signer
+  );
+  
+  console.log();
+  console.log(formatEth(await taxable.threshold()), "<<< threshold");
+  console.log(
+    formatEth(await taxable.currentFeeAmount()),
+    "<<< currentFeeAmount"
+  );
+  console.log(
+    formatEth(await proxySCFX.balanceOf(deployments["Taxable"])),
+    "<<< SCFX balanceOf taxable"
+  );
+  console.log(
+    formatEth(await weth.balanceOf(user1)),
+    "<<< WETH balanceOf user1"
+  );
+  console.log(
+    formatEth(await proxySCFX.balanceOf(user1)),
+    "<<< SCFX balanceOf user1"
+  );
+  console.log(
+    formatEth(await proxySCFX.balanceOf(user2)),
+    "<<< SCFX balanceOf user2"
+  );
 
-  // console.log();
-  // console.log(formatEth(await taxable.threshold()), "<<< threshold");
-  // console.log(
-  //   formatEth(await taxable.currentFeeAmount()),
-  //   "<<< currentFeeAmount"
-  // );
-  // console.log(
-  //   formatEth(await proxySCFX.balanceOf(deployments["Taxable"])),
-  //   "<<< SCFX balanceOf taxable"
-  // );
-  // console.log(
-  //   formatEth(await weth.balanceOf(user1)),
-  //   "<<< WETH balanceOf user1"
-  // );
-  // console.log(
-  //   formatEth(await weth.balanceOf(user2)),
-  //   "<<< WETH balanceOf user2"
-  // );
-
-  // await swap(
-  //   signer1,
-  //   deployments["WETH"],
-  //   deployments["ProxySCFX"],
-  //   parseEth(10),
-  //   user1
-  // ); // * BUY
+  await swap(
+    signer1,
+    deployments["WETH"],
+    deployments["ProxySCFX"],
+    parseEth(10),
+    user1
+  ); // * BUY
   await swap(
     signer1,
     deployments["ProxySCFX"],
@@ -375,71 +374,77 @@ const testCases = async () => {
     user1
   ); // * SELL
 
-  // console.log();
-  // console.log("BEFORE TRANSFER");
-  // console.log(formatEth(await taxable.threshold()), "<<< threshold");
-  // console.log(
-  //   formatEth(await taxable.currentFeeAmount()),
-  //   "<<< currentFeeAmount"
-  // );
-  // console.log(
-  //   formatEth(await proxySCFX.balanceOf(deployments["Taxable"])),
-  //   "<<< SCFX balanceOf taxable"
-  // );
-  // console.log(
-  //   formatEth(await weth.balanceOf(user1)),
-  //   "<<< WETH balanceOf user1"
-  // );
-  // console.log(
-  //   formatEth(await weth.balanceOf(user2)),
-  //   "<<< WETH balanceOf user2"
-  // );
+  console.log();
+  console.log("BEFORE TRANSFER");
+  console.log(formatEth(await taxable.threshold()), "<<< threshold");
+  console.log(
+    formatEth(await taxable.currentFeeAmount()),
+    "<<< currentFeeAmount"
+  );
+  console.log(
+    formatEth(await proxySCFX.balanceOf(deployments["Taxable"])),
+    "<<< SCFX balanceOf taxable"
+  );
+  console.log(
+    formatEth(await weth.balanceOf(user1)),
+    "<<< WETH balanceOf user1"
+  );
+  console.log(
+    formatEth(await proxySCFX.balanceOf(user1)),
+    "<<< SCFX balanceOf user1"
+  );
+  console.log(
+    formatEth(await proxySCFX.balanceOf(user2)),
+    "<<< SCFX balanceOf user2"
+  );
 
-  // await proxySCFX.transfer(user2, parseEth(1));
+  await proxySCFX.transfer(user2, parseEth(1));
 
-  // console.log();
-  // console.log("AFTER TRANSFER");
-  // console.log(formatEth(await taxable.threshold()), "<<< threshold");
-  // console.log(
-  //   formatEth(await taxable.currentFeeAmount()),
-  //   "<<< currentFeeAmount"
-  // );
-  // console.log(
-  //   formatEth(await proxySCFX.balanceOf(deployments["Taxable"])),
-  //   "<<< SCFX balanceOf taxable"
-  // );
-  // console.log(
-  //   formatEth(await weth.balanceOf(user1)),
-  //   "<<< WETH balanceOf user1"
-  // );
-  // console.log(
-  //   formatEth(await weth.balanceOf(user2)),
-  //   "<<< WETH balanceOf user2"
-  // );
+  console.log();
+  console.log("AFTER TRANSFER");
+  console.log(formatEth(await taxable.threshold()), "<<< threshold");
+  console.log(
+    formatEth(await taxable.currentFeeAmount()),
+    "<<< currentFeeAmount"
+  );
+  console.log(
+    formatEth(await proxySCFX.balanceOf(deployments["Taxable"])),
+    "<<< SCFX balanceOf taxable"
+  );
+  console.log(
+    formatEth(await weth.balanceOf(user1)),
+    "<<< WETH balanceOf user1"
+  );
+  console.log(
+    formatEth(await proxySCFX.balanceOf(user1)),
+    "<<< SCFX balanceOf user1"
+  );
+  console.log(
+    formatEth(await proxySCFX.balanceOf(user2)),
+    "<<< SCFX balanceOf user2"
+  );
 };
 
-const swap = async (signer, _tokenIn, _tokenOut, _amountIn, _to) => {
+const swap = async (signerTx, tokenIn, tokenOut, amountIn, to) => {
   const proxySCFX = await ethers.getContractAt(
     contractsPath.ProxyERC20,
-    _tokenIn,
-    signer
+    tokenIn,
+    signerTx
   );
-  await proxySCFX.approve(deployments["UniswapRouter"], parseEth(_amountIn));
+  await proxySCFX.approve(deployments["UniswapRouter"], amountIn);
 
   const RouterContract = new ethers.Contract(
     deployments["UniswapRouter"],
     uniswapRouter,
-    signer
+    signerTx
   );
 
-  // const AbiCoder = new ethers.utils.AbiCoder();
-  // const path = [AbiCoder.encode(_tokenIn), AbiCoder.encode(_tokenOut)];
-  const path = [_tokenIn, _tokenOut];
+  const path = [tokenIn, tokenOut];
   await RouterContract.swapExactTokensForTokensSupportingFeeOnTransferTokens(
-    parseEth(_amountIn),
+    amountIn,
     0,
     path,
-    _to,
+    to,
     Math.round(Date.now() / 1000) + 1000
   );
 };
