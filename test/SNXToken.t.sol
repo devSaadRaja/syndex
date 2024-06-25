@@ -11,7 +11,6 @@ import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import {IMixinResolver} from "../src/interfaces/IMixinResolver.sol";
 
 import {Issuer} from "../src/contracts/Issuer.sol";
-import {Taxable} from "../src/contracts/tax/Taxable.sol";
 import {Synthetix} from "../src/contracts/Synthetix.sol";
 import {ProxyERC20} from "../src/contracts/ProxyERC20.sol";
 import {SystemStatus} from "../src/contracts/SystemStatus.sol";
@@ -38,7 +37,6 @@ contract SCFXToken is Test, Utils {
     address[] public addresses;
 
     Issuer public issuer;
-    Taxable public taxable;
     Synthetix public synthetix;
     ProxyERC20 public proxySCFX;
     SystemStatus public systemStatus;
@@ -79,13 +77,6 @@ contract SCFXToken is Test, Utils {
             owner,
             0,
             address(addressResolver)
-        );
-
-        taxable = new Taxable(
-            address(proxySCFX),
-            address(synthetix),
-            WETH,
-            address(router)
         );
 
         // // ------------------------------
@@ -168,16 +159,9 @@ contract SCFXToken is Test, Utils {
         factory.createPair(address(proxySCFX), WETH);
         address pairSCFXWETH = factory.getPair(address(proxySCFX), WETH);
 
-        taxable.setExcludeFromFee(address(taxable), true);
-        taxable.setRewardAddress(address(WETH));
-        taxable.setRouter(address(router));
-        taxable.setFeeTaker(user2, 100);
-        taxable.setPool(pairSCFXWETH, true);
-
         synthetix.mint(owner, 1_000_000 ether);
         synthetix.setReserveAddress(reserveAddr);
-        synthetix.setTaxable(address(taxable));
-        synthetix.setDeploy(true);
+        synthetix.setPool(pairSCFXWETH, true);
         synthetix.setTrade(true);
 
         proxySCFX.transfer(user1, 1000 ether);
@@ -199,7 +183,7 @@ contract SCFXToken is Test, Utils {
         console.log(proxySCFX.totalSupply(), "<<< totalSupply");
     }
 
-    function testTaxSCFX() public {
+    function testTrade() public {
         vm.startPrank(owner);
         proxySCFX.approve(address(router), 50 ether);
         IERC20(WETH).approve(address(router), 50 ether);
@@ -218,44 +202,25 @@ contract SCFXToken is Test, Utils {
         vm.startPrank(user1);
 
         console.log();
-        console.log(taxable.threshold(), "<-- threshold");
-        console.log(taxable.currentFeeAmount(), "<-- currentFeeAmount");
+        console.log("BEFORE SWAP");
         console.log(
-            proxySCFX.balanceOf(address(taxable)),
-            "<-- SCFX balanceOf taxable"
+            proxySCFX.balanceOf(user1),
+            "<-- proxySCFX balanceOf user1"
         );
         console.log(IERC20(WETH).balanceOf(user1), "<-- WETH balanceOf user1");
-        console.log(IERC20(WETH).balanceOf(user2), "<-- WETH balanceOf user2");
 
         _swap(WETH, address(proxySCFX), 10 ether, user1); // * BUY
         _swap(address(proxySCFX), WETH, 8 ether, user1); // * SELL
 
         console.log();
-        console.log("BEFORE TRANSFER");
-        console.log(taxable.threshold(), "<-- threshold");
-        console.log(taxable.currentFeeAmount(), "<-- currentFeeAmount");
+        console.log("AFTER SWAP");
         console.log(
-            proxySCFX.balanceOf(address(taxable)),
-            "<-- SCFX balanceOf taxable"
+            proxySCFX.balanceOf(user1),
+            "<-- proxySCFX balanceOf user1"
         );
         console.log(IERC20(WETH).balanceOf(user1), "<-- WETH balanceOf user1");
-        console.log(IERC20(WETH).balanceOf(user2), "<-- WETH balanceOf user2");
-
-        proxySCFX.transfer(user3, 1 ether);
 
         vm.stopPrank();
-
-        console.log();
-        console.log("AFTER");
-        console.log(taxable.threshold(), "<-- threshold");
-        console.log(taxable.currentFeeAmount(), "<-- currentFeeAmount");
-        console.log(
-            proxySCFX.balanceOf(address(taxable)),
-            "<-- SCFX balanceOf taxable"
-        );
-        console.log(IERC20(WETH).balanceOf(user1), "<-- WETH balanceOf user1");
-        console.log(IERC20(WETH).balanceOf(user2), "<-- WETH balanceOf user2");
-        console.log(IERC20(WETH).balanceOf(user3), "<-- WETH balanceOf user3");
     }
 
     function _swap(

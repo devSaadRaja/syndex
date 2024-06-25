@@ -18,9 +18,9 @@ contract Synthetix is AccessControl, BaseSynthetix {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
-    ITaxable public taxable;
     bool public activeTrade = false;
     bool public deploymentSet = false; // make it true once all prerequisites are set
+    mapping(address => bool) public pool;
 
     address public reserveAddr;
     uint256 burnAmount = 100000 ether;
@@ -55,16 +55,8 @@ contract Synthetix is AccessControl, BaseSynthetix {
         _grantRole(BURNER_ROLE, _owner);
     }
 
-    function setDeploy(bool val) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        deploymentSet = val;
-    }
-
     function setTrade(bool val) external onlyRole(DEFAULT_ADMIN_ROLE) {
         activeTrade = val;
-    }
-
-    function setTaxable(address addr) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        taxable = ITaxable(addr);
     }
 
     function setReserveAddress(
@@ -77,6 +69,14 @@ contract Synthetix is AccessControl, BaseSynthetix {
         uint256 _amount
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         burnAmount = _amount;
+    }
+
+    function setPool(
+        address poolAddr,
+        bool val
+    ) external onlyOwner isValidAddress(poolAddr) {
+        pool[poolAddr] = val;
+        emit SetPool(poolAddr, val);
     }
 
     function resolverAddressesRequired()
@@ -264,45 +264,10 @@ contract Synthetix is AccessControl, BaseSynthetix {
             "Cannot transfer to this address"
         );
 
-        if (
-            from != owner() &&
-            (taxable.pool(from) || taxable.pool(to)) &&
-            (!taxable.isExcludedFromFee(from) && !taxable.isExcludedFromFee(to))
-        ) {
-            require(activeTrade, "Trade not active!");
-
-            uint256 taxAmount = taxable.pool(from)
-                ? taxable.getTaxAmount(value, true)
-                : taxable.getTaxAmount(value, false);
-            uint256 transferAmount = taxable.calculateTransferAmount(
-                value,
-                taxAmount
-            );
-
-            taxable.addToCurrentFeeAmount(taxAmount);
-
-            tokenState.setBalanceOf(
-                address(taxable),
-                tokenState.balanceOf(address(taxable)).add(taxAmount)
-            );
-            tokenState.setBalanceOf(
-                to,
-                tokenState.balanceOf(to).add(transferAmount)
-            );
-        } else {
-            tokenState.setBalanceOf(to, tokenState.balanceOf(to).add(value));
-
-            if (
-                deploymentSet &&
-                taxable.currentFeeAmount() > 0 &&
-                (!taxable.isExcludedFromFee(from) &&
-                    !taxable.isExcludedFromFee(to))
-            ) {
-                taxable.distribute();
-            }
-        }
+        if (pool[from] || pool[to]) require(activeTrade, "Trade not active!");
 
         tokenState.setBalanceOf(from, tokenState.balanceOf(from).sub(value));
+        tokenState.setBalanceOf(to, tokenState.balanceOf(to).add(value));
 
         emitTransfer(from, to, value);
 
@@ -310,6 +275,8 @@ contract Synthetix is AccessControl, BaseSynthetix {
     }
 
     // ========== EVENTS ==========
+
+    event SetPool(address poolAddress, bool val);
 
     event AtomicSynthExchange(
         address indexed account,

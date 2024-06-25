@@ -19,7 +19,6 @@ import {SMX} from "../src/contracts/SMX/SMX.sol";
 import {Proxy} from "../src/contracts/Proxy.sol";
 import {Issuer} from "../src/contracts/Issuer.sol";
 import {FeePool} from "../src/contracts/FeePool.sol";
-import {Taxable} from "../src/contracts/tax/Taxable.sol";
 import {Proxyable} from "../src/contracts/Proxyable.sol";
 import {Synthetix} from "../src/contracts/Synthetix.sol";
 import {DebtCache} from "../src/contracts/DebtCache.sol";
@@ -99,7 +98,6 @@ contract Setup is Test, Utils {
     SMX public smx;
     Issuer public issuer;
     FeePool public feePool;
-    Taxable public taxable;
     Proxy public proxyFeePool;
     DebtCache public debtCache;
     Synthetix public synthetix;
@@ -333,13 +331,6 @@ contract Setup is Test, Utils {
         aggregatorIssuedSynths = new AggregatorIssuedSynths(addressResolver);
         aggregatorCollateral = new AggregatorCollateral(
             address(addressResolver)
-        );
-
-        taxable = new Taxable(
-            address(proxySCFX),
-            address(synthetix),
-            WETH,
-            address(router)
         );
 
         // // ------------------------------
@@ -583,16 +574,9 @@ contract Setup is Test, Utils {
         factory.createPair(address(proxySCFX), WETH);
         address pairSCFXWETH = factory.getPair(address(proxySCFX), WETH);
 
-        taxable.setExcludeFromFee(address(taxable), true);
-        taxable.setRewardAddress(address(WETH));
-        taxable.setRouter(address(router));
-        taxable.setFeeTaker(user2, 100);
-        taxable.setPool(pairSCFXWETH, true);
-
         synthetix.mint(owner, 1_000_000 ether);
         synthetix.setReserveAddress(reserveAddr);
-        synthetix.setTaxable(address(taxable));
-        synthetix.setDeploy(true);
+        synthetix.setPool(pairSCFXWETH, true);
         synthetix.setTrade(true);
 
         proxySCFX.transfer(user1, 5 ether);

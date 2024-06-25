@@ -25,7 +25,6 @@ const contractsPath = {
   AddressResolver: "src/contracts/AddressResolver.sol:AddressResolver",
   ProxyERC20: "src/contracts/ProxyERC20.sol:ProxyERC20",
   Synthetix: "src/contracts/Synthetix.sol:Synthetix",
-  Taxable: "src/contracts/tax/Taxable.sol:Taxable",
 };
 
 const deployments = JSON.parse(readFileSync(outputFilePath, "utf-8"));
@@ -47,29 +46,23 @@ async function main() {
   // ! ------------------------------------------------------------------------
   // ! DEPLOYMENTS ------------------------------------------------------------
   // ! ------------------------------------------------------------------------
-
   // const SafeDecimalMath = await contractDeploy("SafeDecimalMath", []);
   // deployments["SafeDecimalMath"] = SafeDecimalMath.address;
   // await verify("SafeDecimalMath", SafeDecimalMath.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-
   // // // - ------------------------------
-
   // const AddressResolver = await contractDeploy("AddressResolver", [deployer]);
   // deployments["AddressResolver"] = AddressResolver.address;
   // await verify("AddressResolver", AddressResolver.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-
   // const ProxySCFX = await contractDeploy("ProxyERC20", [deployer]);
   // deployments["ProxySCFX"] = ProxySCFX.address;
   // await verify("ProxyERC20", ProxySCFX.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-
   // const SystemStatus = await contractDeploy("SystemStatus", [deployer]);
   // deployments["SystemStatus"] = SystemStatus.address;
   // await verify("SystemStatus", SystemStatus.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-
   // const Issuer = await contractDeploy(
   //   "Issuer",
   //   [deployer, deployments["AddressResolver"]],
@@ -84,7 +77,6 @@ async function main() {
   //   SafeDecimalMath: deployments["SafeDecimalMath"],
   // });
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-
   // const TokenStateSCFX = await contractDeploy("LegacyTokenState", [
   //   deployer,
   //   ADDRESS_ZERO, // synthetix
@@ -92,7 +84,6 @@ async function main() {
   // deployments["TokenStateSCFX"] = TokenStateSCFX.address;
   // await verify("LegacyTokenState", TokenStateSCFX.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-
   // const SynthetixDebtShare = await contractDeploy("SynthetixDebtShare", [
   //   deployer,
   //   deployments["AddressResolver"],
@@ -100,7 +91,6 @@ async function main() {
   // deployments["SynthetixDebtShare"] = SynthetixDebtShare.address;
   // await verify("SynthetixDebtShare", SynthetixDebtShare.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-
   // const Synthetix = await contractDeploy("Synthetix", [
   //   deployments["ProxySCFX"],
   //   deployments["TokenStateSCFX"],
@@ -111,25 +101,12 @@ async function main() {
   // deployments["Synthetix"] = Synthetix.address;
   // await verify("Synthetix", Synthetix.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-
-  // const Taxable = await contractDeploy(contractsPath.Taxable, [
-  //   deployments["ProxySCFX"],
-  //   deployments["Synthetix"],
-  //   deployments["WETH"],
-  //   deployments["UniswapRouter"],
-  // ]);
-  // deployments["Taxable"] = Taxable.address;
-  // await verify(contractsPath.Taxable, Taxable.address);
-  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-
   // // * PAIR vvv
-
   // const FactoryContract = new ethers.Contract(
   //   deployments["UniswapFactory"],
   //   uniswapFactory,
   //   signer
   // );
-
   // await FactoryContract.createPair(
   //   deployments["ProxySCFX"],
   //   deployments["WETH"]
@@ -139,21 +116,15 @@ async function main() {
   //   deployments["WETH"]
   // );
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-
   // // ============================================================ //
-
   // console.log("--- DEPLOYMENTS UPDATED ---");
-
   // // ============================================================ //
-
   // ! ------------------------------------------------------------------------
   // ! RESOLVER ADDRESSES -----------------------------------------------------
   // ! ------------------------------------------------------------------------
-
   // let count = 0;
   // let names = [];
   // let addresses = [];
-
   // names.push(ethers.utils.formatBytes32String("SystemStatus"));
   // addresses.push(deployments["SystemStatus"]);
   // count++;
@@ -211,24 +182,20 @@ async function main() {
   // addresses.push(deployments["Synthetix"]);
   // names.push(ethers.utils.formatBytes32String("Issuer"));
   // addresses.push(deployments["Issuer"]);
-
   // const addressResolver = await ethers.getContractAt(
   //   contractsPath.AddressResolver,
   //   deployments["AddressResolver"],
   //   signer
   // );
   // await addressResolver.loadAddresses(names, addresses);
-
   // const abi = ["function refreshCache() public"];
   // for (let i = count; i < addresses.length; i++) {
   //   const contract = new ethers.Contract(addresses[i], abi, signer);
   //   await contract.refreshCache();
   // }
-
   // ! ------------------------------------------------------------------------
   // ! SETUP ------------------------------------------------------------------
   // ! ------------------------------------------------------------------------
-
   // const proxySCFX = await ethers.getContractAt(
   //   contractsPath.ProxyERC20,
   //   deployments["ProxySCFX"],
@@ -239,41 +206,22 @@ async function main() {
   //   deployments["TokenStateSCFX"],
   //   signer
   // );
-  // const taxable = await ethers.getContractAt(
-  //   contractsPath.Taxable,
-  //   deployments["Taxable"],
-  //   signer
-  // );
   // const synthetix = await ethers.getContractAt(
   //   contractsPath.Synthetix,
   //   deployments["Synthetix"],
   //   signer
   // );
-
   // await proxySCFX.updateTarget(deployments["Synthetix"]);
-
   // await tokenStateSCFX.linkContract(deployments["Synthetix"]);
-
-  // await taxable.setExcludeFromFee(deployments["Taxable"], true);
-  // await taxable.setRewardAddress(deployments["WETH"]);
-  // await taxable.setRouter(deployments["UniswapRouter"]);
-  // await taxable.setFeeTaker(treasury, 100);
-  // await taxable.setPool(deployments["WETHSCFX"], true);
-
   // await synthetix.mint(deployer, parseEth(1000000));
   // await synthetix.setReserveAddress(reserveAddr);
-  // await synthetix.setTaxable(deployments["Taxable"]);
-  // await synthetix.setDeploy(true);
+  // await synthetix.setPool(deployments["WETHSCFX"], true);
   // await synthetix.setTrade(true);
-
   // await proxySCFX.transfer(user1, parseEth(1000));
   // await proxySCFX.transfer(user2, parseEth(1000));
   // await proxySCFX.transfer(reserveAddr, parseEth(200000));
-
   // // * ADD LIQUIDITY vvv
-
   // const weth = new ethers.Contract(deployments["WETH"], WETH, signer);
-
   // const RouterContract = new ethers.Contract(
   //   deployments["UniswapRouter"],
   //   uniswapRouter,
@@ -291,11 +239,8 @@ async function main() {
   //   deployer,
   //   Math.round(Date.now() / 1000) + 1000
   // );
-
   // console.log("ADDED LIQUIDITY");
-
   // console.log("[[[ COMPLETED ]]]");
-
   // ! ----------------------------------
   // await testCases();
   // ! ----------------------------------
@@ -330,22 +275,9 @@ const testCases = async () => {
   // ! SWAP ---
 
   const weth = new ethers.Contract(deployments["WETH"], WETH, signer);
-  const taxable = await ethers.getContractAt(
-    contractsPath.Taxable,
-    deployments["Taxable"],
-    signer
-  );
-  
+
   console.log();
-  console.log(formatEth(await taxable.threshold()), "<<< threshold");
-  console.log(
-    formatEth(await taxable.currentFeeAmount()),
-    "<<< currentFeeAmount"
-  );
-  console.log(
-    formatEth(await proxySCFX.balanceOf(deployments["Taxable"])),
-    "<<< SCFX balanceOf taxable"
-  );
+  console.log("BEFORE SWAP");
   console.log(
     formatEth(await weth.balanceOf(user1)),
     "<<< WETH balanceOf user1"
@@ -353,10 +285,6 @@ const testCases = async () => {
   console.log(
     formatEth(await proxySCFX.balanceOf(user1)),
     "<<< SCFX balanceOf user1"
-  );
-  console.log(
-    formatEth(await proxySCFX.balanceOf(user2)),
-    "<<< SCFX balanceOf user2"
   );
 
   await swap(
@@ -375,16 +303,7 @@ const testCases = async () => {
   ); // * SELL
 
   console.log();
-  console.log("BEFORE TRANSFER");
-  console.log(formatEth(await taxable.threshold()), "<<< threshold");
-  console.log(
-    formatEth(await taxable.currentFeeAmount()),
-    "<<< currentFeeAmount"
-  );
-  console.log(
-    formatEth(await proxySCFX.balanceOf(deployments["Taxable"])),
-    "<<< SCFX balanceOf taxable"
-  );
+  console.log("AFTER SWAP");
   console.log(
     formatEth(await weth.balanceOf(user1)),
     "<<< WETH balanceOf user1"
@@ -392,36 +311,6 @@ const testCases = async () => {
   console.log(
     formatEth(await proxySCFX.balanceOf(user1)),
     "<<< SCFX balanceOf user1"
-  );
-  console.log(
-    formatEth(await proxySCFX.balanceOf(user2)),
-    "<<< SCFX balanceOf user2"
-  );
-
-  await proxySCFX.transfer(user2, parseEth(1));
-
-  console.log();
-  console.log("AFTER TRANSFER");
-  console.log(formatEth(await taxable.threshold()), "<<< threshold");
-  console.log(
-    formatEth(await taxable.currentFeeAmount()),
-    "<<< currentFeeAmount"
-  );
-  console.log(
-    formatEth(await proxySCFX.balanceOf(deployments["Taxable"])),
-    "<<< SCFX balanceOf taxable"
-  );
-  console.log(
-    formatEth(await weth.balanceOf(user1)),
-    "<<< WETH balanceOf user1"
-  );
-  console.log(
-    formatEth(await proxySCFX.balanceOf(user1)),
-    "<<< SCFX balanceOf user1"
-  );
-  console.log(
-    formatEth(await proxySCFX.balanceOf(user2)),
-    "<<< SCFX balanceOf user2"
   );
 };
 
