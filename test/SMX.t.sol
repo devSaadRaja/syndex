@@ -855,63 +855,6 @@ contract SMXTest is Setup {
         vm.stopPrank();
     }
 
-    function testTaxSCFX() public {
-        vm.startPrank(owner);
-        proxySCFX.approve(address(router), 50 ether);
-        IERC20(WETH).approve(address(router), 50 ether);
-        router.addLiquidity(
-            address(proxySCFX),
-            WETH,
-            50 ether,
-            50 ether,
-            0,
-            0,
-            owner,
-            block.timestamp + 10 minutes
-        );
-        vm.stopPrank();
-
-        vm.startPrank(user6);
-
-        console.log(taxable.threshold(), "<-- threshold");
-        console.log(taxable.currentFeeAmount(), "<-- currentFeeAmount");
-        console.log(
-            proxySCFX.balanceOf(address(taxable)),
-            "<-- SCFX balanceOf taxable"
-        );
-        console.log(IERC20(WETH).balanceOf(user6), "<-- WETH balanceOf user6");
-        console.log(IERC20(WETH).balanceOf(user2), "<-- WETH balanceOf user2");
-
-        _swap(WETH, address(proxySCFX), 10 ether, user6); // BUY
-        _swap(address(proxySCFX), WETH, 8 ether, user6); // SELL
-
-        console.log();
-        console.log("BEFORE TRANSFER");
-        console.log(taxable.threshold(), "<-- threshold");
-        console.log(taxable.currentFeeAmount(), "<-- currentFeeAmount");
-        console.log(
-            proxySCFX.balanceOf(address(taxable)),
-            "<-- SCFX balanceOf taxable"
-        );
-        console.log(IERC20(WETH).balanceOf(user6), "<-- WETH balanceOf user6");
-        console.log(IERC20(WETH).balanceOf(user2), "<-- WETH balanceOf user2");
-
-        proxySCFX.transfer(user3, 1 ether);
-
-        vm.stopPrank();
-
-        console.log();
-        console.log("AFTER");
-        console.log(taxable.threshold(), "<-- threshold");
-        console.log(taxable.currentFeeAmount(), "<-- currentFeeAmount");
-        console.log(
-            proxySCFX.balanceOf(address(taxable)),
-            "<-- SCFX balanceOf taxable"
-        );
-        console.log(IERC20(WETH).balanceOf(user6), "<-- WETH balanceOf user6");
-        console.log(IERC20(WETH).balanceOf(user2), "<-- WETH balanceOf user2");
-    }
-
     function _swap(
         address _tokenIn,
         address _tokenOut,
