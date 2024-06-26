@@ -16,6 +16,7 @@ import {ISwapRouter} from "../src/contracts/SMX/interfaces/ISwapRouter.sol";
 import {IAggregationRouterV4} from "../src/contracts/SMX/interfaces/IAggregationRouterV4.sol";
 
 import {SMX} from "../src/contracts/SMX/SMX.sol";
+import {Depot} from "../src/contracts/Depot.sol";
 import {Proxy} from "../src/contracts/Proxy.sol";
 import {Issuer} from "../src/contracts/Issuer.sol";
 import {FeePool} from "../src/contracts/FeePool.sol";
@@ -96,6 +97,7 @@ contract Setup is Test, Utils {
     address[] public addresses;
 
     SMX public smx;
+    Depot public depot;
     Issuer public issuer;
     FeePool public feePool;
     Proxy public proxyFeePool;
@@ -227,6 +229,7 @@ contract Setup is Test, Utils {
         tokenStatesUSD = new TokenState(owner, address(synthsUSD));
         tokenStatesETH = new TokenState(owner, address(synthsETH));
         wrapperFactory = new WrapperFactory(owner, address(addressResolver));
+        depot = new Depot(owner, payable(treasury), address(addressResolver));
         supplySchedule = new SupplySchedule(owner, 1551830400, 4);
         directIntegrationManager = new DirectIntegrationManager(
             owner,
@@ -394,6 +397,8 @@ contract Setup is Test, Utils {
         // addresses.push(owner); // address(legacyMarket)
         // count++;
         // ---
+        names.push("Depot");
+        addresses.push(address(depot));
         names.push("DirectIntegrationManager");
         addresses.push(address(directIntegrationManager));
         names.push("RewardEscrowV2");

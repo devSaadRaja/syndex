@@ -25,6 +25,8 @@ contract Synthetix is AccessControl, BaseSynthetix {
     address public reserveAddr;
     uint256 burnAmount = 100000 ether;
 
+    // uint256 public MAX_SUPPLY = 1_000_000_000 ether;
+
     // ========== ADDRESS RESOLVER CONFIGURATION ==========
     bytes32 private constant CONTRACT_REWARD_ESCROW = "RewardEscrow";
 
@@ -196,6 +198,8 @@ contract Synthetix is AccessControl, BaseSynthetix {
         address account,
         uint amount
     ) external onlyRole(MINTER_ROLE) isValidAddress(account) {
+        // require(totalSupply.add(amount) <= MAX_SUPPLY, "Max supply exceeded!");
+
         totalSupply = totalSupply.add(amount);
         tokenState.setBalanceOf(
             account,
