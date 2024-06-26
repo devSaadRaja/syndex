@@ -38,6 +38,7 @@ import {ExchangeState} from "../src/contracts/ExchangeState.sol";
 import {MixinResolver} from "../src/contracts/MixinResolver.sol";
 import {SynthRedeemer} from "../src/contracts/SynthRedeemer.sol";
 import {AggregatorETH} from "../src/contracts/AggregatorETH.sol";
+import {SynthetixState} from "../src/contracts/SynthetixState.sol";
 import {WrapperFactory} from "../src/contracts/WrapperFactory.sol";
 import {SupplySchedule} from "../src/contracts/SupplySchedule.sol";
 import {RewardEscrowV2} from "../src/contracts/RewardEscrowV2.sol";
@@ -120,6 +121,7 @@ contract Setup is Test, Utils {
     SynthRedeemer public synthRedeemer;
     MixinResolver public mixinResolver;
     ExchangeRates public exchangeRates;
+    SynthetixState public synthetixState;
     SupplySchedule public supplySchedule;
     TradingRewards public tradingRewards;
     RewardEscrowV2 public rewardEscrowV2;
@@ -225,6 +227,7 @@ contract Setup is Test, Utils {
         flexibleStorage = new FlexibleStorage(address(addressResolver));
         systemSettings = new SystemSettings(owner, address(addressResolver));
         circuitBreaker = new CircuitBreaker(owner, address(addressResolver));
+        synthetixState = new SynthetixState(owner, address(synthetix));
         tokenStateSCFX = new LegacyTokenState(owner, address(synthetix));
         tokenStatesUSD = new TokenState(owner, address(synthsUSD));
         tokenStatesETH = new TokenState(owner, address(synthsETH));
@@ -486,6 +489,7 @@ contract Setup is Test, Utils {
         proxysETH.updateTarget(address(synthsETH));
         proxyFeePool.updateTarget(address(feePool));
 
+        synthetixState.linkContract(address(synthetix));
         tokenStateSCFX.linkContract(address(synthetix));
         tokenStatesUSD.linkContract(address(synthsUSD));
         tokenStatesETH.linkContract(address(synthsETH));
