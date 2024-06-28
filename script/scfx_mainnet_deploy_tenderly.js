@@ -1,4 +1,10 @@
+const { tenderly } = require("hardhat");
+
 const { readFileSync, writeFileSync } = require("fs");
+
+var url = process.env.TENDERLY_MAINNET_FORK_URL_TEST;
+var outputFilePath = "./deployments_mainnet.json";
+var chainId = 1;
 
 const WETH = require("../abis/weth.json");
 const uniswapRouter = require("../abis/uniswap-router.json");
@@ -8,8 +14,6 @@ const { resolve } = require("path");
 const { config } = require("dotenv");
 
 config({ path: resolve(__dirname, "./.env") });
-
-var outputFilePath = "./deployments_mainnet.json";
 
 const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000";
 
@@ -25,15 +29,12 @@ const contractsPath = {
 
 const deployments = JSON.parse(readFileSync(outputFilePath, "utf-8"));
 
-const provider = new ethers.providers.JsonRpcProvider(
-  `https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
-  11155111 // 1
-);
+const provider_tenderly = new ethers.providers.JsonRpcProvider(url, chainId);
 
-const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-const signer1 = new ethers.Wallet(process.env.PRIVATE_KEY_1, provider);
-const signer2 = new ethers.Wallet(process.env.PRIVATE_KEY_2, provider);
-const signer3 = new ethers.Wallet(process.env.PRIVATE_KEY_3, provider);
+const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider_tenderly);
+const signer1 = new ethers.Wallet(process.env.PRIVATE_KEY_1, provider_tenderly);
+const signer2 = new ethers.Wallet(process.env.PRIVATE_KEY_2, provider_tenderly);
+const signer3 = new ethers.Wallet(process.env.PRIVATE_KEY_3, provider_tenderly);
 
 const deployer = "0x0f6A0fBb5a9E10f50f364b2409a5Bbb9aFa52059";
 const user1 = "0x3555f3e074467D24820f14db7e064302e386a57D";
@@ -45,50 +46,50 @@ async function main() {
   // ! ------------------------------------------------------------------------
   // ! DEPLOYMENTS ------------------------------------------------------------
   // ! ------------------------------------------------------------------------
+  // const SafeDecimalMath = await contractDeploy("SafeDecimalMath", []);
+  // deployments["SafeDecimalMath"] = SafeDecimalMath.address;
+  // await verify("SafeDecimalMath", SafeDecimalMath.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+  // // // - ------------------------------
   // const AddressResolver = await contractDeploy("AddressResolver", [deployer]);
   // deployments["AddressResolver"] = AddressResolver.address;
-  // await AddressResolver.deployTransaction.wait(5);
-  // await verify(AddressResolver.address, [deployer]);
+  // await verify("AddressResolver", AddressResolver.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // const ProxySCFX = await contractDeploy("ProxyERC20", [deployer]);
   // deployments["ProxySCFX"] = ProxySCFX.address;
-  // await ProxySCFX.deployTransaction.wait(5);
-  // await verify(ProxySCFX.address, [deployer]);
+  // await verify("ProxyERC20", ProxySCFX.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // const SystemStatus = await contractDeploy("SystemStatus", [deployer]);
   // deployments["SystemStatus"] = SystemStatus.address;
-  // await SystemStatus.deployTransaction.wait(5);
-  // await verify(SystemStatus.address, [deployer]);
+  // await verify("SystemStatus", SystemStatus.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-  // const Issuer = await contractDeploy("Issuer", [
-  //   deployer,
-  //   deployments["AddressResolver"],
-  // ]);
+  // const Issuer = await contractDeploy(
+  //   "Issuer",
+  //   [deployer, deployments["AddressResolver"]],
+  //   {
+  //     libraries: {
+  //       SafeDecimalMath: deployments["SafeDecimalMath"],
+  //     },
+  //   }
+  // );
   // deployments["Issuer"] = Issuer.address;
-  // await Issuer.deployTransaction.wait(5);
-  // await verify(Issuer.address, [deployer, deployments["AddressResolver"]]);
+  // await verify("Issuer", Issuer.address, {
+  //   SafeDecimalMath: deployments["SafeDecimalMath"],
+  // });
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // const TokenStateSCFX = await contractDeploy("LegacyTokenState", [
   //   deployer,
   //   ADDRESS_ZERO, // synthetix
   // ]);
   // deployments["TokenStateSCFX"] = TokenStateSCFX.address;
-  // await TokenStateSCFX.deployTransaction.wait(5);
-  // await verify(TokenStateSCFX.address, [
-  //   deployer,
-  //   ADDRESS_ZERO, // synthetix
-  // ]);
+  // await verify("LegacyTokenState", TokenStateSCFX.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // const SynthetixDebtShare = await contractDeploy("SynthetixDebtShare", [
   //   deployer,
   //   deployments["AddressResolver"],
   // ]);
   // deployments["SynthetixDebtShare"] = SynthetixDebtShare.address;
-  // await SynthetixDebtShare.deployTransaction.wait(5);
-  // await verify(SynthetixDebtShare.address, [
-  //   deployer,
-  //   deployments["AddressResolver"],
-  // ]);
+  // await verify("SynthetixDebtShare", SynthetixDebtShare.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // const Synthetix = await contractDeploy("Synthetix", [
   //   deployments["ProxySCFX"],
@@ -98,14 +99,7 @@ async function main() {
   //   deployments["AddressResolver"],
   // ]);
   // deployments["Synthetix"] = Synthetix.address;
-  // await Synthetix.deployTransaction.wait(5);
-  // await verify(Synthetix.address, [
-  //   deployments["ProxySCFX"],
-  //   deployments["TokenStateSCFX"],
-  //   deployer,
-  //   0,
-  //   deployments["AddressResolver"],
-  // ]);
+  // await verify("Synthetix", Synthetix.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // // * PAIR vvv
   // const FactoryContract = new ethers.Contract(
@@ -344,8 +338,8 @@ const swap = async (signerTx, tokenIn, tokenOut, amountIn, to) => {
   );
 };
 
-const contractDeploy = async (name, args) => {
-  const contractFactory = await ethers.getContractFactory(name);
+const contractDeploy = async (name, args, libraries) => {
+  const contractFactory = await ethers.getContractFactory(name, libraries);
   const contract = await contractFactory.deploy(...args);
   await contract.deployTransaction.wait();
 
@@ -354,10 +348,10 @@ const contractDeploy = async (name, args) => {
   return contract;
 };
 
-const verify = async (address, constructorArguments) => {
+const verify = async (name, address, libraries) => {
   console.log("Verifying contract...");
   try {
-    await run("verify:verify", { address, constructorArguments });
+    await tenderly.verify({ name, address, libraries });
   } catch (e) {
     if (e.message.toLowerCase().includes("already verified")) {
       console.log("Already verified!");
