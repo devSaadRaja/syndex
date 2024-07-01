@@ -40,7 +40,6 @@ import {SynthRedeemer} from "../src/contracts/SynthRedeemer.sol";
 import {AggregatorETH} from "../src/contracts/AggregatorETH.sol";
 import {SynthetixState} from "../src/contracts/SynthetixState.sol";
 import {WrapperFactory} from "../src/contracts/WrapperFactory.sol";
-import {SupplySchedule} from "../src/contracts/SupplySchedule.sol";
 import {RewardEscrowV2} from "../src/contracts/RewardEscrowV2.sol";
 import {TradingRewards} from "../src/contracts/TradingRewards.sol";
 import {CollateralUtil} from "../src/contracts/CollateralUtil.sol";
@@ -122,7 +121,6 @@ contract Setup is Test, Utils {
     MixinResolver public mixinResolver;
     ExchangeRates public exchangeRates;
     SynthetixState public synthetixState;
-    SupplySchedule public supplySchedule;
     TradingRewards public tradingRewards;
     RewardEscrowV2 public rewardEscrowV2;
     CollateralUtil public collateralUtil;
@@ -233,7 +231,6 @@ contract Setup is Test, Utils {
         tokenStatesETH = new TokenState(owner, address(synthsETH));
         wrapperFactory = new WrapperFactory(owner, address(addressResolver));
         depot = new Depot(owner, payable(treasury), address(addressResolver));
-        supplySchedule = new SupplySchedule(owner, 1551830400, 4);
         directIntegrationManager = new DirectIntegrationManager(
             owner,
             address(addressResolver)
@@ -348,16 +345,13 @@ contract Setup is Test, Utils {
         names.push("AddressResolver");
         addresses.push(address(addressResolver));
         count++;
-        names.push("MixinResolver");
-        addresses.push(address(mixinResolver));
-        count++;
         names.push("ProxySCFX");
         addresses.push(address(proxySCFX));
         count++;
         names.push("SystemStatus");
         addresses.push(address(systemStatus));
         count++;
-        names.push("TokenStateSynthetix");
+        names.push("TokenStateSCFX");
         addresses.push(address(tokenStateSCFX));
         count++;
         names.push("TokenStatesUSD");
@@ -386,9 +380,6 @@ contract Setup is Test, Utils {
         count++;
         names.push("RewardEscrow");
         addresses.push(address(rewardEscrow));
-        count++;
-        names.push("SupplySchedule");
-        addresses.push(address(supplySchedule));
         count++;
         names.push("FeePoolEternalStorage");
         addresses.push(address(feePoolEternalStorage));
@@ -563,9 +554,6 @@ contract Setup is Test, Utils {
         // systemSettings.updateSnxLiquidationPenalty(0.5 ether); // 50%
         // systemSettings.updateLiquidationDelay(28800); // 8 hours
         // systemSettings.updateRateStalePeriod(86400); // 1 day
-
-        supplySchedule.setSynthetixProxy(address(proxySCFX));
-        supplySchedule.setInflationAmount(3000000 * 10 ** 18);
 
         factory.createPair(address(smx), WETH);
         address pair = factory.getPair(address(smx), WETH);

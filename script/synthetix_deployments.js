@@ -47,7 +47,7 @@ const contractsPath = {
   ExchangeRates: "src/contracts/ExchangeRates.sol:ExchangeRates",
   CollateralETH: "src/contracts/CollateralEth.sol:CollateralEth",
   SystemSettings: "src/contracts/SystemSettings.sol:SystemSettings",
-  SupplySchedule: "src/contracts/SupplySchedule.sol:SupplySchedule",
+  SynthetixState: "src/contracts/SynthetixState.sol:SynthetixState",
   AddressResolver: "src/contracts/AddressResolver.sol:AddressResolver",
   CollateralManager: "src/contracts/CollateralManager.sol:CollateralManager",
   MultiCollateralSynth:
@@ -63,9 +63,11 @@ const deployments = JSON.parse(readFileSync(outputFilePath, "utf-8"));
 const provider_tenderly = new ethers.providers.JsonRpcProvider(url, chainId);
 const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider_tenderly);
 
-const deployer = "0xE536B4D7cf1e346D985cEe807e16B1b11B019976";
-const user = "0xc5Fa3B9D1C223E96eC77CB48880eeBeb9DaB4ad7";
-const treasury = "0x35D9466FFa2497fa919203809C2F150F493A0f73";
+const deployer = "0x0f6A0fBb5a9E10f50f364b2409a5Bbb9aFa52059";
+const user1 = "0x3555f3e074467D24820f14db7e064302e386a57D";
+const user2 = "0xcE4a1e96EB50E62d4920cb6424358404AA5570Be";
+const treasury = "0xa6C40e6Ea900EF92FD8459c86FA290a282b0aCE5";
+const reserveAddr = "0xEA1b7aF13E723D4598aA384e0b5b80FCB4147F48";
 
 async function main() {
   // ! ------------------------------------------------------------------------
@@ -293,6 +295,14 @@ async function main() {
   // await verify("CircuitBreaker", CircuitBreaker.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
+  // const SynthetixState = await contractDeploy("SynthetixState", [
+  //   deployer,
+  //   ADDRESS_ZERO, // synthetix
+  // ]);
+  // deployments["SynthetixState"] = SynthetixState.address;
+  // await verify("SynthetixState", SynthetixState.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+
   // const TokenStateSCFX = await contractDeploy("LegacyTokenState", [
   //   deployer,
   //   ADDRESS_ZERO, // synthetix
@@ -317,6 +327,21 @@ async function main() {
   // await verify("TokenState", TokenStatesETH.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
+  // const Depot = await contractDeploy(
+  //   "Depot",
+  //   [deployer, treasury, deployments["AddressResolver"]],
+  //   {
+  //     libraries: {
+  //       SafeDecimalMath: deployments["SafeDecimalMath"],
+  //     },
+  //   }
+  // );
+  // deployments["Depot"] = Depot.address;
+  // await verify("Depot", Depot.address, {
+  //   SafeDecimalMath: deployments["SafeDecimalMath"],
+  // });
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+
   // const WrapperFactory = await contractDeploy(
   //   "WrapperFactory",
   //   [deployer, deployments["AddressResolver"]],
@@ -338,15 +363,6 @@ async function main() {
   // ]);
   // deployments["RewardEscrowV2"] = RewardEscrowV2.address;
   // await verify("RewardEscrowV2", RewardEscrowV2.address);
-  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-
-  // const SupplySchedule = await contractDeploy(contractsPath.SupplySchedule, [
-  //   deployer,
-  //   1551830400,
-  //   4,
-  // ]);
-  // deployments["SupplySchedule"] = SupplySchedule.address;
-  // await verify(contractsPath.SupplySchedule, SupplySchedule.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const TradingRewards = await contractDeploy("TradingRewards", [
@@ -563,6 +579,24 @@ async function main() {
   // await verify("AggregatorDebtRatio", AggregatorDebtRatio.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
+  // const Staking = await contractDeploy("Staking", [
+  //   deployments["ProxySCFX"],
+  //   deployments["ProxySCFX"],
+  // ]);
+  // deployments["Staking"] = Staking.address;
+  // await verify("Staking", Staking.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+
+  // const TestToken = await contractDeploy("Token", [
+  //   "TestToken",
+  //   "TKN",
+  //   deployer,
+  //   parseEth(1000000),
+  // ]);
+  // deployments["TestToken"] = TestToken.address;
+  // await verify("Token", TestToken.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+
   // const FactoryContract = new ethers.Contract(
   //   deployments["UniswapFactory"],
   //   uniswapFactory,
@@ -570,12 +604,12 @@ async function main() {
   // );
 
   // await FactoryContract.createPair(
-  //   deployments["ProxysUSD"],
-  //   deployments["ProxysETH"]
+  //   deployments["ProxySCFX"],
+  //   deployments["WETH"]
   // );
-  // deployments["ETHUSD"] = await FactoryContract.getPair(
-  //   deployments["ProxysUSD"],
-  //   deployments["ProxysETH"]
+  // deployments["SCFXWETH"] = await FactoryContract.getPair(
+  //   deployments["ProxySCFX"],
+  //   deployments["WETH"]
   // );
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
@@ -589,38 +623,58 @@ async function main() {
   // ! RESOLVER ADDRESSES -----------------------------------------------------
   // ! ------------------------------------------------------------------------
 
+  // let count = 0;
   // let names = [];
   // let addresses = [];
 
   // names.push(ethers.utils.formatBytes32String("AddressResolver"));
   // addresses.push(deployments["AddressResolver"]);
+  // count++;
+  // names.push(ethers.utils.formatBytes32String("ProxySCFX"));
+  // addresses.push(deployments["ProxySCFX"]);
+  // count++;
   // names.push(ethers.utils.formatBytes32String("SystemStatus"));
   // addresses.push(deployments["SystemStatus"]);
+  // count++;
   // names.push(ethers.utils.formatBytes32String("TokenStateSCFX"));
   // addresses.push(deployments["TokenStateSCFX"]);
+  // count++;
   // names.push(ethers.utils.formatBytes32String("TokenStatesUSD"));
   // addresses.push(deployments["TokenStatesUSD"]);
+  // count++;
   // names.push(ethers.utils.formatBytes32String("ext:AggregatorIssuedSynths"));
   // addresses.push(deployments["AggregatorIssuedSynths"]);
+  // count++;
   // names.push(ethers.utils.formatBytes32String("ext:AggregatorDebtRatio"));
   // addresses.push(deployments["AggregatorDebtRatio"]);
+  // count++;
   // names.push(ethers.utils.formatBytes32String("FlexibleStorage"));
   // addresses.push(deployments["FlexibleStorage"]);
+  // count++;
   // names.push(ethers.utils.formatBytes32String("ExchangeState"));
   // addresses.push(deployments["ExchangeState"]);
+  // count++;
   // names.push(ethers.utils.formatBytes32String("DelegateApprovals"));
   // addresses.push(deployments["DelegateApprovals"]);
+  // count++;
   // names.push(ethers.utils.formatBytes32String("RewardsDistribution"));
   // addresses.push(deployments["RewardsDistribution"]);
+  // count++;
   // names.push(ethers.utils.formatBytes32String("RewardEscrowV2Storage"));
   // addresses.push(deployments["RewardEscrowV2Storage"]);
+  // count++;
   // names.push(ethers.utils.formatBytes32String("RewardEscrow"));
   // addresses.push(deployments["RewardEscrow"]);
-  // names.push(ethers.utils.formatBytes32String("SupplySchedule"));
-  // addresses.push(deployments["SupplySchedule"]);
+  // count++;
   // names.push(ethers.utils.formatBytes32String("FeePoolEternalStorage"));
   // addresses.push(deployments["FeePoolEternalStorage"]);
+  // count++;
+  // names.push(ethers.utils.formatBytes32String("SynthetixBridgeToOptimism"));
+  // addresses.push(deployer);
+  // count++;
   // // ---------------------------------------------
+  // names.push(ethers.utils.formatBytes32String("Depot"));
+  // addresses.push(deployments["Depot"]);
   // names.push(ethers.utils.formatBytes32String("DirectIntegrationManager"));
   // addresses.push(deployments["DirectIntegrationManager"]);
   // names.push(ethers.utils.formatBytes32String("RewardEscrowV2"));
@@ -676,20 +730,11 @@ async function main() {
   // await addressResolver.loadAddresses(names, addresses);
 
   // const abi = ["function refreshCache() public"];
-  // for (let i = 14; i < addresses.length; i++) {
+  // for (let i = count; i < addresses.length; i++) {
+  //   console.log(i);
   //   const contract = new ethers.Contract(addresses[i], abi, signer);
   //   await contract.refreshCache();
   // }
-
-  // const TestToken = await contractDeploy("Token", [
-  //   "TestToken",
-  //   "TKN",
-  //   deployer,
-  //   parseEth(1000000),
-  // ]);
-  // deployments["TestToken"] = TestToken.address;
-  // await verify("Token", TestToken.address);
-  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // ! ------------------------------------------------------------------------
   // ! SETUP ------------------------------------------------------------------
@@ -755,12 +800,12 @@ async function main() {
   // );
   // await proxyFeePool.updateTarget(deployments["FeePool"]);
 
-  // const synthetix = await ethers.getContractAt(
-  //   contractsPath.Synthetix,
-  //   deployments["Synthetix"],
+  // const synthetixState = await ethers.getContractAt(
+  //   contractsPath.SynthetixState,
+  //   deployments["SynthetixState"],
   //   signer
   // );
-  // await synthetix.setTokenState(deployments["TokenStateSCFX"]);
+  // await synthetixState.linkContract(deployments["Synthetix"]);
 
   // const tokenStateSCFX = await ethers.getContractAt(
   //   contractsPath.TokenState,
@@ -768,19 +813,6 @@ async function main() {
   //   signer
   // );
   // await tokenStateSCFX.linkContract(deployments["Synthetix"]);
-  // await tokenStateSCFX.setBalanceOf(deployer, parseEth(1000));
-  // await tokenStateSCFX.setBalanceOf(user, parseEth(1000));
-  // await tokenStateSCFX.setBalanceOf(
-  //   "0xAfdb49aF7e7BDE7e99589DF3831d849b7a55dE34",
-  //   parseEth(1000)
-  // );
-
-  // await synthetix.createMaxSynths();
-  // await synthetix.executeExchange(
-  //   ethers.utils.formatBytes32String("sUSD"),
-  //   parseEth(50),
-  //   ethers.utils.formatBytes32String("sETH")
-  // );
 
   // const tokenStatesUSD = await ethers.getContractAt(
   //   contractsPath.TokenState,
@@ -827,18 +859,10 @@ async function main() {
   //   ethers.utils.formatBytes32String("sETH"),
   //   deployments["AggregatorETH"]
   // );
-  // await exchangeRates.addAggregator(
-  //   ethers.utils.formatBytes32String("TKN"),
-  //   deployments["AggregatorETH"]
-  // );
-
-  // const supplySchedule = await ethers.getContractAt(
-  //   contractsPath.SupplySchedule,
-  //   deployments["SupplySchedule"],
-  //   signer
-  // );
-  // await supplySchedule.setSynthetixProxy(deployments["ProxySCFX"]);
-  // await supplySchedule.setInflationAmount(parseEth(3000000));
+  // // await exchangeRates.addAggregator(
+  // //   ethers.utils.formatBytes32String("TKN"),
+  // //   deployments["AggregatorETH"]
+  // // );
 
   // const systemSettings = await ethers.getContractAt(
   //   contractsPath.SystemSettings,
@@ -850,8 +874,8 @@ async function main() {
   // let exchangeFeeRates = [];
   // synthKeys.push(ethers.utils.formatBytes32String("sUSD"));
   // synthKeys.push(ethers.utils.formatBytes32String("sETH"));
-  // exchangeFeeRates.push(1);
-  // exchangeFeeRates.push(1);
+  // exchangeFeeRates.push(parseEth(0.001));
+  // exchangeFeeRates.push(parseEth(0.001)); // 0.0035
   // await systemSettings.updateExchangeFeeRateForSynths(synthKeys, exchangeFeeRates);
 
   // await systemSettings.setIssuanceRatio(parseEth(0.2));
@@ -869,6 +893,35 @@ async function main() {
   // await systemSettings.updateExchangeDynamicFeeThreshold(parseEth(0.0025));
   // await systemSettings.updateExchangeDynamicFeeWeightDecay(parseEth(0.95));
   // await systemSettings.updatePriceDeviationThreshold(parseEth(3));
+  // await systemSettings.toggleTradingRewards(true);
+  // await systemSettings.setFeePeriodDuration(604800);
+
+  // const synthetix = await ethers.getContractAt(
+  //   contractsPath.Synthetix,
+  //   deployments["Synthetix"],
+  //   signer
+  // );
+  // const proxySCFX = await ethers.getContractAt(
+  //   contractsPath.ProxyERC20,
+  //   deployments["ProxySCFX"],
+  //   signer
+  // );
+
+  // await synthetix.mint(deployer, parseEth(1000000));
+  // await synthetix.setReserveAddress(reserveAddr);
+  // await synthetix.setPool(deployments["SCFXWETH"], true);
+  // await synthetix.setTrade(true);
+
+  // await proxySCFX.transfer(user1, parseEth(1000));
+  // await proxySCFX.transfer(user2, parseEth(1000));
+  // await proxySCFX.transfer(reserveAddr, parseEth(200000));
+
+  // // await synthetix.createMaxSynths();
+  // // await synthetix.executeExchange(
+  // //   ethers.utils.formatBytes32String("sUSD"),
+  // //   parseEth(50),
+  // //   ethers.utils.formatBytes32String("sETH")
+  // // );
 
   // const RouterContract = new ethers.Contract(
   //   deployments["UniswapRouter"],
@@ -1370,7 +1423,7 @@ async function deploySynth(
   let synthKey = [];
   let exchangeFeeRates = [];
   synthKey.push(ethers.utils.formatBytes32String(synthSymbol));
-  exchangeFeeRates.push(1);
+  exchangeFeeRates.push(parseEth(0.001));
 
   const systemSettings = await ethers.getContractAt(
     contractsPath.SystemSettings,

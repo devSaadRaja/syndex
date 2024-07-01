@@ -6,8 +6,8 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "./interfaces/ISynthSwap.sol";
-import "./interfaces/IAggregationExecutor.sol";
 import "../../interfaces/ISynthetix.sol";
+import "./interfaces/IAggregationExecutor.sol";
 import "../../interfaces/IAddressResolver.sol";
 import {ISwapRouter} from "./interfaces/ISwapRouter.sol";
 
@@ -27,7 +27,7 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     bytes32 private constant CONTRACT_SYNTHETIX = "Synthetix";
     bytes32 private constant sUSD_CURRENCY_KEY = "sUSD";
-    bytes32 private constant TRACKING_CODE = "SMX";
+    bytes32 private constant TRACKING_CODE = "SCFX";
 
     event SwapInto(address indexed from, uint amountReceived);
     event SwapOutOf(address indexed from, uint amountReceived);
