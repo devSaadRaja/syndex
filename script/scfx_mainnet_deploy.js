@@ -9,7 +9,7 @@ const { config } = require("dotenv");
 
 config({ path: resolve(__dirname, "./.env") });
 
-var outputFilePath = "./deployments_mainnet.json";
+var outputFilePath = "./deployments_testnet.json";
 
 const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000";
 
@@ -117,7 +117,7 @@ async function main() {
   //   deployments["ProxySCFX"],
   //   deployments["WETH"]
   // );
-  // deployments["WETHSCFX"] = await FactoryContract.getPair(
+  // deployments["SCFXWETH"] = await FactoryContract.getPair(
   //   deployments["ProxySCFX"],
   //   deployments["WETH"]
   // );
@@ -221,11 +221,11 @@ async function main() {
   // await tokenStateSCFX.linkContract(deployments["Synthetix"]);
   // await synthetix.mint(deployer, parseEth(1000000));
   // await synthetix.setReserveAddress(reserveAddr);
-  // await synthetix.setPool(deployments["WETHSCFX"], true);
+  // await synthetix.setPool(deployments["SCFXWETH"], true);
   // await synthetix.setTrade(true);
-  // await proxySCFX.transfer(user1, parseEth(1000));
-  // await proxySCFX.transfer(user2, parseEth(1000));
-  // await proxySCFX.transfer(reserveAddr, parseEth(200000));
+  // // await proxySCFX.transfer(user1, parseEth(1000)); // !
+  // // await proxySCFX.transfer(user2, parseEth(1000)); // !
+  // // await proxySCFX.transfer(reserveAddr, parseEth(200000)); // !
   // // * ADD LIQUIDITY vvv
   // const weth = new ethers.Contract(deployments["WETH"], WETH, signer);
   // const RouterContract = new ethers.Contract(

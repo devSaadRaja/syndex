@@ -3,7 +3,7 @@ const { tenderly } = require("hardhat");
 const { readFileSync, writeFileSync } = require("fs");
 
 var url = process.env.TENDERLY_MAINNET_FORK_URL_TEST;
-var outputFilePath = "./deployments_mainnet.json";
+var outputFilePath = "./deployments_testnet.json";
 var chainId = 1;
 
 const WETH = require("../abis/weth.json");
