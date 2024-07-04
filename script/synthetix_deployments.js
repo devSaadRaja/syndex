@@ -39,6 +39,7 @@ const contractsPath = {
   Proxy: "src/contracts/Proxy.sol:Proxy",
   Issuer: "src/contracts/Issuer.sol:Issuer",
   ERC20: "src/contracts/SMX/ERC20.sol:ERC20",
+  TestToken: "src/contracts/test/Token.sol:Token",
   Synthetix: "src/contracts/Synthetix.sol:Synthetix",
   Exchanger: "src/contracts/Exchanger.sol:Exchanger",
   ProxyERC20: "src/contracts/ProxyERC20.sol:ProxyERC20",
@@ -613,6 +614,16 @@ async function main() {
   // );
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
+  // await FactoryContract.createPair(
+  //   deployments["TestToken"],
+  //   deployments["ProxysUSD"]
+  // );
+  // deployments["TKNUSD"] = await FactoryContract.getPair(
+  //   deployments["TestToken"],
+  //   deployments["ProxysUSD"]
+  // );
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+
   // // ============================================================ //
 
   console.log("--- DEPLOYMENTS UPDATED ---");
@@ -928,6 +939,30 @@ async function main() {
   //   uniswapRouter,
   //   signer
   // );
+  // const proxysUSD = await ethers.getContractAt(
+  //   contractsPath.ProxyERC20,
+  //   deployments["ProxysUSD"],
+  //   signer
+  // );
+  // const testToken = await ethers.getContractAt(
+  //   contractsPath.TestToken,
+  //   deployments["TestToken"],
+  //   signer
+  // );
+
+  // await proxysUSD.approve(deployments["UniswapRouter"], parseEth(100));
+  // await testToken.approve(deployments["UniswapRouter"], parseEth(100));
+  // await RouterContract.addLiquidity(
+  //   deployments["ProxysUSD"],
+  //   deployments["TestToken"],
+  //   parseEth(100),
+  //   parseEth(100),
+  //   1,
+  //   1,
+  //   deployer,
+  //   Math.round(Date.now() / 1000) + 1000
+  // );
+
   // await proxysUSD.approve(deployments["UniswapRouter"], parseEth(50));
   // await proxysETH.approve(deployments["UniswapRouter"], parseEth(50));
   // await RouterContract.addLiquidity(
