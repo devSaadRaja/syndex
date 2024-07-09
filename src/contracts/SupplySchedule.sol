@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/math/Math.sol";
 import "./Proxy.sol";
 
 import "../interfaces/IERC20.sol";
-import "../interfaces/ISynthetix.sol";
+import "../interfaces/ISynDex.sol";
 import "../interfaces/ISupplySchedule.sol";
 
 import "../libraries/SafeDecimalMath.sol";
@@ -27,18 +27,18 @@ contract SupplySchedule is Ownable, ISupplySchedule {
 
     uint public constant INFLATION_START_DATE = 1551830400; // 2019-03-06T00:00:00+00:00
 
-    // The number of SCFX rewarded to the caller of Synthetix.mint()
+    // The number of SFCX rewarded to the caller of SynDex.mint()
     uint public minterReward = 100 * 1e18;
 
-    // The number of SCFX minted per week
+    // The number of SFCX minted per week
     uint public inflationAmount;
 
     uint public maxInflationAmount = 3e6 * 1e18; // max inflation amount 3,000,000
 
-    // Address of the SynthetixProxy for the onlySynthetix modifier
-    address payable public synthetixProxy;
+    // Address of the SynDexProxy for the onlySynDex modifier
+    address payable public syndexProxy;
 
-    // Max SCFX rewards for minter
+    // Max SFCX rewards for minter
     uint public constant MAX_MINTER_REWARD = 200 * 1e18;
 
     // How long each inflation period is before mint can be called
@@ -58,7 +58,7 @@ contract SupplySchedule is Ownable, ISupplySchedule {
     // ========== VIEWS ==========
 
     /**
-     * @return The amount of SCFX mintable for the inflationary supply
+     * @return The amount of SFCX mintable for the inflationary supply
      */
     function mintableSupply() external view returns (uint) {
         uint totalAmount;
@@ -100,15 +100,15 @@ contract SupplySchedule is Ownable, ISupplySchedule {
     // ========== MUTATIVE FUNCTIONS ==========
 
     /**
-     * @notice Record the mint event from Synthetix by incrementing the inflation
+     * @notice Record the mint event from SynDex by incrementing the inflation
      * week counter for the number of weeks minted (probabaly always 1)
      * and store the time of the event.
-     * @param supplyMinted the amount of SCFX the total supply was inflated by.
-     * @return minterReward the amount of SCFX reward for caller
+     * @param supplyMinted the amount of SFCX the total supply was inflated by.
+     * @return minterReward the amount of SFCX reward for caller
      * */
     function recordMintEvent(
         uint supplyMinted
-    ) external onlySynthetix returns (uint) {
+    ) external onlySynDex returns (uint) {
         uint numberOfWeeksIssued = weeksSinceLastIssuance();
 
         // add number of weeks minted to weekCounter
@@ -132,11 +132,11 @@ contract SupplySchedule is Ownable, ISupplySchedule {
     // ========== SETTERS ========== */
 
     /**
-     * @notice Sets the reward amount of SCFX for the caller of the public
-     * function Synthetix.mint().
+     * @notice Sets the reward amount of SFCX for the caller of the public
+     * function SynDex.mint().
      * This incentivises anyone to mint the inflationary supply and the mintr
      * Reward will be deducted from the inflationary supply and sent to the caller.
-     * @param amount the amount of SCFX to reward the minter.
+     * @param amount the amount of SFCX to reward the minter.
      * */
     function setMinterReward(uint amount) external onlyOwner {
         require(
@@ -148,14 +148,14 @@ contract SupplySchedule is Ownable, ISupplySchedule {
     }
 
     /**
-     * @notice Set the SynthetixProxy should it ever change.
-     * SupplySchedule requires Synthetix address as it has the authority
+     * @notice Set the SynDexProxy should it ever change.
+     * SupplySchedule requires SynDex address as it has the authority
      * to record mint event.
      * */
-    function setSynthetixProxy(address _synthetixProxy) external onlyOwner {
-        require(_synthetixProxy != address(0), "Address cannot be 0");
-        synthetixProxy = payable(_synthetixProxy);
-        emit SynthetixProxyUpdated(synthetixProxy);
+    function setSynDexProxy(address _syndexProxy) external onlyOwner {
+        require(_syndexProxy != address(0), "Address cannot be 0");
+        syndexProxy = payable(_syndexProxy);
+        emit SynDexProxyUpdated(syndexProxy);
     }
 
     /**
@@ -177,12 +177,12 @@ contract SupplySchedule is Ownable, ISupplySchedule {
     // ========== MODIFIERS ==========
 
     /**
-     * @notice Only the Synthetix contract is authorised to call this function
+     * @notice Only the SynDex contract is authorised to call this function
      * */
-    modifier onlySynthetix() {
+    modifier onlySynDex() {
         require(
-            msg.sender == address(Proxy(synthetixProxy).currentTarget()),
-            "Only the synthetix contract can perform this action"
+            msg.sender == address(Proxy(syndexProxy).currentTarget()),
+            "Only the syndex contract can perform this action"
         );
         _;
     }
@@ -199,7 +199,7 @@ contract SupplySchedule is Ownable, ISupplySchedule {
     );
 
     /**
-     * @notice Emitted when the SCFX minter reward amount is updated
+     * @notice Emitted when the SFCX minter reward amount is updated
      * */
     event MinterRewardUpdated(uint newRewardAmount);
 
@@ -214,7 +214,7 @@ contract SupplySchedule is Ownable, ISupplySchedule {
     event MaxInflationAmountUpdated(uint newInflationAmount);
 
     /**
-     * @notice Emitted when setSynthetixProxy is called changing the Synthetix Proxy address
+     * @notice Emitted when setSynDexProxy is called changing the SynDex Proxy address
      * */
-    event SynthetixProxyUpdated(address newAddress);
+    event SynDexProxyUpdated(address newAddress);
 }

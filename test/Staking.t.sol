@@ -9,7 +9,7 @@ import {Staking} from "../src/contracts/staking/Staking.sol";
 
 contract StakingTest is Setup {
     Staking public staking;
-    Staking public stakingSCFX;
+    Staking public stakingSFCX;
 
     function setUp() public override {
         super.setUp();
@@ -22,8 +22,8 @@ contract StakingTest is Setup {
         smx.transfer(user2, 20 * 10 ** 18);
         smx.transfer(address(staking), 30 * 10 ** 18);
 
-        stakingSCFX = new Staking(address(proxySCFX), address(proxySCFX));
-        proxySCFX.transfer(address(stakingSCFX), 30 ether);
+        stakingSFCX = new Staking(address(proxySFCX), address(proxySFCX));
+        proxySFCX.transfer(address(stakingSFCX), 30 ether);
 
         vm.stopPrank();
     }
@@ -104,79 +104,79 @@ contract StakingTest is Setup {
         vm.stopPrank();
     }
 
-    function testStakeSCFX() public {
+    function testStakeSFCX() public {
         vm.startPrank(user7); // user7
 
-        proxySCFX.approve(address(stakingSCFX), 10 ether);
-        stakingSCFX.stake(10 ether);
-        assertEq(stakingSCFX.totalStaked(), 10 ether);
-        assertEq(stakingSCFX.getStakeDetails(user7).balance, 10 ether);
+        proxySFCX.approve(address(stakingSFCX), 10 ether);
+        stakingSFCX.stake(10 ether);
+        assertEq(stakingSFCX.totalStaked(), 10 ether);
+        assertEq(stakingSFCX.getStakeDetails(user7).balance, 10 ether);
 
-        proxySCFX.approve(address(stakingSCFX), 10 ether);
-        stakingSCFX.stake(10 ether);
-        assertEq(stakingSCFX.totalStaked(), 20 ether);
-        assertEq(stakingSCFX.getStakeDetails(user7).balance, 20 ether);
+        proxySFCX.approve(address(stakingSFCX), 10 ether);
+        stakingSFCX.stake(10 ether);
+        assertEq(stakingSFCX.totalStaked(), 20 ether);
+        assertEq(stakingSFCX.getStakeDetails(user7).balance, 20 ether);
 
         vm.stopPrank();
 
         vm.startPrank(user8); // user8
 
-        proxySCFX.approve(address(stakingSCFX), 10 ether);
-        stakingSCFX.stake(10 ether);
-        assertEq(stakingSCFX.totalStaked(), 30 ether);
-        assertEq(stakingSCFX.getStakeDetails(user8).balance, 10 ether);
+        proxySFCX.approve(address(stakingSFCX), 10 ether);
+        stakingSFCX.stake(10 ether);
+        assertEq(stakingSFCX.totalStaked(), 30 ether);
+        assertEq(stakingSFCX.getStakeDetails(user8).balance, 10 ether);
 
         vm.stopPrank();
     }
 
-    function testClaimRewardsSCFX() public {
+    function testClaimRewardsSFCX() public {
         vm.startPrank(user8);
 
-        proxySCFX.approve(address(stakingSCFX), 10 ether);
-        stakingSCFX.stake(10 ether);
+        proxySFCX.approve(address(stakingSFCX), 10 ether);
+        stakingSFCX.stake(10 ether);
 
         _passTime(365 days);
 
-        assertEq(stakingSCFX.calculateRewards(user8), 1.4 ether);
-        stakingSCFX.claimReward();
+        assertEq(stakingSFCX.calculateRewards(user8), 1.4 ether);
+        stakingSFCX.claimReward();
 
         _passTime(365 days);
 
-        assertEq(stakingSCFX.calculateRewards(user8), 1.4 ether);
-        stakingSCFX.claimReward();
+        assertEq(stakingSFCX.calculateRewards(user8), 1.4 ether);
+        stakingSFCX.claimReward();
 
         vm.stopPrank();
     }
 
-    function testUnstakeSCFX() public {
+    function testUnstakeSFCX() public {
         vm.startPrank(user8);
 
-        proxySCFX.approve(address(stakingSCFX), 10 ether);
-        stakingSCFX.stake(10 ether);
+        proxySFCX.approve(address(stakingSFCX), 10 ether);
+        stakingSFCX.stake(10 ether);
 
         _passTime(365 days);
 
-        assertEq(stakingSCFX.calculateRewards(user8), 1.4 ether);
-        stakingSCFX.unstake(5 ether);
+        assertEq(stakingSFCX.calculateRewards(user8), 1.4 ether);
+        stakingSFCX.unstake(5 ether);
 
-        assertEq(stakingSCFX.calculateRewards(user8), 0);
+        assertEq(stakingSFCX.calculateRewards(user8), 0);
 
         vm.stopPrank();
     }
 
-    function testWarmupPeriodSCFX() public {
+    function testWarmupPeriodSFCX() public {
         vm.startPrank(owner);
-        stakingSCFX.setWarmupPeriod(2 days);
+        stakingSFCX.setWarmupPeriod(2 days);
         vm.stopPrank();
 
         vm.startPrank(user8);
-        proxySCFX.approve(address(stakingSCFX), 10 ether);
-        stakingSCFX.stake(10 ether);
+        proxySFCX.approve(address(stakingSFCX), 10 ether);
+        stakingSFCX.stake(10 ether);
         _passTime(1 days);
         vm.expectRevert("Warmup Period not Ended!");
-        stakingSCFX.claimReward();
+        stakingSFCX.claimReward();
         vm.expectRevert("Warmup Period not Ended!");
-        stakingSCFX.unstake(5 ether);
+        stakingSFCX.unstake(5 ether);
         vm.stopPrank();
     }
 }

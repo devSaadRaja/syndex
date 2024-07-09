@@ -1081,7 +1081,7 @@ library UniERC20 {
         IERC20(0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE);
     IERC20 private constant _ZERO_ADDRESS = IERC20(address(0));
 
-    function isETH(IERC20 token) internal pure returns (bool) {
+    function icfETH(IERC20 token) internal pure returns (bool) {
         return (token == _ZERO_ADDRESS || token == _ETH_ADDRESS);
     }
 
@@ -1089,7 +1089,7 @@ library UniERC20 {
         IERC20 token,
         address account
     ) internal view returns (uint256) {
-        if (isETH(token)) {
+        if (icfETH(token)) {
             return account.balance;
         } else {
             return token.balanceOf(account);
@@ -1102,7 +1102,7 @@ library UniERC20 {
         uint256 amount
     ) internal {
         if (amount > 0) {
-            if (isETH(token)) {
+            if (icfETH(token)) {
                 to.transfer(amount);
             } else {
                 token.safeTransfer(to, amount);
@@ -1111,7 +1111,7 @@ library UniERC20 {
     }
 
     function uniApprove(IERC20 token, address to, uint256 amount) internal {
-        require(!isETH(token), "Approve called on ETH");
+        require(!icfETH(token), "Approve called on ETH");
 
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory returndata) = address(token).call(
@@ -2715,7 +2715,7 @@ contract AggregationRouterV4 is
         IERC20 srcToken = desc.srcToken;
         IERC20 dstToken = desc.dstToken;
 
-        bool srcETH = srcToken.isETH();
+        bool srcETH = srcToken.icfETH();
         if (flags & _REQUIRES_EXTRA_ETH != 0) {
             require(
                 msg.value > (srcETH ? desc.amount : 0),

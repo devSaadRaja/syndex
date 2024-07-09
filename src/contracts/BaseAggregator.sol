@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./AddressResolver.sol";
 import "../interfaces/IDebtCache.sol";
-import "../interfaces/ISynthetixDebtShare.sol";
+import "../interfaces/ISynDexDebtShare.sol";
 
 // aggregator which reports the data from the system itself
 // useful for testing

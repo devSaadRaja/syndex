@@ -43,19 +43,19 @@ contract DebtCache is BaseDebtCache {
             bool isInvalid
         ) = _currentSynthDebts(currencyKeys);
 
-        // The total SCFX-backed debt is the debt of futures markets plus the debt of circulating synths.
-        uint scfxCollateralDebt = futuresDebt;
+        // The total SFCX-backed debt is the debt of futures markets plus the debt of circulating synths.
+        uint sfcxCollateralDebt = futuresDebt;
         _cachedSynthDebt[FUTURES_DEBT_KEY] = futuresDebt;
         uint numValues = values.length;
         for (uint i; i < numValues; i++) {
             uint value = values[i];
-            scfxCollateralDebt = scfxCollateralDebt.add(value);
+            sfcxCollateralDebt = sfcxCollateralDebt.add(value);
             _cachedSynthDebt[currencyKeys[i]] = value;
         }
 
-        // Subtract out the excluded non-SCFX backed debt from our total
+        // Subtract out the excluded non-SFCX backed debt from our total
         _cachedSynthDebt[EXCLUDED_DEBT_KEY] = excludedDebt;
-        uint newDebt = scfxCollateralDebt.floorsub(excludedDebt);
+        uint newDebt = sfcxCollateralDebt.floorsub(excludedDebt);
         _cachedDebt = newDebt;
         _cacheTimestamp = block.timestamp;
         emit DebtCacheUpdated(newDebt);
@@ -109,13 +109,13 @@ contract DebtCache is BaseDebtCache {
         _excludedIssuedDebt[currencyKey] = uint(newExcludedDebt);
     }
 
-    function updateCachedsUSDDebt(int amount) external override onlyIssuer {
+    function updateCachedcfUSDDebt(int amount) external override onlyIssuer {
         uint delta = SafeDecimalMath.abs(amount);
         if (amount > 0) {
-            _cachedSynthDebt[sUSD] = _cachedSynthDebt[sUSD].add(delta);
+            _cachedSynthDebt[cfUSD] = _cachedSynthDebt[cfUSD].add(delta);
             _cachedDebt = _cachedDebt.add(delta);
         } else {
-            _cachedSynthDebt[sUSD] = _cachedSynthDebt[sUSD].sub(delta);
+            _cachedSynthDebt[cfUSD] = _cachedSynthDebt[cfUSD].sub(delta);
             _cachedDebt = _cachedDebt.sub(delta);
         }
 

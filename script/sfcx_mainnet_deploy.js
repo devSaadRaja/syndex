@@ -20,7 +20,7 @@ const contractsPath = {
   LegacyTokenState: "src/contracts/LegacyTokenState.sol:LegacyTokenState",
   AddressResolver: "src/contracts/AddressResolver.sol:AddressResolver",
   ProxyERC20: "src/contracts/ProxyERC20.sol:ProxyERC20",
-  Synthetix: "src/contracts/Synthetix.sol:Synthetix",
+  SynDex: "src/contracts/SynDex.sol:SynDex",
 };
 
 const deployments = JSON.parse(readFileSync(outputFilePath, "utf-8"));
@@ -50,10 +50,10 @@ async function main() {
   // await AddressResolver.deployTransaction.wait(5);
   // await verify(AddressResolver.address, [deployer]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-  // const ProxySCFX = await contractDeploy("ProxyERC20", [deployer]);
-  // deployments["ProxySCFX"] = ProxySCFX.address;
-  // await ProxySCFX.deployTransaction.wait(5);
-  // await verify(ProxySCFX.address, [deployer]);
+  // const ProxySFCX = await contractDeploy("ProxyERC20", [deployer]);
+  // deployments["ProxySFCX"] = ProxySFCX.address;
+  // await ProxySFCX.deployTransaction.wait(5);
+  // await verify(ProxySFCX.address, [deployer]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // const SystemStatus = await contractDeploy("SystemStatus", [deployer]);
   // deployments["SystemStatus"] = SystemStatus.address;
@@ -68,40 +68,40 @@ async function main() {
   // await Issuer.deployTransaction.wait(5);
   // await verify(Issuer.address, [deployer, deployments["AddressResolver"]]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-  // const TokenStateSCFX = await contractDeploy("LegacyTokenState", [
+  // const TokenStateSFCX = await contractDeploy("LegacyTokenState", [
   //   deployer,
-  //   ADDRESS_ZERO, // synthetix
+  //   ADDRESS_ZERO, // syndex
   // ]);
-  // deployments["TokenStateSCFX"] = TokenStateSCFX.address;
-  // await TokenStateSCFX.deployTransaction.wait(5);
-  // await verify(TokenStateSCFX.address, [
+  // deployments["TokenStateSFCX"] = TokenStateSFCX.address;
+  // await TokenStateSFCX.deployTransaction.wait(5);
+  // await verify(TokenStateSFCX.address, [
   //   deployer,
-  //   ADDRESS_ZERO, // synthetix
+  //   ADDRESS_ZERO, // syndex
   // ]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-  // const SynthetixDebtShare = await contractDeploy("SynthetixDebtShare", [
+  // const SynDexDebtShare = await contractDeploy("SynDexDebtShare", [
   //   deployer,
   //   deployments["AddressResolver"],
   // ]);
-  // deployments["SynthetixDebtShare"] = SynthetixDebtShare.address;
-  // await SynthetixDebtShare.deployTransaction.wait(5);
-  // await verify(SynthetixDebtShare.address, [
+  // deployments["SynDexDebtShare"] = SynDexDebtShare.address;
+  // await SynDexDebtShare.deployTransaction.wait(5);
+  // await verify(SynDexDebtShare.address, [
   //   deployer,
   //   deployments["AddressResolver"],
   // ]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-  // const Synthetix = await contractDeploy("Synthetix", [
-  //   deployments["ProxySCFX"],
-  //   deployments["TokenStateSCFX"],
+  // const SynDex = await contractDeploy("SynDex", [
+  //   deployments["ProxySFCX"],
+  //   deployments["TokenStateSFCX"],
   //   deployer,
   //   0,
   //   deployments["AddressResolver"],
   // ]);
-  // deployments["Synthetix"] = Synthetix.address;
-  // await Synthetix.deployTransaction.wait(5);
-  // await verify(Synthetix.address, [
-  //   deployments["ProxySCFX"],
-  //   deployments["TokenStateSCFX"],
+  // deployments["SynDex"] = SynDex.address;
+  // await SynDex.deployTransaction.wait(5);
+  // await verify(SynDex.address, [
+  //   deployments["ProxySFCX"],
+  //   deployments["TokenStateSFCX"],
   //   deployer,
   //   0,
   //   deployments["AddressResolver"],
@@ -114,11 +114,11 @@ async function main() {
   //   signer
   // );
   // await FactoryContract.createPair(
-  //   deployments["ProxySCFX"],
+  //   deployments["ProxySFCX"],
   //   deployments["WETH"]
   // );
-  // deployments["SCFXWETH"] = await FactoryContract.getPair(
-  //   deployments["ProxySCFX"],
+  // deployments["SFCXWETH"] = await FactoryContract.getPair(
+  //   deployments["ProxySFCX"],
   //   deployments["WETH"]
   // );
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
@@ -153,8 +153,8 @@ async function main() {
   // addresses.push(deployer);
   // count++;
   // // ! --- refreshCache vvv
-  // names.push(ethers.utils.formatBytes32String("SynthetixDebtShare"));
-  // addresses.push(deployments["SynthetixDebtShare"]);
+  // names.push(ethers.utils.formatBytes32String("SynDexDebtShare"));
+  // addresses.push(deployments["SynDexDebtShare"]);
   // count++;
   // names.push(ethers.utils.formatBytes32String("Exchanger"));
   // addresses.push(deployer);
@@ -184,8 +184,8 @@ async function main() {
   // addresses.push(deployer);
   // count++;
   // // ! ---
-  // names.push(ethers.utils.formatBytes32String("Synthetix"));
-  // addresses.push(deployments["Synthetix"]);
+  // names.push(ethers.utils.formatBytes32String("SynDex"));
+  // addresses.push(deployments["SynDex"]);
   // names.push(ethers.utils.formatBytes32String("Issuer"));
   // addresses.push(deployments["Issuer"]);
   // const addressResolver = await ethers.getContractAt(
@@ -202,30 +202,30 @@ async function main() {
   // ! ------------------------------------------------------------------------
   // ! SETUP ------------------------------------------------------------------
   // ! ------------------------------------------------------------------------
-  // const proxySCFX = await ethers.getContractAt(
+  // const proxySFCX = await ethers.getContractAt(
   //   contractsPath.ProxyERC20,
-  //   deployments["ProxySCFX"],
+  //   deployments["ProxySFCX"],
   //   signer
   // );
-  // const tokenStateSCFX = await ethers.getContractAt(
+  // const tokenStateSFCX = await ethers.getContractAt(
   //   contractsPath.LegacyTokenState,
-  //   deployments["TokenStateSCFX"],
+  //   deployments["TokenStateSFCX"],
   //   signer
   // );
-  // const synthetix = await ethers.getContractAt(
-  //   contractsPath.Synthetix,
-  //   deployments["Synthetix"],
+  // const syndex = await ethers.getContractAt(
+  //   contractsPath.SynDex,
+  //   deployments["SynDex"],
   //   signer
   // );
-  // await proxySCFX.updateTarget(deployments["Synthetix"]);
-  // await tokenStateSCFX.linkContract(deployments["Synthetix"]);
-  // await synthetix.mint(deployer, parseEth(1000000));
-  // await synthetix.setReserveAddress(reserveAddr);
-  // await synthetix.setPool(deployments["SCFXWETH"], true);
-  // await synthetix.setTrade(true);
-  // // await proxySCFX.transfer(user1, parseEth(1000)); // !
-  // // await proxySCFX.transfer(user2, parseEth(1000)); // !
-  // // await proxySCFX.transfer(reserveAddr, parseEth(200000)); // !
+  // await proxySFCX.updateTarget(deployments["SynDex"]);
+  // await tokenStateSFCX.linkContract(deployments["SynDex"]);
+  // await syndex.mint(deployer, parseEth(1000000));
+  // await syndex.setReserveAddress(reserveAddr);
+  // await syndex.setPool(deployments["SFCXWETH"], true);
+  // await syndex.setTrade(true);
+  // // await proxySFCX.transfer(user1, parseEth(1000)); // !
+  // // await proxySFCX.transfer(user2, parseEth(1000)); // !
+  // // await proxySFCX.transfer(reserveAddr, parseEth(200000)); // !
   // // * ADD LIQUIDITY vvv
   // const weth = new ethers.Contract(deployments["WETH"], WETH, signer);
   // const RouterContract = new ethers.Contract(
@@ -234,10 +234,10 @@ async function main() {
   //   signer
   // );
   // await weth.approve(deployments["UniswapRouter"], parseEth(50));
-  // await proxySCFX.approve(deployments["UniswapRouter"], parseEth(50));
+  // await proxySFCX.approve(deployments["UniswapRouter"], parseEth(50));
   // await RouterContract.addLiquidity(
   //   deployments["WETH"],
-  //   deployments["ProxySCFX"],
+  //   deployments["ProxySFCX"],
   //   parseEth(50),
   //   parseEth(50),
   //   1,
@@ -253,30 +253,30 @@ async function main() {
 }
 
 const testCases = async () => {
-  const proxySCFX = await ethers.getContractAt(
+  const proxySFCX = await ethers.getContractAt(
     contractsPath.ProxyERC20,
-    deployments["ProxySCFX"],
+    deployments["ProxySFCX"],
     signer
   );
-  await proxySCFX.approve(reserveAddr, parseEth(1000));
+  await proxySFCX.approve(reserveAddr, parseEth(1000));
 
-  const proxySCFXReserve = await ethers.getContractAt(
+  const proxySFCXReserve = await ethers.getContractAt(
     contractsPath.ProxyERC20,
-    deployments["ProxySCFX"],
+    deployments["ProxySFCX"],
     signer3
   );
-  await proxySCFXReserve.transferFrom(deployer, user2, parseEth(10));
+  await proxySFCXReserve.transferFrom(deployer, user2, parseEth(10));
 
   console.log(
-    formatEth(await proxySCFX.balanceOf(deployer)),
+    formatEth(await proxySFCX.balanceOf(deployer)),
     "<<< balanceOf(deployer)"
   );
   console.log(
-    formatEth(await proxySCFX.balanceOf(user2)),
+    formatEth(await proxySFCX.balanceOf(user2)),
     "<<< balanceOf(user2)"
   );
 
-  console.log(formatEth(await proxySCFX.totalSupply()), "<<< totalSupply");
+  console.log(formatEth(await proxySFCX.totalSupply()), "<<< totalSupply");
 
   // ! SWAP ---
 
@@ -289,20 +289,20 @@ const testCases = async () => {
     "<<< WETH balanceOf user1"
   );
   console.log(
-    formatEth(await proxySCFX.balanceOf(user1)),
-    "<<< SCFX balanceOf user1"
+    formatEth(await proxySFCX.balanceOf(user1)),
+    "<<< SFCX balanceOf user1"
   );
 
   await swap(
     signer1,
     deployments["WETH"],
-    deployments["ProxySCFX"],
+    deployments["ProxySFCX"],
     parseEth(10),
     user1
   ); // * BUY
   await swap(
     signer1,
-    deployments["ProxySCFX"],
+    deployments["ProxySFCX"],
     deployments["WETH"],
     parseEth(8),
     user1
@@ -315,18 +315,18 @@ const testCases = async () => {
     "<<< WETH balanceOf user1"
   );
   console.log(
-    formatEth(await proxySCFX.balanceOf(user1)),
-    "<<< SCFX balanceOf user1"
+    formatEth(await proxySFCX.balanceOf(user1)),
+    "<<< SFCX balanceOf user1"
   );
 };
 
 const swap = async (signerTx, tokenIn, tokenOut, amountIn, to) => {
-  const proxySCFX = await ethers.getContractAt(
+  const proxySFCX = await ethers.getContractAt(
     contractsPath.ProxyERC20,
     tokenIn,
     signerTx
   );
-  await proxySCFX.approve(deployments["UniswapRouter"], amountIn);
+  await proxySFCX.approve(deployments["UniswapRouter"], amountIn);
 
   const RouterContract = new ethers.Contract(
     deployments["UniswapRouter"],

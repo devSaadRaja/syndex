@@ -15,7 +15,7 @@ library SystemSettingsLib {
 
     bytes32 public constant SETTINGS_CONTRACT_NAME = "SystemSettings";
 
-    // No more synths may be issued than the value of SCFX backing them.
+    // No more synths may be issued than the value of SFCX backing them.
     uint public constant MAX_ISSUANCE_RATIO = 1e18;
 
     // The fee period must be between 1 day and 60 days.
@@ -232,7 +232,7 @@ library SystemSettingsLib {
         bytes32 settingName,
         uint penalty
     ) external {
-        // MAX_LIQUIDATION_PENALTY is enforced on both Collateral and SCFX liquidations
+        // MAX_LIQUIDATION_PENALTY is enforced on both Collateral and SFCX liquidations
         require(
             penalty <= MAX_LIQUIDATION_PENALTY,
             "penalty > MAX_LIQUIDATION_PENALTY"

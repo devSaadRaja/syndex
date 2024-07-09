@@ -64,8 +64,8 @@ async function main() {
   // // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // // const Staking = await contractDeploy("Staking", [
-  // //   deployments["ProxySCFX"],
-  // //   deployments["ProxySCFX"],
+  // //   deployments["ProxySFCX"],
+  // //   deployments["ProxySFCX"],
   // // ]);
   // // deployments["Staking"] = Staking.address;
   // // await verify("Staking", Staking.address);
@@ -103,7 +103,7 @@ async function main() {
   // // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
   // const SynthSwap = await contractDeploy("SynthSwap", [
-  //   deployments["ProxysUSD"],
+  //   deployments["ProxycfUSD"],
   //   deployments["UniswapSwapRouter"],
   //   deployments["AddressResolver"],
   //   deployer,

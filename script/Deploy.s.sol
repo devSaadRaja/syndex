@@ -9,7 +9,7 @@ import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 import {Issuer} from "../src/contracts/Issuer.sol";
 import {Proxyable} from "../src/contracts/Proxyable.sol";
-import {Synthetix} from "../src/contracts/Synthetix.sol";
+import {SynDex} from "../src/contracts/SynDex.sol";
 import {ProxyERC20} from "../src/contracts/ProxyERC20.sol";
 import {TokenState} from "../src/contracts/TokenState.sol";
 import {Staking} from "../src/contracts/staking/Staking.sol";
@@ -20,7 +20,7 @@ import {SupplySchedule} from "../src/contracts/SupplySchedule.sol";
 import {AddressResolver} from "../src/contracts/AddressResolver.sol";
 import {AggregatorCollateral} from "../src/contracts/AggregatorCollateral.sol";
 
-import {ISynthetix} from "../src/interfaces/ISynthetix.sol";
+import {ISynDex} from "../src/interfaces/ISynDex.sol";
 
 contract DeployScript is Script {
     address WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
@@ -33,8 +33,8 @@ contract DeployScript is Script {
     address[] public addresses;
 
     Issuer public issuer;
-    ProxyERC20 public proxySCFX;
-    Synthetix public synthetix;
+    ProxyERC20 public proxySFCX;
+    SynDex public syndex;
     TokenState public tokenState;
     SystemStatus public systemStatus;
     ExchangeRates public exchangeRates;
@@ -63,30 +63,30 @@ contract DeployScript is Script {
             address(addressResolver)
         );
         exchangeRates = new ExchangeRates(deployer, address(addressResolver));
-        proxySCFX = new ProxyERC20(deployer);
-        tokenState = new TokenState(deployer, address(synthetix));
-        synthetix = new Synthetix(
-            payable(address(proxySCFX)),
+        proxySFCX = new ProxyERC20(deployer);
+        tokenState = new TokenState(deployer, address(syndex));
+        syndex = new SynDex(
+            payable(address(proxySFCX)),
             address(tokenState),
             deployer,
             100_000_000 ether,
             address(addressResolver)
         );
-        staking = new Staking(address(proxySCFX), address(proxySCFX));
+        staking = new Staking(address(proxySFCX), address(proxySFCX));
 
         // ? SETUP ---
 
-        // // issuer.addSynth(address(synthsUSD));
-        // // issuer.addSynth(address(synthsETH));
+        // // issuer.addSynth(address(synthcfUSD));
+        // // issuer.addSynth(address(synthcfETH));
 
-        // exchangeRates.addAggregator("SCFX", address(aggregatorCollateral));
+        // exchangeRates.addAggregator("SFCX", address(aggregatorCollateral));
 
-        // proxySCFX.updateTarget(Proxyable(address(synthetix)));
+        // proxySFCX.updateTarget(Proxyable(address(syndex)));
 
-        // tokenState.linkContract(address(synthetix));
+        // tokenState.linkContract(address(syndex));
 
-        // // factory.createPair(address(proxySCFX), WETH);
-        // // address pair = factory.getPair(address(proxySCFX), WETH);
+        // // factory.createPair(address(proxySFCX), WETH);
+        // // address pair = factory.getPair(address(proxySFCX), WETH);
         // // taxable.setPool(pair, true);
 
         // ? TRANSACTIONS ---
@@ -100,8 +100,8 @@ contract DeployScript is Script {
         // addresses.push(address(issuer));
         // names.push("ExchangeRates");
         // addresses.push(address(exchangeRates));
-        // names.push("Synthetix");
-        // addresses.push(address(synthetix));
+        // names.push("SynDex");
+        // addresses.push(address(syndex));
 
         // addressResolver.loadAddresses(names, addresses);
         // for (uint i = 2; i < addresses.length; i++) {
@@ -110,14 +110,14 @@ contract DeployScript is Script {
 
         // // ---
 
-        // synthetix.mint(deployer, 100_000_000 ether);
+        // syndex.mint(deployer, 100_000_000 ether);
 
-        // proxySCFX.transfer(address(staking), 30 * 10 ** 18);
+        // proxySFCX.transfer(address(staking), 30 * 10 ** 18);
 
-        // // proxySCFX.approve(address(router), 50 * 10 ** 18);
+        // // proxySFCX.approve(address(router), 50 * 10 ** 18);
         // // IERC20(WETH).approve(address(router), 50 * 10 ** 18);
         // // router.addLiquidity(
-        // //     address(proxySCFX),
+        // //     address(proxySFCX),
         // //     WETH,
         // //     50 * 10 ** 18,
         // //     50 * 10 ** 18,

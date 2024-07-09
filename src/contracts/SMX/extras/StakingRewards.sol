@@ -12,7 +12,7 @@ import "../interfaces/ISupplySchedule.sol";
 
 /// @title SMX Staking Rewards
 /// @author SYNTHETIX, JaredBorders (jaredborders@proton.me), JChiaramonte7 (jeremy@bytecode.llc)
-/// @notice Updated version of Synthetix's StakingRewards with new features specific
+/// @notice Updated version of SynDex's StakingRewards with new features specific
 /// to SMX
 contract StakingRewards is IStakingRewards, Ownable, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20;

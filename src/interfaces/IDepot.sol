@@ -29,18 +29,18 @@ interface IDepot {
 
     function exchangeEtherForSNXAtRate(
         uint guaranteedRate,
-        uint guaranteedSynthetixRate
+        uint guaranteedSynDexRate
     ) external payable returns (uint);
 
     function exchangeSynthsForSNX(uint synthAmount) external returns (uint);
 
-    function synthetixReceivedForEther(
+    function syndexReceivedForEther(
         uint amount
     ) external view returns (uint);
 
-    function synthetixReceivedForSynths(
+    function syndexReceivedForSynths(
         uint amount
     ) external view returns (uint);
 
-    function withdrawSynthetix(uint amount) external;
+    function withdrawSynDex(uint amount) external;
 }

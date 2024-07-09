@@ -17,7 +17,7 @@ contract SynthRedeemer is ISynthRedeemer, MixinResolver {
     mapping(address => uint) public redemptions;
 
     bytes32 private constant CONTRACT_ISSUER = "Issuer";
-    bytes32 private constant CONTRACT_SYNTHSUSD = "SynthsUSD";
+    bytes32 private constant CONTRACT_SYNTHSUSD = "SynthcfUSD";
 
     constructor(address _resolver) MixinResolver(_resolver) {}
 
@@ -36,14 +36,14 @@ contract SynthRedeemer is ISynthRedeemer, MixinResolver {
         return IIssuer(requireAndGetAddress(CONTRACT_ISSUER));
     }
 
-    function sUSD() internal view returns (IERC20) {
+    function cfUSD() internal view returns (IERC20) {
         return IERC20(requireAndGetAddress(CONTRACT_SYNTHSUSD));
     }
 
     function totalSupply(
         IERC20 synthProxy
-    ) public view returns (uint supplyInsUSD) {
-        supplyInsUSD = synthProxy.totalSupply().multiplyDecimal(
+    ) public view returns (uint supplyIncfUSD) {
+        supplyIncfUSD = synthProxy.totalSupply().multiplyDecimal(
             redemptions[address(synthProxy)]
         );
     }
@@ -51,8 +51,8 @@ contract SynthRedeemer is ISynthRedeemer, MixinResolver {
     function balanceOf(
         IERC20 synthProxy,
         address account
-    ) external view returns (uint balanceInsUSD) {
-        balanceInsUSD = synthProxy.balanceOf(account).multiplyDecimal(
+    ) external view returns (uint balanceIncfUSD) {
+        balanceIncfUSD = synthProxy.balanceOf(account).multiplyDecimal(
             redemptions[address(synthProxy)]
         );
     }
@@ -86,13 +86,13 @@ contract SynthRedeemer is ISynthRedeemer, MixinResolver {
             msg.sender,
             amountOfSynth
         );
-        uint amountInsUSD = amountOfSynth.multiplyDecimal(rateToRedeem);
-        sUSD().transfer(msg.sender, amountInsUSD);
+        uint amountIncfUSD = amountOfSynth.multiplyDecimal(rateToRedeem);
+        cfUSD().transfer(msg.sender, amountIncfUSD);
         emit SynthRedeemed(
             address(synthProxy),
             msg.sender,
             amountOfSynth,
-            amountInsUSD
+            amountIncfUSD
         );
     }
 
@@ -107,17 +107,17 @@ contract SynthRedeemer is ISynthRedeemer, MixinResolver {
         );
         require(rateToRedeem > 0, "No rate for synth to redeem");
         uint totalSynthSupply = synthProxy.totalSupply();
-        uint supplyInsUSD = totalSynthSupply.multiplyDecimal(rateToRedeem);
+        uint supplyIncfUSD = totalSynthSupply.multiplyDecimal(rateToRedeem);
         require(
-            sUSD().balanceOf(address(this)) >= supplyInsUSD,
-            "sUSD must first be supplied"
+            cfUSD().balanceOf(address(this)) >= supplyIncfUSD,
+            "cfUSD must first be supplied"
         );
         redemptions[synthProxyAddress] = rateToRedeem;
         emit SynthDeprecated(
             address(synthProxy),
             rateToRedeem,
             totalSynthSupply,
-            supplyInsUSD
+            supplyIncfUSD
         );
     }
 
@@ -137,12 +137,12 @@ contract SynthRedeemer is ISynthRedeemer, MixinResolver {
         address synth,
         address account,
         uint amountOfSynth,
-        uint amountInsUSD
+        uint amountIncfUSD
     );
     event SynthDeprecated(
         address synth,
         uint rateToRedeem,
         uint totalSynthSupply,
-        uint supplyInsUSD
+        uint supplyIncfUSD
     );
 }

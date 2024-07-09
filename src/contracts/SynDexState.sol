@@ -5,11 +5,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./State.sol";
 
-import "../interfaces/ISynthetixState.sol";
+import "../interfaces/ISynDexState.sol";
 
 import "../libraries/SafeDecimalMath.sol";
 
-contract SynthetixState is Ownable, State, ISynthetixState {
+contract SynDexState is Ownable, State, ISynDexState {
     using SafeMath for uint;
     using SafeDecimalMath for uint;
 

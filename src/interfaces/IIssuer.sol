@@ -11,7 +11,7 @@ interface IIssuer {
         view
         returns (uint256 debt, uint256 sharesSupply, bool isStale);
 
-    function anySynthOrSCFXRateIsInvalid()
+    function anySynthOrSFCXRateIsInvalid()
         external
         view
         returns (bool anyRateInvalid);
@@ -71,7 +71,7 @@ interface IIssuer {
         bool excludeOtherCollateral
     ) external view returns (uint);
 
-    function transferableSynthetixAndAnyRateIsInvalid(
+    function transferableSynDexAndAnyRateIsInvalid(
         address account,
         uint balance
     ) external view returns (uint transferable, bool anyRateIsInvalid);
@@ -89,7 +89,7 @@ interface IIssuer {
             uint initialDebtBalance
         );
 
-    // Restricted: used internally to Synthetix
+    // Restricted: used internally to SynDex
     function addSynths(ISynth[] calldata synthsToAdd) external;
 
     function createSynths(address from, uint amount) external;

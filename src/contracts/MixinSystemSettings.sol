@@ -21,8 +21,8 @@ contract MixinSystemSettings is MixinResolver {
         "liquidationEscrowDuration";
     bytes32 internal constant SETTING_LIQUIDATION_PENALTY =
         "liquidationPenalty";
-    bytes32 internal constant SETTING_SCFX_LIQUIDATION_PENALTY =
-        "scfxLiquidationPenalty";
+    bytes32 internal constant SETTING_SFCX_LIQUIDATION_PENALTY =
+        "sfcxLiquidationPenalty";
     bytes32 internal constant SETTING_SELF_LIQUIDATION_PENALTY =
         "selfLiquidationPenalty";
     bytes32 internal constant SETTING_FLAG_REWARD = "flagReward";
@@ -241,7 +241,7 @@ contract MixinSystemSettings is MixinResolver {
         return
             flexibleStorage().getUIntValue(
                 SETTING_CONTRACT_NAME,
-                SETTING_SCFX_LIQUIDATION_PENALTY
+                SETTING_SFCX_LIQUIDATION_PENALTY
             );
     }
 

@@ -13,7 +13,7 @@ contract AggregatorIssuedSynths is BaseAggregator {
     ) public view override returns (uint80, int256, uint256, uint256, uint80) {
         uint totalIssuedSynths = IIssuer(
             resolver.requireAndGetAddress("Issuer", "aggregate debt info")
-        ).totalIssuedSynths("sUSD", true);
+        ).totalIssuedSynths("cfUSD", true);
 
         uint dataTimestamp = block.timestamp;
 

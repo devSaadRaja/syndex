@@ -11,14 +11,14 @@ import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import {IMixinResolver} from "../src/interfaces/IMixinResolver.sol";
 
 import {Issuer} from "../src/contracts/Issuer.sol";
-import {Synthetix} from "../src/contracts/Synthetix.sol";
+import {SynDex} from "../src/contracts/SynDex.sol";
 import {ProxyERC20} from "../src/contracts/ProxyERC20.sol";
 import {SystemStatus} from "../src/contracts/SystemStatus.sol";
 import {AddressResolver} from "../src/contracts/AddressResolver.sol";
 import {LegacyTokenState} from "../src/contracts/LegacyTokenState.sol";
-import {SynthetixDebtShare} from "../src/contracts/SynthetixDebtShare.sol";
+import {SynDexDebtShare} from "../src/contracts/SynDexDebtShare.sol";
 
-contract SCFXToken is Test, Utils {
+contract SFCXToken is Test, Utils {
     address public owner = vm.addr(1);
     address public user1 = vm.addr(2);
     address public user2 = vm.addr(3);
@@ -37,12 +37,12 @@ contract SCFXToken is Test, Utils {
     address[] public addresses;
 
     Issuer public issuer;
-    Synthetix public synthetix;
-    ProxyERC20 public proxySCFX;
+    SynDex public syndex;
+    ProxyERC20 public proxySFCX;
     SystemStatus public systemStatus;
-    LegacyTokenState public tokenStateSCFX;
+    LegacyTokenState public tokenStateSFCX;
     AddressResolver public addressResolver;
-    SynthetixDebtShare public synthetixDebtShare;
+    SynDexDebtShare public syndexDebtShare;
 
     function setUp() public {
         deal(owner, 100 ether);
@@ -63,17 +63,17 @@ contract SCFXToken is Test, Utils {
 
         addressResolver = new AddressResolver(owner);
 
-        proxySCFX = new ProxyERC20(owner);
+        proxySFCX = new ProxyERC20(owner);
         systemStatus = new SystemStatus(owner);
         issuer = new Issuer(owner, address(addressResolver));
-        tokenStateSCFX = new LegacyTokenState(owner, address(synthetix));
-        synthetixDebtShare = new SynthetixDebtShare(
+        tokenStateSFCX = new LegacyTokenState(owner, address(syndex));
+        syndexDebtShare = new SynDexDebtShare(
             owner,
             address(addressResolver)
         );
-        synthetix = new Synthetix(
-            payable(address(proxySCFX)),
-            address(tokenStateSCFX),
+        syndex = new SynDex(
+            payable(address(proxySFCX)),
+            address(tokenStateSFCX),
             owner,
             0,
             address(addressResolver)
@@ -107,8 +107,8 @@ contract SCFXToken is Test, Utils {
         addresses.push(owner);
         count++;
         // ! --- refreshCache vvv
-        names.push("SynthetixDebtShare");
-        addresses.push(address(synthetixDebtShare));
+        names.push("SynDexDebtShare");
+        addresses.push(address(syndexDebtShare));
         count++;
         names.push("Exchanger");
         addresses.push(owner);
@@ -138,8 +138,8 @@ contract SCFXToken is Test, Utils {
         addresses.push(owner);
         count++;
         // ? ---
-        names.push("Synthetix");
-        addresses.push(address(synthetix));
+        names.push("SynDex");
+        addresses.push(address(syndex));
         names.push("Issuer");
         addresses.push(address(issuer));
 
@@ -152,43 +152,43 @@ contract SCFXToken is Test, Utils {
         // // ---------------------------------------------------------------------
         // // ---------------------------------------------------------------------
 
-        proxySCFX.updateTarget(address(synthetix));
+        proxySFCX.updateTarget(address(syndex));
 
-        tokenStateSCFX.linkContract(address(synthetix));
+        tokenStateSFCX.linkContract(address(syndex));
 
-        factory.createPair(address(proxySCFX), WETH);
-        address pairSCFXWETH = factory.getPair(address(proxySCFX), WETH);
+        factory.createPair(address(proxySFCX), WETH);
+        address pairSFCXWETH = factory.getPair(address(proxySFCX), WETH);
 
-        synthetix.mint(owner, 1_000_000 ether);
-        synthetix.setReserveAddress(reserveAddr);
-        synthetix.setPool(pairSCFXWETH, true);
-        synthetix.setTrade(true);
+        syndex.mint(owner, 1_000_000 ether);
+        syndex.setReserveAddress(reserveAddr);
+        syndex.setPool(pairSFCXWETH, true);
+        syndex.setTrade(true);
 
-        proxySCFX.transfer(user1, 1000 ether);
-        proxySCFX.transfer(user2, 1000 ether);
-        proxySCFX.transfer(user3, 1000 ether);
-        proxySCFX.transfer(reserveAddr, 200000 ether);
+        proxySFCX.transfer(user1, 1000 ether);
+        proxySFCX.transfer(user2, 1000 ether);
+        proxySFCX.transfer(user3, 1000 ether);
+        proxySFCX.transfer(reserveAddr, 200000 ether);
 
-        proxySCFX.approve(user4, 1000 ether);
+        proxySFCX.approve(user4, 1000 ether);
 
         vm.stopPrank(); // OWNER
 
         vm.startPrank(user4);
-        proxySCFX.transferFrom(owner, user4, 10 ether);
+        proxySFCX.transferFrom(owner, user4, 10 ether);
         vm.stopPrank();
 
-        console.log(proxySCFX.balanceOf(owner), "<<< balanceOf(owner)");
-        console.log(proxySCFX.balanceOf(user4), "<<< balanceOf(user4)");
+        console.log(proxySFCX.balanceOf(owner), "<<< balanceOf(owner)");
+        console.log(proxySFCX.balanceOf(user4), "<<< balanceOf(user4)");
 
-        console.log(proxySCFX.totalSupply(), "<<< totalSupply");
+        console.log(proxySFCX.totalSupply(), "<<< totalSupply");
     }
 
     function testTrade() public {
         vm.startPrank(owner);
-        proxySCFX.approve(address(router), 50 ether);
+        proxySFCX.approve(address(router), 50 ether);
         IERC20(WETH).approve(address(router), 50 ether);
         router.addLiquidity(
-            address(proxySCFX),
+            address(proxySFCX),
             WETH,
             50 ether,
             50 ether,
@@ -204,19 +204,19 @@ contract SCFXToken is Test, Utils {
         console.log();
         console.log("BEFORE SWAP");
         console.log(
-            proxySCFX.balanceOf(user1),
-            "<-- proxySCFX balanceOf user1"
+            proxySFCX.balanceOf(user1),
+            "<-- proxySFCX balanceOf user1"
         );
         console.log(IERC20(WETH).balanceOf(user1), "<-- WETH balanceOf user1");
 
-        _swap(WETH, address(proxySCFX), 10 ether, user1); // * BUY
-        _swap(address(proxySCFX), WETH, 8 ether, user1); // * SELL
+        _swap(WETH, address(proxySFCX), 10 ether, user1); // * BUY
+        _swap(address(proxySFCX), WETH, 8 ether, user1); // * SELL
 
         console.log();
         console.log("AFTER SWAP");
         console.log(
-            proxySCFX.balanceOf(user1),
-            "<-- proxySCFX balanceOf user1"
+            proxySFCX.balanceOf(user1),
+            "<-- proxySFCX balanceOf user1"
         );
         console.log(IERC20(WETH).balanceOf(user1), "<-- WETH balanceOf user1");
 

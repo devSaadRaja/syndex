@@ -28,7 +28,7 @@ contract Collateral is ICollateralLoan, Ownable, MixinSystemSettings {
 
     /* ========== CONSTANTS ========== */
 
-    bytes32 internal constant sUSD = "sUSD";
+    bytes32 internal constant cfUSD = "cfUSD";
 
     // ========== STATE VARIABLES ==========
 
@@ -68,7 +68,7 @@ contract Collateral is ICollateralLoan, Ownable, MixinSystemSettings {
     bytes32 private constant CONTRACT_EXRATES = "ExchangeRates";
     bytes32 private constant CONTRACT_EXCHANGER = "Exchanger";
     bytes32 private constant CONTRACT_FEEPOOL = "FeePool";
-    bytes32 private constant CONTRACT_SYNTHSUSD = "SynthsUSD";
+    bytes32 private constant CONTRACT_SYNTHSUSD = "SynthcfUSD";
     bytes32 private constant CONTRACT_COLLATERALUTIL = "CollateralUtil";
 
     /* ========== CONSTRUCTOR ========== */
@@ -123,7 +123,7 @@ contract Collateral is ICollateralLoan, Ownable, MixinSystemSettings {
         return ISynth(requireAndGetAddress(synthName));
     }
 
-    function _synthsUSD() internal view returns (ISynth) {
+    function _synthcfUSD() internal view returns (ISynth) {
         return ISynth(requireAndGetAddress(CONTRACT_SYNTHSUSD));
     }
 
@@ -289,7 +289,7 @@ contract Collateral is ICollateralLoan, Ownable, MixinSystemSettings {
         // 3. Collateral >= minimum collateral size.
         require(collateral >= minCollateral, "Not enough collateral");
 
-        // 4. Check we haven't hit the debt cap for non scfx collateral.
+        // 4. Check we haven't hit the debt cap for non sfcx collateral.
         (bool canIssue, bool anyRateIsInvalid) = manager.exceedsDebtLimit(
             amount,
             currency
@@ -332,14 +332,14 @@ contract Collateral is ICollateralLoan, Ownable, MixinSystemSettings {
         // 12. Pay the minting fees to the fee pool.
         _payFees(issueFee, currency);
 
-        // 13. If its short, convert back to sUSD, otherwise issue the loan.
+        // 13. If its short, convert back to cfUSD, otherwise issue the loan.
         if (short) {
-            _synthsUSD().issue(
+            _synthcfUSD().issue(
                 msg.sender,
                 _exchangeRates().effectiveValue(
                     currency,
                     loanAmountMinusFee,
-                    sUSD
+                    cfUSD
                 )
             );
             manager.incrementShorts(currency, amount);
@@ -628,12 +628,12 @@ contract Collateral is ICollateralLoan, Ownable, MixinSystemSettings {
         // 6. If its short, issue the synths.
         if (loan.short) {
             manager.incrementShorts(loan.currency, amount);
-            _synthsUSD().issue(
+            _synthcfUSD().issue(
                 msg.sender,
                 _exchangeRates().effectiveValue(
                     loan.currency,
                     amountMinusFee,
-                    sUSD
+                    cfUSD
                 )
             );
 
@@ -715,13 +715,13 @@ contract Collateral is ICollateralLoan, Ownable, MixinSystemSettings {
         }
     }
 
-    // Take an amount of fees in a certain synth and convert it to sUSD before paying the fee pool.
+    // Take an amount of fees in a certain synth and convert it to cfUSD before paying the fee pool.
     function _payFees(uint amount, bytes32 synth) internal {
         if (amount > 0) {
-            if (synth != sUSD) {
-                amount = _exchangeRates().effectiveValue(synth, amount, sUSD);
+            if (synth != cfUSD) {
+                amount = _exchangeRates().effectiveValue(synth, amount, cfUSD);
             }
-            _synthsUSD().issue(_feePool().FEE_ADDRESS(), amount);
+            _synthcfUSD().issue(_feePool().FEE_ADDRESS(), amount);
             _feePool().recordFeePaid(amount);
         }
     }

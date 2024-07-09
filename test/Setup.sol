@@ -11,7 +11,7 @@ import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import {IFeePool} from "../src/interfaces/IFeePool.sol";
-import {ISynthetix} from "../src/interfaces/ISynthetix.sol";
+import {ISynDex} from "../src/interfaces/ISynDex.sol";
 import {IMixinResolver} from "../src/interfaces/IMixinResolver.sol";
 import {ISwapRouter} from "../src/contracts/SMX/interfaces/ISwapRouter.sol";
 import {IAggregationRouterV4} from "../src/contracts/SMX/interfaces/IAggregationRouterV4.sol";
@@ -22,7 +22,7 @@ import {Proxy} from "../src/contracts/Proxy.sol";
 import {Issuer} from "../src/contracts/Issuer.sol";
 import {FeePool} from "../src/contracts/FeePool.sol";
 import {Proxyable} from "../src/contracts/Proxyable.sol";
-import {Synthetix} from "../src/contracts/Synthetix.sol";
+import {SynDex} from "../src/contracts/SynDex.sol";
 import {DebtCache} from "../src/contracts/DebtCache.sol";
 import {Exchanger} from "../src/contracts/Exchanger.sol";
 import {SynthUtil} from "../src/contracts/SynthUtil.sol";
@@ -37,7 +37,7 @@ import {CollateralEth} from "../src/contracts/CollateralEth.sol";
 import {ExchangeRates} from "../src/contracts/ExchangeRates.sol";
 import {ExchangeState} from "../src/contracts/ExchangeState.sol";
 import {SynthRedeemer} from "../src/contracts/SynthRedeemer.sol";
-import {SynthetixState} from "../src/contracts/SynthetixState.sol";
+import {SynDexState} from "../src/contracts/SynDexState.sol";
 import {WrapperFactory} from "../src/contracts/WrapperFactory.sol";
 import {RewardEscrowV2} from "../src/contracts/RewardEscrowV2.sol";
 import {TradingRewards} from "../src/contracts/TradingRewards.sol";
@@ -54,7 +54,7 @@ import {DelegateApprovals} from "../src/contracts/DelegateApprovals.sol";
 import {CollateralManager} from "../src/contracts/CollateralManager.sol";
 import {LiquidatorRewards} from "../src/contracts/LiquidatorRewards.sol";
 import {DappMaintenance} from "../src/contracts/SMX/DappMaintenance.sol";
-import {SynthetixDebtShare} from "../src/contracts/SynthetixDebtShare.sol";
+import {SynDexDebtShare} from "../src/contracts/SynDexDebtShare.sol";
 import {RewardsDistribution} from "../src/contracts/RewardsDistribution.sol";
 import {AggregatorDebtRatio} from "../src/contracts/AggregatorDebtRatio.sol";
 import {MultiCollateralSynth} from "../src/contracts/MultiCollateralSynth.sol";
@@ -102,24 +102,24 @@ contract Setup is Test, Utils {
     FeePool public feePool;
     Proxy public proxyFeePool;
     DebtCache public debtCache;
-    Synthetix public synthetix;
+    SynDex public syndex;
     Exchanger public exchanger;
     SynthSwap public synthSwap;
-    ProxyERC20 public proxySCFX;
+    ProxyERC20 public proxySFCX;
     SynthUtil public synthUtil;
-    ProxyERC20 public proxysUSD;
-    ProxyERC20 public proxysETH;
+    ProxyERC20 public proxycfUSD;
+    ProxyERC20 public proxycfETH;
     Liquidator public liquidator;
     EtherWrapper public etherWrapper;
     RewardEscrow public rewardEscrow;
-    TokenState public tokenStatesUSD;
-    TokenState public tokenStatesETH;
+    TokenState public tokenStatecfUSD;
+    TokenState public tokenStatecfETH;
     SystemStatus public systemStatus;
     CollateralEth public collateralETH;
     ExchangeState public exchangeState;
     SynthRedeemer public synthRedeemer;
     ExchangeRates public exchangeRates;
-    SynthetixState public synthetixState;
+    SynDexState public syndexState;
     TradingRewards public tradingRewards;
     RewardEscrowV2 public rewardEscrowV2;
     CollateralUtil public collateralUtil;
@@ -127,9 +127,9 @@ contract Setup is Test, Utils {
     SystemSettings public systemSettings;
     CircuitBreaker public circuitBreaker;
     WrapperFactory public wrapperFactory;
-    LegacyTokenState public tokenStateSCFX;
-    MultiCollateralSynth public synthsUSD;
-    MultiCollateralSynth public synthsETH;
+    LegacyTokenState public tokenStateSFCX;
+    MultiCollateralSynth public synthcfUSD;
+    MultiCollateralSynth public synthcfETH;
     DappMaintenance public dappMaintenance;
     FlexibleStorage public flexibleStorage;
     AddressResolver public addressResolver;
@@ -137,7 +137,7 @@ contract Setup is Test, Utils {
     DelegateApprovals public delegateApprovals;
     CollateralManager public collateralManager;
     LiquidatorRewards public liquidatorRewards;
-    SynthetixDebtShare public synthetixDebtShare;
+    SynDexDebtShare public syndexDebtShare;
     RewardsDistribution public rewardsDistribution;
     RewardEscrowV2Frozen public rewardEscrowV2Frozen;
     FuturesMarketManager public futuresMarketManager;
@@ -194,7 +194,7 @@ contract Setup is Test, Utils {
             owner,
             address(collateralManager),
             address(addressResolver),
-            "sETH",
+            "cfETH",
             1.5 ether, // 100 / 150, 150%
             0.1 ether
         );
@@ -210,9 +210,9 @@ contract Setup is Test, Utils {
         );
 
         proxyFeePool = new Proxy(owner);
-        proxySCFX = new ProxyERC20(owner);
-        proxysUSD = new ProxyERC20(owner);
-        proxysETH = new ProxyERC20(owner);
+        proxySFCX = new ProxyERC20(owner);
+        proxycfUSD = new ProxyERC20(owner);
+        proxycfETH = new ProxyERC20(owner);
         systemStatus = new SystemStatus(owner);
         issuer = new Issuer(owner, address(addressResolver));
         debtCache = new DebtCache(owner, address(addressResolver));
@@ -223,10 +223,10 @@ contract Setup is Test, Utils {
         flexibleStorage = new FlexibleStorage(address(addressResolver));
         systemSettings = new SystemSettings(owner, address(addressResolver));
         circuitBreaker = new CircuitBreaker(owner, address(addressResolver));
-        synthetixState = new SynthetixState(owner, address(synthetix));
-        tokenStateSCFX = new LegacyTokenState(owner, address(synthetix));
-        tokenStatesUSD = new TokenState(owner, address(synthsUSD));
-        tokenStatesETH = new TokenState(owner, address(synthsETH));
+        syndexState = new SynDexState(owner, address(syndex));
+        tokenStateSFCX = new LegacyTokenState(owner, address(syndex));
+        tokenStatecfUSD = new TokenState(owner, address(synthcfUSD));
+        tokenStatecfETH = new TokenState(owner, address(synthcfETH));
         wrapperFactory = new WrapperFactory(owner, address(addressResolver));
         depot = new Depot(owner, payable(treasury), address(addressResolver));
         directIntegrationManager = new DirectIntegrationManager(
@@ -244,7 +244,7 @@ contract Setup is Test, Utils {
         );
         rewardEscrow = new RewardEscrow(
             owner,
-            address(synthetix),
+            address(syndex),
             address(feePool)
         );
         etherWrapper = new EtherWrapper(
@@ -260,34 +260,34 @@ contract Setup is Test, Utils {
             owner,
             address(addressResolver)
         );
-        synthetixDebtShare = new SynthetixDebtShare(
+        syndexDebtShare = new SynDexDebtShare(
             owner,
             address(addressResolver)
         );
-        synthetix = new Synthetix(
-            payable(address(proxySCFX)),
-            address(tokenStateSCFX),
+        syndex = new SynDex(
+            payable(address(proxySFCX)),
+            address(tokenStateSFCX),
             owner,
             0,
             address(addressResolver)
         );
-        synthsUSD = new MultiCollateralSynth(
-            payable(address(proxysUSD)),
-            address(tokenStatesUSD),
-            "SynthsUSD",
-            "sUSD",
+        synthcfUSD = new MultiCollateralSynth(
+            payable(address(proxycfUSD)),
+            address(tokenStatecfUSD),
+            "SynthcfUSD",
+            "cfUSD",
             owner,
-            "sUSD",
+            "cfUSD",
             0,
             address(addressResolver)
         );
-        synthsETH = new MultiCollateralSynth(
-            payable(address(proxysETH)),
-            address(tokenStatesETH),
-            "SynthsETH",
-            "sETH",
+        synthcfETH = new MultiCollateralSynth(
+            payable(address(proxycfETH)),
+            address(tokenStatecfETH),
+            "SynthcfETH",
+            "cfETH",
             owner,
-            "sETH",
+            "cfETH",
             0,
             address(addressResolver)
         );
@@ -298,8 +298,8 @@ contract Setup is Test, Utils {
         );
         rewardsDistribution = new RewardsDistribution(
             owner,
-            address(synthetix),
-            address(proxySCFX),
+            address(syndex),
+            address(proxySFCX),
             address(rewardEscrowV2),
             address(proxyFeePool)
         );
@@ -307,13 +307,13 @@ contract Setup is Test, Utils {
             owner,
             address(addressResolver)
         );
-        eternalStorage = new EternalStorage(owner, address(synthsUSD));
+        eternalStorage = new EternalStorage(owner, address(synthcfUSD));
         delegateApprovals = new DelegateApprovals(
             owner,
             address(eternalStorage)
         );
         synthSwap = new SynthSwap(
-            address(proxysUSD),
+            address(proxycfUSD),
             address(swapRouter), // routerV4
             address(addressResolver),
             owner, // volumeRewards
@@ -347,17 +347,17 @@ contract Setup is Test, Utils {
         names.push("AddressResolver");
         addresses.push(address(addressResolver));
         count++;
-        names.push("ProxySCFX");
-        addresses.push(address(proxySCFX));
+        names.push("ProxySFCX");
+        addresses.push(address(proxySFCX));
         count++;
         names.push("SystemStatus");
         addresses.push(address(systemStatus));
         count++;
-        names.push("TokenStateSCFX");
-        addresses.push(address(tokenStateSCFX));
+        names.push("TokenStateSFCX");
+        addresses.push(address(tokenStateSFCX));
         count++;
-        names.push("TokenStatesUSD");
-        addresses.push(address(tokenStatesUSD));
+        names.push("TokenStatecfUSD");
+        addresses.push(address(tokenStatecfUSD));
         count++;
         names.push("ext:AggregatorIssuedSynths");
         addresses.push(address(aggregatorIssuedSynths));
@@ -386,7 +386,7 @@ contract Setup is Test, Utils {
         names.push("FeePoolEternalStorage");
         addresses.push(address(feePoolEternalStorage));
         count++;
-        names.push("SynthetixBridgeToOptimism");
+        names.push("SynDexBridgeToOptimism");
         addresses.push(owner);
         count++;
         // names.push("LegacyMarket");
@@ -405,14 +405,14 @@ contract Setup is Test, Utils {
         addresses.push(address(issuer));
         names.push("LiquidatorRewards");
         addresses.push(address(liquidatorRewards));
-        names.push("SynthetixDebtShare");
-        addresses.push(address(synthetixDebtShare));
-        names.push("Synthetix");
-        addresses.push(address(synthetix));
-        names.push("SynthsUSD");
-        addresses.push(address(synthsUSD));
-        names.push("SynthsETH");
-        addresses.push(address(synthsETH));
+        names.push("SynDexDebtShare");
+        addresses.push(address(syndexDebtShare));
+        names.push("SynDex");
+        addresses.push(address(syndex));
+        names.push("SynthcfUSD");
+        addresses.push(address(synthcfUSD));
+        names.push("SynthcfETH");
+        addresses.push(address(synthcfETH));
         names.push("FeePool");
         addresses.push(address(feePool));
         names.push("DebtCache");
@@ -461,10 +461,10 @@ contract Setup is Test, Utils {
 
         bytes32[] memory _synthNamesInResolver = new bytes32[](2);
         bytes32[] memory _synthKeys = new bytes32[](2);
-        _synthNamesInResolver[0] = "SynthsUSD";
-        _synthKeys[0] = "sUSD";
-        _synthNamesInResolver[1] = "SynthsETH";
-        _synthKeys[1] = "sETH";
+        _synthNamesInResolver[0] = "SynthcfUSD";
+        _synthKeys[0] = "cfUSD";
+        _synthNamesInResolver[1] = "SynthcfETH";
+        _synthKeys[1] = "cfETH";
         collateralETH.addSynths(_synthNamesInResolver, _synthKeys);
         collateralErc20.addSynths(_synthNamesInResolver, _synthKeys);
         collateralManager.addSynths(_synthNamesInResolver, _synthKeys);
@@ -474,18 +474,18 @@ contract Setup is Test, Utils {
         collateralAddresses[1] = address(collateralErc20);
         collateralManager.addCollaterals(collateralAddresses);
 
-        issuer.addSynth(address(synthsUSD));
-        issuer.addSynth(address(synthsETH));
+        issuer.addSynth(address(synthcfUSD));
+        issuer.addSynth(address(synthcfETH));
 
-        proxySCFX.updateTarget(address(synthetix));
-        proxysUSD.updateTarget(address(synthsUSD));
-        proxysETH.updateTarget(address(synthsETH));
+        proxySFCX.updateTarget(address(syndex));
+        proxycfUSD.updateTarget(address(synthcfUSD));
+        proxycfETH.updateTarget(address(synthcfETH));
         proxyFeePool.updateTarget(address(feePool));
 
-        synthetixState.linkContract(address(synthetix));
-        tokenStateSCFX.linkContract(address(synthetix));
-        tokenStatesUSD.linkContract(address(synthsUSD));
-        tokenStatesETH.linkContract(address(synthsETH));
+        syndexState.linkContract(address(syndex));
+        tokenStateSFCX.linkContract(address(syndex));
+        tokenStatecfUSD.linkContract(address(synthcfUSD));
+        tokenStatecfETH.linkContract(address(synthcfETH));
         collateralManagerState.linkContract(address(collateralManager));
 
         rewardEscrowV2Storage.setFallbackRewardEscrow(
@@ -493,8 +493,8 @@ contract Setup is Test, Utils {
         );
 
         exchangeRates.addAggregator("SMX", address(aggregatorSynth));
-        exchangeRates.addAggregator("sETH", address(aggregatorSynth));
-        exchangeRates.addAggregator("SCFX", address(aggregatorCollateral));
+        exchangeRates.addAggregator("cfETH", address(aggregatorSynth));
+        exchangeRates.addAggregator("SFCX", address(aggregatorCollateral));
         // exchangeRates.addAggregator(
         //     "ext:AggregatorDebtRatio",
         //     address(aggregatorDebtRatio)
@@ -540,8 +540,8 @@ contract Setup is Test, Utils {
 
         bytes32[] memory synthKeys = new bytes32[](2);
         uint256[] memory exchangeFeeRates = new uint256[](2);
-        synthKeys[0] = "sUSD";
-        synthKeys[1] = "sETH";
+        synthKeys[0] = "cfUSD";
+        synthKeys[1] = "cfETH";
         exchangeFeeRates[0] = 0.001 ether;
         exchangeFeeRates[1] = 0.001 ether; // 0.0035
         systemSettings.updateExchangeFeeRateForSynths(
@@ -570,28 +570,28 @@ contract Setup is Test, Utils {
         smx.setDeploy(true);
         smx.setTrade(true);
 
-        factory.createPair(address(proxySCFX), WETH);
-        address pairSCFXWETH = factory.getPair(address(proxySCFX), WETH);
+        factory.createPair(address(proxySFCX), WETH);
+        address pairSFCXWETH = factory.getPair(address(proxySFCX), WETH);
 
-        synthetix.mint(owner, 1_000_000 ether);
-        synthetix.setReserveAddress(reserveAddr);
-        synthetix.setPool(pairSCFXWETH, true);
-        synthetix.setTrade(true);
+        syndex.mint(owner, 1_000_000 ether);
+        syndex.setReserveAddress(reserveAddr);
+        syndex.setPool(pairSFCXWETH, true);
+        syndex.setTrade(true);
 
-        proxySCFX.transfer(user1, 5 ether);
-        proxySCFX.transfer(user2, 10 ether);
-        proxySCFX.transfer(user3, 15 ether);
-        proxySCFX.transfer(user4, 1000 ether);
-        proxySCFX.transfer(user5, 5000 ether);
-        proxySCFX.transfer(user6, 1000 ether);
-        proxySCFX.transfer(user7, 5000 ether);
-        proxySCFX.transfer(user8, 5000 ether);
-        proxySCFX.transfer(reserveAddr, 200000 ether);
+        proxySFCX.transfer(user1, 5 ether);
+        proxySFCX.transfer(user2, 10 ether);
+        proxySFCX.transfer(user3, 15 ether);
+        proxySFCX.transfer(user4, 1000 ether);
+        proxySFCX.transfer(user5, 5000 ether);
+        proxySFCX.transfer(user6, 1000 ether);
+        proxySFCX.transfer(user7, 5000 ether);
+        proxySFCX.transfer(user8, 5000 ether);
+        proxySFCX.transfer(reserveAddr, 200000 ether);
 
         vm.stopPrank(); // OWNER
 
         vm.startPrank(address(reserveAddr));
-        proxySCFX.approve(user8, 1_000_000_000 ether);
+        proxySFCX.approve(user8, 1_000_000_000 ether);
         vm.stopPrank();
     }
 }

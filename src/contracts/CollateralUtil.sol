@@ -15,7 +15,7 @@ contract CollateralUtil is ICollateralLoan, MixinSystemSettings {
 
     /* ========== CONSTANTS ========== */
 
-    bytes32 private constant sUSD = "sUSD";
+    bytes32 private constant cfUSD = "cfUSD";
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
@@ -57,12 +57,12 @@ contract CollateralUtil is ICollateralLoan, MixinSystemSettings {
         uint cvalue = _exchangeRates().effectiveValue(
             collateralKey,
             loan.collateral,
-            sUSD
+            cfUSD
         );
         uint dvalue = _exchangeRates().effectiveValue(
             loan.currency,
             loan.amount.add(loan.accruedInterest),
-            sUSD
+            cfUSD
         );
         return cvalue.divideDecimal(dvalue);
     }
@@ -82,8 +82,8 @@ contract CollateralUtil is ICollateralLoan, MixinSystemSettings {
 
     /**
      * r = currentTarget issuance ratio
-     * D = debt value in sUSD
-     * V = collateral value in sUSD
+     * D = debt value in cfUSD
+     * V = collateral value in cfUSD
      * P = liquidation penalty
      * Calculates amount of synths = (D - V * r) / (1 - (1 + P) * r)
      * Note: if you pass a loan in here that is not eligible for liquidation it will revert.
@@ -98,12 +98,12 @@ contract CollateralUtil is ICollateralLoan, MixinSystemSettings {
         uint debtValue = _exchangeRates().effectiveValue(
             loan.currency,
             loan.amount.add(loan.accruedInterest),
-            sUSD
+            cfUSD
         );
         uint collateralValue = _exchangeRates().effectiveValue(
             collateralKey,
             loan.collateral,
-            sUSD
+            cfUSD
         );
         uint unit = SafeDecimalMath.unit();
 
@@ -112,9 +112,9 @@ contract CollateralUtil is ICollateralLoan, MixinSystemSettings {
             unit.add(liquidationPenalty).divideDecimal(minCratio)
         );
 
-        uint sUSDamount = dividend.divideDecimal(divisor);
+        uint cfUSDamount = dividend.divideDecimal(divisor);
 
-        return _exchangeRates().effectiveValue(sUSD, sUSDamount, loan.currency);
+        return _exchangeRates().effectiveValue(cfUSD, cfUSDamount, loan.currency);
     }
 
     function collateralRedeemed(

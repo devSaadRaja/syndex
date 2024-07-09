@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "./interfaces/IAggregationRouterV4.sol";
 import "./interfaces/IAggregationExecutor.sol";
-import "../../interfaces/ISynthetix.sol";
+import "../../interfaces/ISynDex.sol";
 import "../../interfaces/IAddressResolver.sol";
 import {ISynthSwap} from "./interfaces/ISynthSwap2.sol";
 
@@ -18,29 +18,29 @@ import "./libraries/RevertReasonParser.sol";
 contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
-    IERC20 immutable sUSD;
+    IERC20 immutable cfUSD;
     IAggregationRouterV4 immutable router;
     IAddressResolver immutable addressResolver;
     address immutable volumeRewards;
     address immutable treasury;
 
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    bytes32 private constant CONTRACT_SYNTHETIX = "Synthetix";
-    bytes32 private constant sUSD_CURRENCY_KEY = "sUSD";
-    bytes32 private constant TRACKING_CODE = "SCFX";
+    bytes32 private constant CONTRACT_SYNTHETIX = "SynDex";
+    bytes32 private constant cfUSD_CURRENCY_KEY = "cfUSD";
+    bytes32 private constant TRACKING_CODE = "SFCX";
 
     event SwapInto(address indexed from, uint amountReceived);
     event SwapOutOf(address indexed from, uint amountReceived);
     event Received(address from, uint amountReceived);
 
     constructor(
-        address _sUSD,
+        address _cfUSD,
         address _aggregationRouterV4,
         address _addressResolver,
         address _volumeRewards,
         address _treasury
     ) Ownable(msg.sender) {
-        sUSD = IERC20(_sUSD);
+        cfUSD = IERC20(_cfUSD);
         router = IAggregationRouterV4(_aggregationRouterV4);
         addressResolver = IAddressResolver(_addressResolver);
         volumeRewards = _volumeRewards;
@@ -62,11 +62,11 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
     ) external payable override returns (uint) {
         (uint amountOut, ) = swapOn1inch(_data, false);
 
-        // if destination synth is NOT sUSD, swap on Synthetix is necessary
-        if (_destSynthCurrencyKey != sUSD_CURRENCY_KEY) {
-            amountOut = swapOnSynthetix(
+        // if destination synth is NOT cfUSD, swap on SynDex is necessary
+        if (_destSynthCurrencyKey != cfUSD_CURRENCY_KEY) {
+            amountOut = swapOnSynDex(
                 amountOut,
-                sUSD_CURRENCY_KEY,
+                cfUSD_CURRENCY_KEY,
                 _destSynthCurrencyKey
             );
         }
@@ -96,12 +96,12 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
             _sourceAmount
         );
 
-        // if source synth is NOT sUSD, swap on Synthetix is necessary
-        if (_sourceSynthCurrencyKey != sUSD_CURRENCY_KEY) {
-            swapOnSynthetix(
+        // if source synth is NOT cfUSD, swap on SynDex is necessary
+        if (_sourceSynthCurrencyKey != cfUSD_CURRENCY_KEY) {
+            swapOnSynDex(
                 _sourceAmount,
                 _sourceSynthCurrencyKey,
-                sUSD_CURRENCY_KEY
+                cfUSD_CURRENCY_KEY
             );
         }
 
@@ -120,10 +120,10 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
 
         emit SwapOutOf(msg.sender, amountOut);
 
-        // any remaining sUSD in contract should be transferred to treasury
-        uint remainingBalanceSUSD = sUSD.balanceOf(address(this));
+        // any remaining cfUSD in contract should be transferred to treasury
+        uint remainingBalanceSUSD = cfUSD.balanceOf(address(this));
         if (remainingBalanceSUSD > 0) {
-            sUSD.safeTransfer(treasury, remainingBalanceSUSD);
+            cfUSD.safeTransfer(treasury, remainingBalanceSUSD);
         }
 
         return amountOut;
@@ -146,7 +146,7 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
             IERC20(_sourceTokenAddress).approve(address(router), _amount);
         }
 
-        // swap ETH or source token for sUSD
+        // swap ETH or source token for cfUSD
         (bool success, bytes memory result) = address(router).call{
             value: msg.value
         }(_data);
@@ -154,14 +154,14 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
             revert(RevertReasonParser.parse(result, "callBytes failed: "));
         }
 
-        // record amount of sUSD received from swap
+        // record amount of cfUSD received from swap
         uint amountOut = abi.decode(result, (uint));
 
-        // if destination synth is NOT sUSD, swap on Synthetix is necessary
-        if (_destSynthCurrencyKey != sUSD_CURRENCY_KEY) {
-            amountOut = swapOnSynthetix(
+        // if destination synth is NOT cfUSD, swap on SynDex is necessary
+        if (_destSynthCurrencyKey != cfUSD_CURRENCY_KEY) {
+            amountOut = swapOnSynDex(
                 amountOut,
-                sUSD_CURRENCY_KEY,
+                cfUSD_CURRENCY_KEY,
                 _destSynthCurrencyKey
             );
         }
@@ -194,19 +194,19 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
             _amountOfSynth
         );
 
-        // if source synth is NOT sUSD, swap on Synthetix is necessary
-        if (_sourceSynthCurrencyKey != sUSD_CURRENCY_KEY) {
-            swapOnSynthetix(
+        // if source synth is NOT cfUSD, swap on SynDex is necessary
+        if (_sourceSynthCurrencyKey != cfUSD_CURRENCY_KEY) {
+            swapOnSynDex(
                 _amountOfSynth,
                 _sourceSynthCurrencyKey,
-                sUSD_CURRENCY_KEY
+                cfUSD_CURRENCY_KEY
             );
         }
 
-        // approve AggregationRouterV4 to spend sUSD
-        sUSD.approve(address(router), _expectedAmountOfSUSDFromSwap);
+        // approve AggregationRouterV4 to spend cfUSD
+        cfUSD.approve(address(router), _expectedAmountOfSUSDFromSwap);
 
-        // swap sUSD for ETH or destination token
+        // swap cfUSD for ETH or destination token
         (bool success, bytes memory result) = address(router).call(_data);
         if (!success) {
             revert(
@@ -237,10 +237,10 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
 
         emit SwapOutOf(msg.sender, amountOut);
 
-        // any remaining sUSD in contract should be transferred to treasury
-        uint remainingBalanceSUSD = sUSD.balanceOf(address(this));
+        // any remaining cfUSD in contract should be transferred to treasury
+        uint remainingBalanceSUSD = cfUSD.balanceOf(address(this));
         if (remainingBalanceSUSD > 0) {
-            sUSD.safeTransfer(treasury, remainingBalanceSUSD);
+            cfUSD.safeTransfer(treasury, remainingBalanceSUSD);
         }
 
         return amountOut;
@@ -255,20 +255,20 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
     ///////// INTERNAL FUNCTIONS /////////
     //////////////////////////////////////
 
-    /// @notice addressResolver fetches ISynthetix address
-    function synthetix() internal view returns (ISynthetix) {
+    /// @notice addressResolver fetches ISynDex address
+    function syndex() internal view returns (ISynDex) {
         return
-            ISynthetix(
+            ISynDex(
                 addressResolver.requireAndGetAddress(
                     CONTRACT_SYNTHETIX,
-                    "Could not get Synthetix"
+                    "Could not get SynDex"
                 )
             );
     }
 
     /// @notice execute swap on 1inch
     /// @dev token approval needed when source is not ETH
-    /// @dev either source or destination token will ALWAYS be sUSD
+    /// @dev either source or destination token will ALWAYS be cfUSD
     /// @param _data specifying swap data
     /// @param _areTokensInContract TODO
     /// @return amount received from 1inch swap
@@ -317,19 +317,19 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
         return (amountOut, desc.dstToken);
     }
 
-    /// @notice execute swap on Synthetix
+    /// @notice execute swap on SynDex
     /// @dev token approval is always required
     /// @param _amount of source synth to swap
     /// @param _sourceSynthCurrencyKey source synth key needed for executeExchange
     /// @param _destSynthCurrencyKey destination synth key needed for executeExchange
-    /// @return amountOut: received from Synthetix swap
-    function swapOnSynthetix(
+    /// @return amountOut: received from SynDex swap
+    function swapOnSynDex(
         uint _amount,
         bytes32 _sourceSynthCurrencyKey,
         bytes32 _destSynthCurrencyKey
     ) internal returns (uint) {
-        // execute Synthetix swap
-        uint amountOut = synthetix().exchangeWithTracking(
+        // execute SynDex swap
+        uint amountOut = syndex().exchangeWithTracking(
             _sourceSynthCurrencyKey,
             _amount,
             _destSynthCurrencyKey,
@@ -337,12 +337,12 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
             TRACKING_CODE
         );
 
-        require(amountOut > 0, "SynthSwap: swapOnSynthetix failed");
+        require(amountOut > 0, "SynthSwap: swapOnSynDex failed");
         return amountOut;
     }
 
     /// @notice get the proxy address from the synth implementation contract
-    /// @dev only possible because Synthetix synths inherit Proxyable which track proxy()
+    /// @dev only possible because SynDex synths inherit Proxyable which track proxy()
     /// @param synthImplementation synth implementation address
     /// @return synthProxy proxy address
     function proxyForSynth(

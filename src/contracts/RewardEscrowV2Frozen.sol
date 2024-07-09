@@ -18,11 +18,11 @@ contract RewardEscrowV2Frozen is BaseRewardEscrowV2Frozen {
 
     // note that the actual deployed RewardEscrowV2 uses SafeDecimalMath to get this value,
     // and this is different in order to simplify deployment for testing
-    uint public migrateEntriesThresholdAmount = (10 ** 18) * 1000; // Default 1000 SCFX
+    uint public migrateEntriesThresholdAmount = (10 ** 18) * 1000; // Default 1000 SFCX
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
     bytes32 private constant CONTRACT_SYNTHETIX_BRIDGE_OPTIMISM =
-        "SynthetixBridgeToOptimism";
+        "SynDexBridgeToOptimism";
     bytes32 private constant CONTRACT_REWARD_ESCROW = "RewardEscrow";
     bytes32 private constant CONTRACT_SYSTEMSTATUS = "SystemStatus";
 
@@ -50,7 +50,7 @@ contract RewardEscrowV2Frozen is BaseRewardEscrowV2Frozen {
         return combineArrays(existingAddresses, newAddresses);
     }
 
-    function synthetixBridgeToOptimism() internal view returns (address) {
+    function syndexBridgeToOptimism() internal view returns (address) {
         return requireAndGetAddress(CONTRACT_SYNTHETIX_BRIDGE_OPTIMISM);
     }
 
@@ -90,7 +90,7 @@ contract RewardEscrowV2Frozen is BaseRewardEscrowV2Frozen {
             "Address escrow balance is 0"
         );
 
-        /* Add a vestable entry for addresses with totalBalancePendingMigration <= migrateEntriesThreshold amount of SCFX */
+        /* Add a vestable entry for addresses with totalBalancePendingMigration <= migrateEntriesThreshold amount of SFCX */
         if (
             totalBalancePendingMigration[addressToMigrate] <=
             migrateEntriesThresholdAmount
@@ -223,7 +223,7 @@ contract RewardEscrowV2Frozen is BaseRewardEscrowV2Frozen {
                 "Account migration is pending already"
             );
 
-            /* Update totalEscrowedBalance for tracking the Synthetix balance of this contract. */
+            /* Update totalEscrowedBalance for tracking the SynDex balance of this contract. */
             totalEscrowedBalance = totalEscrowedBalance.add(escrowedAmount);
 
             /* Update totalEscrowedAccountBalance and totalVestedAccountBalance for each account */
@@ -273,7 +273,7 @@ contract RewardEscrowV2Frozen is BaseRewardEscrowV2Frozen {
     )
         external
         override
-        onlySynthetixBridge
+        onlySynDexBridge
         returns (
             uint256 escrowedAccountBalance,
             VestingEntries.VestingEntry[] memory vestingEntries
@@ -303,12 +303,12 @@ contract RewardEscrowV2Frozen is BaseRewardEscrowV2Frozen {
 
         /**
          *  update account total escrow balances for migration
-         *  transfer the escrowed SCFX being migrated to the L2 deposit contract
+         *  transfer the escrowed SFCX being migrated to the L2 deposit contract
          */
         if (escrowedAccountBalance > 0) {
             _reduceAccountEscrowBalances(account, escrowedAccountBalance);
-            IERC20(address(synthetix())).transfer(
-                synthetixBridgeToOptimism(),
+            IERC20(address(syndex())).transfer(
+                syndexBridgeToOptimism(),
                 escrowedAccountBalance
             );
         }
@@ -325,10 +325,10 @@ contract RewardEscrowV2Frozen is BaseRewardEscrowV2Frozen {
 
     /* ========== MODIFIERS ========== */
 
-    modifier onlySynthetixBridge() {
+    modifier onlySynDexBridge() {
         require(
-            msg.sender == synthetixBridgeToOptimism(),
-            "Can only be invoked by SynthetixBridgeToOptimism contract"
+            msg.sender == syndexBridgeToOptimism(),
+            "Can only be invoked by SynDexBridgeToOptimism contract"
         );
         _;
     }

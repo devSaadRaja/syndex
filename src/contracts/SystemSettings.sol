@@ -85,8 +85,8 @@ contract SystemSettings is Ownable, MixinSystemSettings {
     }
 
     // SIP-251 Differentiate Liquidation Penalties
-    // penalty taken away from currentTarget of SCFX liquidation (with 18 decimals). E.g. 30% is 0.3e18
-    function scfxLiquidationPenalty() external view returns (uint) {
+    // penalty taken away from currentTarget of SFCX liquidation (with 18 decimals). E.g. 30% is 0.3e18
+    function sfcxLiquidationPenalty() external view returns (uint) {
         return getSnxLiquidationPenalty();
     }
 
@@ -192,7 +192,7 @@ contract SystemSettings is Ownable, MixinSystemSettings {
     }
 
     // SIP 112: ETH Wrappr
-    // The fee for burning sETH and releasing ETH from the EtherWrapper.
+    // The fee for burning cfETH and releasing ETH from the EtherWrapper.
     function etherWrapperBurnFeeRate() external view returns (uint) {
         return getEtherWrapperBurnFeeRate();
     }
@@ -378,7 +378,7 @@ contract SystemSettings is Ownable, MixinSystemSettings {
 
     function updateSnxLiquidationPenalty(uint penalty) external onlyOwner {
         flexibleStorage().updateSnxLiquidationPenalty(
-            SETTING_SCFX_LIQUIDATION_PENALTY,
+            SETTING_SFCX_LIQUIDATION_PENALTY,
             penalty
         );
         emit SnxLiquidationPenaltyUpdated(penalty);

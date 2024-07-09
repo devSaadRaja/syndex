@@ -52,15 +52,15 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
     // The ending index of our queue exclusive
     uint public depositEndIndex;
 
-    /* This is a convenience variable so users and dApps can just query how much sUSD
+    /* This is a convenience variable so users and dApps can just query how much cfUSD
        we have available for purchase without having to iterate the mapping with a
        O(n) amount of calls for something we'll probably want to display quite regularly. */
     uint public totalSellableDeposits;
 
-    // The minimum amount of sUSD required to enter the FiFo queue
+    // The minimum amount of cfUSD required to enter the FiFo queue
     uint public minimumDepositAmount = 50 * SafeDecimalMath.unit();
 
-    // A cap on the amount of sUSD you can buy with ETH in 1 transaction
+    // A cap on the amount of cfUSD you can buy with ETH in 1 transaction
     uint public maxEthPurchase = 500 * SafeDecimalMath.unit();
 
     // If a user deposits a synth amount < the minimumDepositAmount the contract will keep
@@ -70,9 +70,9 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
-    bytes32 private constant CONTRACT_SYNTHSUSD = "SynthsUSD";
+    bytes32 private constant CONTRACT_SYNTHSUSD = "SynthcfUSD";
     bytes32 private constant CONTRACT_EXRATES = "ExchangeRates";
-    bytes32 private constant CONTRACT_SYNTHETIX = "Synthetix";
+    bytes32 private constant CONTRACT_SYNTHETIX = "SynDex";
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -101,8 +101,8 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
     }
 
     /**
-     * @notice Set the minimum deposit amount required to depoist sUSD into the FIFO queue
-     * @param _amount The new new minimum number of sUSD required to deposit
+     * @notice Set the minimum deposit amount required to depoist cfUSD into the FIFO queue
+     * @param _amount The new new minimum number of cfUSD required to deposit
      */
     function setMinimumDepositAmount(uint _amount) external onlyOwner {
         // Do not allow us to set it less than 1 dollar opening up to fractional desposits in the queue again
@@ -117,7 +117,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
     /* ========== MUTATIVE FUNCTIONS ========== */
 
     /**
-     * @notice Fallback function (exchanges ETH to sUSD)
+     * @notice Fallback function (exchanges ETH to cfUSD)
      */
     fallback() external payable nonReentrant rateNotInvalid(ETH) whenNotPaused {
         _exchangeEtherForSynths();
@@ -126,7 +126,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
     receive() external payable {}
 
     /**
-     * @notice Exchange ETH to sUSD.
+     * @notice Exchange ETH to cfUSD.
      */
     /* solhint-disable multiple-sends, reentrancy */
     function exchangeEtherForSynths()
@@ -136,7 +136,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
         rateNotInvalid(ETH)
         whenNotPaused
         returns (
-            uint // Returns the number of Synths (sUSD) received
+            uint // Returns the number of Synths (cfUSD) received
         )
     {
         return _exchangeEtherForSynths();
@@ -188,7 +188,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
                     // Transfer the ETH to the depositor. Send is used instead of transfer
                     // so a non payable contract won't block the FIFO queue on a failed
                     // ETH payable for synths transaction. The proceeds to be sent to the
-                    // synthetix foundation funds wallet. This is to protect all depositors
+                    // syndex foundation funds wallet. This is to protect all depositors
                     // in the queue in this rare case that may occur.
                     ethToSend = remainingToFulfill.divideDecimal(
                         exchangeRates().rateForCurrency(ETH)
@@ -214,7 +214,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
                     // Note: Fees are calculated by the Synth contract, so when
                     //       we request a specific transfer here, the fee is
                     //       automatically deducted and sent to the fee pool.
-                    synthsUSD().transfer(msg.sender, remainingToFulfill);
+                    synthcfUSD().transfer(msg.sender, remainingToFulfill);
 
                     // And we have nothing left to fulfill on this order.
                     remainingToFulfill = 0;
@@ -233,7 +233,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
                     // Now fulfill by transfering the ETH to the depositor. Send is used instead of transfer
                     // so a non payable contract won't block the FIFO queue on a failed
                     // ETH payable for synths transaction. The proceeds to be sent to the
-                    // synthetix foundation funds wallet. This is to protect all depositors
+                    // syndex foundation funds wallet. This is to protect all depositors
                     // in the queue in this rare case that may occur.
                     ethToSend = deposit.amount.divideDecimal(
                         exchangeRates().rateForCurrency(ETH)
@@ -259,7 +259,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
                     // Note: Fees are calculated by the Synth contract, so when
                     //       we request a specific transfer here, the fee is
                     //       automatically deducted and sent to the fee pool.
-                    synthsUSD().transfer(msg.sender, deposit.amount);
+                    synthcfUSD().transfer(msg.sender, deposit.amount);
 
                     // And subtract the order from our outstanding amount remaining
                     // for the next iteration of the loop.
@@ -283,7 +283,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
 
         if (fulfilled > 0) {
             // Now tell everyone that we gave them that many (only if the amount is greater than 0).
-            emit Exchange("ETH", msg.value, "sUSD", fulfilled);
+            emit Exchange("ETH", msg.value, "cfUSD", fulfilled);
         }
 
         return fulfilled;
@@ -292,7 +292,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
     /* solhint-enable multiple-sends, reentrancy */
 
     /**
-     * @notice Exchange ETH to sUSD while insisting on a particular rate. This allows a user to
+     * @notice Exchange ETH to cfUSD while insisting on a particular rate. This allows a user to
      *         exchange while protecting against frontrunning by the contract owner on the exchange rate.
      * @param guaranteedRate The exchange rate (ether price) which must be honored or the call will revert.
      */
@@ -304,7 +304,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
         rateNotInvalid(ETH)
         whenNotPaused
         returns (
-            uint // Returns the number of Synths (sUSD) received
+            uint // Returns the number of Synths (cfUSD) received
         )
     {
         require(
@@ -317,17 +317,17 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
 
     function _exchangeEtherForSNX() internal returns (uint) {
         // How many SNX are they going to be receiving?
-        uint synthetixToSend = synthetixReceivedForEther(msg.value);
+        uint syndexToSend = syndexReceivedForEther(msg.value);
 
         // Store the ETH in our funds wallet
         fundsWallet.transfer(msg.value);
 
         // And send them the SNX.
-        synthetix().transfer(msg.sender, synthetixToSend);
+        syndex().transfer(msg.sender, syndexToSend);
 
-        emit Exchange("ETH", msg.value, "SNX", synthetixToSend);
+        emit Exchange("ETH", msg.value, "SNX", syndexToSend);
 
-        return synthetixToSend;
+        return syndexToSend;
     }
 
     /**
@@ -350,11 +350,11 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
      * @notice Exchange ETH to SNX while insisting on a particular set of rates. This allows a user to
      *         exchange while protecting against frontrunning by the contract owner on the exchange rates.
      * @param guaranteedEtherRate The ether exchange rate which must be honored or the call will revert.
-     * @param guaranteedSynthetixRate The synthetix exchange rate which must be honored or the call will revert.
+     * @param guaranteedSynDexRate The syndex exchange rate which must be honored or the call will revert.
      */
     function exchangeEtherForSNXAtRate(
         uint guaranteedEtherRate,
-        uint guaranteedSynthetixRate
+        uint guaranteedSynDexRate
     )
         external
         payable
@@ -370,8 +370,8 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
             "Guaranteed ether rate would not be received"
         );
         require(
-            guaranteedSynthetixRate == exchangeRates().rateForCurrency(SNX),
-            "Guaranteed synthetix rate would not be received"
+            guaranteedSynDexRate == exchangeRates().rateForCurrency(SNX),
+            "Guaranteed syndex rate would not be received"
         );
 
         return _exchangeEtherForSNX();
@@ -379,23 +379,23 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
 
     function _exchangeSynthsForSNX(uint synthAmount) internal returns (uint) {
         // How many SNX are they going to be receiving?
-        uint synthetixToSend = synthetixReceivedForSynths(synthAmount);
+        uint syndexToSend = syndexReceivedForSynths(synthAmount);
 
         // Ok, transfer the Synths to our funds wallet.
         // These do not go in the deposit queue as they aren't for sale as such unless
         // they're sent back in from the funds wallet.
-        synthsUSD().transferFrom(msg.sender, fundsWallet, synthAmount);
+        synthcfUSD().transferFrom(msg.sender, fundsWallet, synthAmount);
 
         // And send them the SNX.
-        synthetix().transfer(msg.sender, synthetixToSend);
+        syndex().transfer(msg.sender, syndexToSend);
 
-        emit Exchange("sUSD", synthAmount, "SNX", synthetixToSend);
+        emit Exchange("cfUSD", synthAmount, "SNX", syndexToSend);
 
-        return synthetixToSend;
+        return syndexToSend;
     }
 
     /**
-     * @notice Exchange sUSD for SNX
+     * @notice Exchange cfUSD for SNX
      * @param synthAmount The amount of synths the user wishes to exchange.
      */
     function exchangeSynthsForSNX(
@@ -412,10 +412,10 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
     }
 
     /**
-     * @notice Exchange sUSD for SNX while insisting on a particular rate. This allows a user to
+     * @notice Exchange cfUSD for SNX while insisting on a particular rate. This allows a user to
      *         exchange while protecting against frontrunning by the contract owner on the exchange rate.
      * @param synthAmount The amount of synths the user wishes to exchange.
-     * @param guaranteedRate A rate (synthetix price) the caller wishes to insist upon.
+     * @param guaranteedRate A rate (syndex price) the caller wishes to insist upon.
      */
     function exchangeSynthsForSNXAtRate(
         uint synthAmount,
@@ -440,12 +440,12 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
      * @notice Allows the owner to withdraw SNX from this contract if needed.
      * @param amount The amount of SNX to attempt to withdraw (in 18 decimal places).
      */
-    function withdrawSynthetix(uint amount) external onlyOwner {
-        synthetix().transfer(owner(), amount);
+    function withdrawSynDex(uint amount) external onlyOwner {
+        syndex().transfer(owner(), amount);
 
         // We don't emit our own events here because we assume that anyone
         // who wants to watch what the Depot is doing can
-        // just watch ERC20 events from the Synth and/or Synthetix contracts
+        // just watch ERC20 events from the Synth and/or SynDex contracts
         // filtered to our address.
     }
 
@@ -484,18 +484,18 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
         require(synthsToSend > 0, "You have no deposits to withdraw.");
 
         // Send their deposits back to them (minus fees)
-        synthsUSD().transfer(msg.sender, synthsToSend);
+        synthcfUSD().transfer(msg.sender, synthsToSend);
 
         emit SynthWithdrawal(msg.sender, synthsToSend);
     }
 
     /**
      * @notice depositSynths: Allows users to deposit synths via the approve / transferFrom workflow
-     * @param amount The amount of sUSD you wish to deposit (must have been approved first)
+     * @param amount The amount of cfUSD you wish to deposit (must have been approved first)
      */
     function depositSynths(uint amount) external {
         // Grab the amount of synths. Will fail if not approved first
-        synthsUSD().transferFrom(msg.sender, address(this), amount);
+        synthcfUSD().transferFrom(msg.sender, address(this), amount);
 
         // A minimum deposit amount is designed to protect purchasers from over paying
         // gas for fullfilling multiple small synth deposits
@@ -544,7 +544,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
      *         an amount of synths.
      * @param amount The amount of synths (in 18 decimal places) you want to ask about
      */
-    function synthetixReceivedForSynths(
+    function syndexReceivedForSynths(
         uint amount
     ) public view returns (uint) {
         // And what would that be worth in SNX based on the current price?
@@ -556,14 +556,14 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
      *         an amount of ether.
      * @param amount The amount of ether (in wei) you want to ask about
      */
-    function synthetixReceivedForEther(uint amount) public view returns (uint) {
-        // How much is the ETH they sent us worth in sUSD (ignoring the transfer fee)?
+    function syndexReceivedForEther(uint amount) public view returns (uint) {
+        // How much is the ETH they sent us worth in cfUSD (ignoring the transfer fee)?
         uint valueSentInSynths = amount.multiplyDecimal(
             exchangeRates().rateForCurrency(ETH)
         );
 
         // Now, how many SNX will that USD amount buy?
-        return synthetixReceivedForSynths(valueSentInSynths);
+        return syndexReceivedForSynths(valueSentInSynths);
     }
 
     /**
@@ -578,11 +578,11 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
 
     /* ========== INTERNAL VIEWS ========== */
 
-    function synthsUSD() internal view returns (IERC20) {
+    function synthcfUSD() internal view returns (IERC20) {
         return IERC20(requireAndGetAddress(CONTRACT_SYNTHSUSD));
     }
 
-    function synthetix() internal view returns (IERC20) {
+    function syndex() internal view returns (IERC20) {
         return IERC20(requireAndGetAddress(CONTRACT_SYNTHETIX));
     }
 

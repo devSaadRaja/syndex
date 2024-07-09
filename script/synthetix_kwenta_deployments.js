@@ -20,7 +20,7 @@ const contractsPath = {
   Issuer: "src/contracts/Issuer.sol:Issuer",
   ERC20: "src/contracts/SMX/ERC20.sol:ERC20",
   TestToken: "src/contracts/test/Token.sol:Token",
-  Synthetix: "src/contracts/Synthetix.sol:Synthetix",
+  SynDex: "src/contracts/SynDex.sol:SynDex",
   Exchanger: "src/contracts/Exchanger.sol:Exchanger",
   ProxyERC20: "src/contracts/ProxyERC20.sol:ProxyERC20",
   TokenState: "src/contracts/TokenState.sol:TokenState",
@@ -28,7 +28,7 @@ const contractsPath = {
   ExchangeRates: "src/contracts/ExchangeRates.sol:ExchangeRates",
   CollateralETH: "src/contracts/CollateralEth.sol:CollateralEth",
   SystemSettings: "src/contracts/SystemSettings.sol:SystemSettings",
-  SynthetixState: "src/contracts/SynthetixState.sol:SynthetixState",
+  SynDexState: "src/contracts/SynDexState.sol:SynDexState",
   AddressResolver: "src/contracts/AddressResolver.sol:AddressResolver",
   CollateralManager: "src/contracts/CollateralManager.sol:CollateralManager",
   MultiCollateralSynth:
@@ -110,7 +110,7 @@ async function main() {
   //   deployer,
   //   deployments["CollateralManager"],
   //   deployments["AddressResolver"],
-  //   ethers.utils.formatBytes32String("sETH"),
+  //   ethers.utils.formatBytes32String("cfETH"),
   //   parseEth(1.5), // 100 / 150, 150%
   //   parseEth(0.1),
   // ]);
@@ -119,18 +119,18 @@ async function main() {
   //   deployer,
   //   deployments["CollateralManager"],
   //   deployments["AddressResolver"],
-  //   ethers.utils.formatBytes32String("sETH"),
+  //   ethers.utils.formatBytes32String("cfETH"),
   //   parseEth(1.5), // 100 / 150, 150%
   //   parseEth(0.1),
   // ]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-  // const ProxysUSD = await contractDeploy("ProxyERC20", [deployer]);
-  // deployments["ProxysUSD"] = ProxysUSD.address;
-  // await verify(ProxysUSD.address, [deployer]);
+  // const ProxycfUSD = await contractDeploy("ProxyERC20", [deployer]);
+  // deployments["ProxycfUSD"] = ProxycfUSD.address;
+  // await verify(ProxycfUSD.address, [deployer]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-  // const ProxysETH = await contractDeploy("ProxyERC20", [deployer]);
-  // deployments["ProxysETH"] = ProxysETH.address;
-  // await verify(ProxysETH.address, [deployer]);
+  // const ProxycfETH = await contractDeploy("ProxyERC20", [deployer]);
+  // deployments["ProxycfETH"] = ProxycfETH.address;
+  // await verify(ProxycfETH.address, [deployer]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // const ProxyFeePool = await contractDeploy("Proxy", [deployer]);
   // deployments["ProxyFeePool"] = ProxyFeePool.address;
@@ -196,34 +196,34 @@ async function main() {
   //   deployments["AddressResolver"],
   // ]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-  // const SynthetixState = await contractDeploy("SynthetixState", [
+  // const SynDexState = await contractDeploy("SynDexState", [
   //   deployer,
-  //   ADDRESS_ZERO, // synthetix
+  //   ADDRESS_ZERO, // syndex
   // ]);
-  // deployments["SynthetixState"] = SynthetixState.address;
-  // await verify(SynthetixState.address, [
+  // deployments["SynDexState"] = SynDexState.address;
+  // await verify(SynDexState.address, [
   //   deployer,
-  //   ADDRESS_ZERO, // synthetix
-  // ]);
-  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-  // const TokenStatesUSD = await contractDeploy("TokenState", [
-  //   deployer,
-  //   ADDRESS_ZERO, // synthsUSD
-  // ]);
-  // deployments["TokenStatesUSD"] = TokenStatesUSD.address;
-  // await verify(TokenStatesUSD.address, [
-  //   deployer,
-  //   ADDRESS_ZERO, // synthetix
+  //   ADDRESS_ZERO, // syndex
   // ]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-  // const TokenStatesETH = await contractDeploy("TokenState", [
+  // const TokenStatecfUSD = await contractDeploy("TokenState", [
   //   deployer,
-  //   ADDRESS_ZERO, // synthsETH
+  //   ADDRESS_ZERO, // synthcfUSD
   // ]);
-  // deployments["TokenStatesETH"] = TokenStatesETH.address;
-  // await verify(TokenStatesETH.address, [
+  // deployments["TokenStatecfUSD"] = TokenStatecfUSD.address;
+  // await verify(TokenStatecfUSD.address, [
   //   deployer,
-  //   ADDRESS_ZERO, // synthetix
+  //   ADDRESS_ZERO, // syndex
+  // ]);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+  // const TokenStatecfETH = await contractDeploy("TokenState", [
+  //   deployer,
+  //   ADDRESS_ZERO, // synthcfETH
+  // ]);
+  // deployments["TokenStatecfETH"] = TokenStatecfETH.address;
+  // await verify(TokenStatecfETH.address, [
+  //   deployer,
+  //   ADDRESS_ZERO, // syndex
   // ]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // const Depot = await contractDeploy("Depot", [
@@ -281,13 +281,13 @@ async function main() {
   // ]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // const FeePool = await contractDeploy("FeePool", [
-  //   deployments["ProxysUSD"],
+  //   deployments["ProxycfUSD"],
   //   deployer,
   //   deployments["AddressResolver"],
   // ]);
   // deployments["FeePool"] = FeePool.address;
   // await verify(FeePool.address, [
-  //   deployments["ProxysUSD"],
+  //   deployments["ProxycfUSD"],
   //   deployer,
   //   deployments["AddressResolver"],
   // ]);
@@ -304,13 +304,13 @@ async function main() {
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // const RewardEscrow = await contractDeploy(contractsPath.RewardEscrow, [
   //   deployer,
-  //   deployments["Synthetix"],
+  //   deployments["SynDex"],
   //   deployments["FeePool"],
   // ]);
   // deployments["RewardEscrow"] = RewardEscrow.address;
   // await verify(RewardEscrow.address, [
   //   deployer,
-  //   deployments["Synthetix"],
+  //   deployments["SynDex"],
   //   deployments["FeePool"],
   // ]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
@@ -346,46 +346,46 @@ async function main() {
   //   deployments["AddressResolver"],
   // ]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-  // const SynthsUSD = await contractDeploy("MultiCollateralSynth", [
-  //   deployments["ProxysUSD"],
-  //   deployments["TokenStatesUSD"],
-  //   "SynthsUSD",
-  //   "sUSD",
+  // const SynthcfUSD = await contractDeploy("MultiCollateralSynth", [
+  //   deployments["ProxycfUSD"],
+  //   deployments["TokenStatecfUSD"],
+  //   "SynthcfUSD",
+  //   "cfUSD",
   //   deployer,
-  //   ethers.utils.formatBytes32String("sUSD"),
+  //   ethers.utils.formatBytes32String("cfUSD"),
   //   0,
   //   deployments["AddressResolver"],
   // ]);
-  // deployments["SynthsUSD"] = SynthsUSD.address;
-  // await verify(SynthsUSD.address, [
-  //   deployments["ProxysUSD"],
-  //   deployments["TokenStatesUSD"],
-  //   "SynthsUSD",
-  //   "sUSD",
+  // deployments["SynthcfUSD"] = SynthcfUSD.address;
+  // await verify(SynthcfUSD.address, [
+  //   deployments["ProxycfUSD"],
+  //   deployments["TokenStatecfUSD"],
+  //   "SynthcfUSD",
+  //   "cfUSD",
   //   deployer,
-  //   ethers.utils.formatBytes32String("sUSD"),
+  //   ethers.utils.formatBytes32String("cfUSD"),
   //   0,
   //   deployments["AddressResolver"],
   // ]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
-  // const SynthsETH = await contractDeploy("MultiCollateralSynth", [
-  //   deployments["ProxysETH"],
-  //   deployments["TokenStatesETH"],
-  //   "SynthsETH",
-  //   "sETH",
+  // const SynthcfETH = await contractDeploy("MultiCollateralSynth", [
+  //   deployments["ProxycfETH"],
+  //   deployments["TokenStatecfETH"],
+  //   "SynthcfETH",
+  //   "cfETH",
   //   deployer,
-  //   ethers.utils.formatBytes32String("sETH"),
+  //   ethers.utils.formatBytes32String("cfETH"),
   //   0,
   //   deployments["AddressResolver"],
   // ]);
-  // deployments["SynthsETH"] = SynthsETH.address;
-  // await verify(SynthsETH.address, [
-  //   deployments["ProxysETH"],
-  //   deployments["TokenStatesETH"],
-  //   "SynthsETH",
-  //   "sETH",
+  // deployments["SynthcfETH"] = SynthcfETH.address;
+  // await verify(SynthcfETH.address, [
+  //   deployments["ProxycfETH"],
+  //   deployments["TokenStatecfETH"],
+  //   "SynthcfETH",
+  //   "cfETH",
   //   deployer,
-  //   ethers.utils.formatBytes32String("sETH"),
+  //   ethers.utils.formatBytes32String("cfETH"),
   //   0,
   //   deployments["AddressResolver"],
   // ]);
@@ -402,16 +402,16 @@ async function main() {
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // const RewardsDistribution = await contractDeploy("RewardsDistribution", [
   //   deployer,
-  //   deployments["Synthetix"],
-  //   deployments["ProxySCFX"],
+  //   deployments["SynDex"],
+  //   deployments["ProxySFCX"],
   //   deployments["RewardEscrowV2"],
   //   deployments["ProxyFeePool"],
   // ]);
   // deployments["RewardsDistribution"] = RewardsDistribution.address;
   // await verify(RewardsDistribution.address, [
   //   deployer,
-  //   deployments["Synthetix"],
-  //   deployments["ProxySCFX"],
+  //   deployments["SynDex"],
+  //   deployments["ProxySFCX"],
   //   deployments["RewardEscrowV2"],
   //   deployments["ProxyFeePool"],
   // ]);
@@ -428,10 +428,10 @@ async function main() {
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // const EternalStorage = await contractDeploy("EternalStorage", [
   //   deployer,
-  //   deployments["SynthsUSD"],
+  //   deployments["SynthcfUSD"],
   // ]);
   // deployments["EternalStorage"] = EternalStorage.address;
-  // await verify(EternalStorage.address, [deployer, deployments["SynthsUSD"]]);
+  // await verify(EternalStorage.address, [deployer, deployments["SynthcfUSD"]]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // const DelegateApprovals = await contractDeploy("DelegateApprovals", [
   //   deployer,
@@ -481,17 +481,17 @@ async function main() {
   // await verify(AggregatorDebtRatio.address, [deployments["AddressResolver"]]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // const Staking = await contractDeploy("Staking", [
-  //   deployments["ProxySCFX"],
-  //   deployments["ProxySCFX"],
+  //   deployments["ProxySFCX"],
+  //   deployments["ProxySFCX"],
   // ]);
   // deployments["Staking"] = Staking.address;
   // await verify(Staking.address, [
-  //   deployments["ProxySCFX"],
-  //   deployments["ProxySCFX"],
+  //   deployments["ProxySFCX"],
+  //   deployments["ProxySFCX"],
   // ]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // const SynthSwap = await contractDeploy("SynthSwap", [
-  //   deployments["ProxysUSD"],
+  //   deployments["ProxycfUSD"],
   //   deployments["UniswapSwapRouter"],
   //   deployments["AddressResolver"],
   //   deployer,
@@ -499,7 +499,7 @@ async function main() {
   // ]);
   // deployments["SynthSwap"] = SynthSwap.address;
   // await verify(SynthSwap.address, [
-  //   deployments["ProxysUSD"],
+  //   deployments["ProxycfUSD"],
   //   deployments["UniswapSwapRouter"],
   //   deployments["AddressResolver"],
   //   deployer,
@@ -526,21 +526,21 @@ async function main() {
   //   signer
   // );
   // await FactoryContract.createPair(
-  //   deployments["ProxySCFX"],
+  //   deployments["ProxySFCX"],
   //   deployments["WETH"]
   // );
-  // deployments["SCFXWETH"] = await FactoryContract.getPair(
-  //   deployments["ProxySCFX"],
+  // deployments["SFCXWETH"] = await FactoryContract.getPair(
+  //   deployments["ProxySFCX"],
   //   deployments["WETH"]
   // );
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // await FactoryContract.createPair(
   //   deployments["TestToken"],
-  //   deployments["ProxysUSD"]
+  //   deployments["ProxycfUSD"]
   // );
   // deployments["TKNUSD"] = await FactoryContract.getPair(
   //   deployments["TestToken"],
-  //   deployments["ProxysUSD"]
+  //   deployments["ProxycfUSD"]
   // );
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // // ============================================================ //
@@ -555,17 +555,17 @@ async function main() {
   // names.push(ethers.utils.formatBytes32String("AddressResolver"));
   // addresses.push(deployments["AddressResolver"]);
   // count++;
-  // names.push(ethers.utils.formatBytes32String("ProxySCFX"));
-  // addresses.push(deployments["ProxySCFX"]);
+  // names.push(ethers.utils.formatBytes32String("ProxySFCX"));
+  // addresses.push(deployments["ProxySFCX"]);
   // count++;
   // names.push(ethers.utils.formatBytes32String("SystemStatus"));
   // addresses.push(deployments["SystemStatus"]);
   // count++;
-  // names.push(ethers.utils.formatBytes32String("TokenStateSCFX"));
-  // addresses.push(deployments["TokenStateSCFX"]);
+  // names.push(ethers.utils.formatBytes32String("TokenStateSFCX"));
+  // addresses.push(deployments["TokenStateSFCX"]);
   // count++;
-  // names.push(ethers.utils.formatBytes32String("TokenStatesUSD"));
-  // addresses.push(deployments["TokenStatesUSD"]);
+  // names.push(ethers.utils.formatBytes32String("TokenStatecfUSD"));
+  // addresses.push(deployments["TokenStatecfUSD"]);
   // count++;
   // names.push(ethers.utils.formatBytes32String("ext:AggregatorIssuedSynths"));
   // addresses.push(deployments["AggregatorIssuedSynths"]);
@@ -594,7 +594,7 @@ async function main() {
   // names.push(ethers.utils.formatBytes32String("FeePoolEternalStorage"));
   // addresses.push(deployments["FeePoolEternalStorage"]);
   // count++;
-  // names.push(ethers.utils.formatBytes32String("SynthetixBridgeToOptimism"));
+  // names.push(ethers.utils.formatBytes32String("SynDexBridgeToOptimism"));
   // addresses.push(deployer);
   // count++;
   // // ---------------------------------------------
@@ -610,14 +610,14 @@ async function main() {
   // addresses.push(deployments["Issuer"]);
   // names.push(ethers.utils.formatBytes32String("LiquidatorRewards"));
   // addresses.push(deployments["LiquidatorRewards"]);
-  // names.push(ethers.utils.formatBytes32String("SynthetixDebtShare"));
-  // addresses.push(deployments["SynthetixDebtShare"]);
-  // names.push(ethers.utils.formatBytes32String("Synthetix"));
-  // addresses.push(deployments["Synthetix"]);
-  // names.push(ethers.utils.formatBytes32String("SynthsUSD"));
-  // addresses.push(deployments["SynthsUSD"]);
-  // names.push(ethers.utils.formatBytes32String("SynthsETH"));
-  // addresses.push(deployments["SynthsETH"]);
+  // names.push(ethers.utils.formatBytes32String("SynDexDebtShare"));
+  // addresses.push(deployments["SynDexDebtShare"]);
+  // names.push(ethers.utils.formatBytes32String("SynDex"));
+  // addresses.push(deployments["SynDex"]);
+  // names.push(ethers.utils.formatBytes32String("SynthcfUSD"));
+  // addresses.push(deployments["SynthcfUSD"]);
+  // names.push(ethers.utils.formatBytes32String("SynthcfETH"));
+  // addresses.push(deployments["SynthcfETH"]);
   // names.push(ethers.utils.formatBytes32String("FeePool"));
   // addresses.push(deployments["FeePool"]);
   // names.push(ethers.utils.formatBytes32String("DebtCache"));
@@ -663,10 +663,10 @@ async function main() {
   // ! ------------------------------------------------------------------------
   // let synthNamesInResolver = [];
   // let synthKeys = [];
-  // synthNamesInResolver.push(ethers.utils.formatBytes32String("SynthsUSD"));
-  // synthKeys.push(ethers.utils.formatBytes32String("sUSD"));
-  // synthNamesInResolver.push(ethers.utils.formatBytes32String("SynthsETH"));
-  // synthKeys.push(ethers.utils.formatBytes32String("sETH"));
+  // synthNamesInResolver.push(ethers.utils.formatBytes32String("SynthcfUSD"));
+  // synthKeys.push(ethers.utils.formatBytes32String("cfUSD"));
+  // synthNamesInResolver.push(ethers.utils.formatBytes32String("SynthcfETH"));
+  // synthKeys.push(ethers.utils.formatBytes32String("cfETH"));
   // const collateralETH = await ethers.getContractAt(
   //   contractsPath.CollateralETH,
   //   deployments["CollateralEth"],
@@ -685,49 +685,49 @@ async function main() {
   //   deployments["Issuer"],
   //   signer
   // );
-  // await issuer.addSynth(deployments["SynthsUSD"]);
-  // await issuer.addSynth(deployments["SynthsETH"]);
-  // const proxySCFX = await ethers.getContractAt(
+  // await issuer.addSynth(deployments["SynthcfUSD"]);
+  // await issuer.addSynth(deployments["SynthcfETH"]);
+  // const proxySFCX = await ethers.getContractAt(
   //   contractsPath.ProxyERC20,
-  //   deployments["ProxySCFX"],
+  //   deployments["ProxySFCX"],
   //   signer
   // );
-  // const proxysUSD = await ethers.getContractAt(
+  // const proxycfUSD = await ethers.getContractAt(
   //   contractsPath.ProxyERC20,
-  //   deployments["ProxysUSD"],
+  //   deployments["ProxycfUSD"],
   //   signer
   // );
-  // await proxysUSD.updateTarget(deployments["SynthsUSD"]);
-  // const proxysETH = await ethers.getContractAt(
+  // await proxycfUSD.updateTarget(deployments["SynthcfUSD"]);
+  // const proxycfETH = await ethers.getContractAt(
   //   contractsPath.ProxyERC20,
-  //   deployments["ProxysETH"],
+  //   deployments["ProxycfETH"],
   //   signer
   // );
-  // await proxysETH.updateTarget(deployments["SynthsETH"]);
+  // await proxycfETH.updateTarget(deployments["SynthcfETH"]);
   // const proxyFeePool = await ethers.getContractAt(
   //   contractsPath.Proxy,
   //   deployments["ProxyFeePool"],
   //   signer
   // );
   // await proxyFeePool.updateTarget(deployments["FeePool"]);
-  // const synthetixState = await ethers.getContractAt(
-  //   contractsPath.SynthetixState,
-  //   deployments["SynthetixState"],
+  // const syndexState = await ethers.getContractAt(
+  //   contractsPath.SynDexState,
+  //   deployments["SynDexState"],
   //   signer
   // );
-  // await synthetixState.linkContract(deployments["Synthetix"]);
-  // const tokenStatesUSD = await ethers.getContractAt(
+  // await syndexState.linkContract(deployments["SynDex"]);
+  // const tokenStatecfUSD = await ethers.getContractAt(
   //   contractsPath.TokenState,
-  //   deployments["TokenStatesUSD"],
+  //   deployments["TokenStatecfUSD"],
   //   signer
   // );
-  // await tokenStatesUSD.linkContract(deployments["SynthsUSD"]);
-  // const tokenStatesETH = await ethers.getContractAt(
+  // await tokenStatecfUSD.linkContract(deployments["SynthcfUSD"]);
+  // const tokenStatecfETH = await ethers.getContractAt(
   //   contractsPath.TokenState,
-  //   deployments["TokenStatesETH"],
+  //   deployments["TokenStatecfETH"],
   //   signer
   // );
-  // await tokenStatesETH.linkContract(deployments["SynthsETH"]);
+  // await tokenStatecfETH.linkContract(deployments["SynthcfETH"]);
   // const collateralManagerState = await ethers.getContractAt(
   //   contractsPath.CollateralManagerState,
   //   deployments["CollateralManagerState"],
@@ -750,11 +750,11 @@ async function main() {
   //   signer
   // );
   // await exchangeRates.addAggregator(
-  //   ethers.utils.formatBytes32String("SCFX"),
+  //   ethers.utils.formatBytes32String("SFCX"),
   //   deployments["AggregatorCollateral"]
   // );
   // await exchangeRates.addAggregator(
-  //   ethers.utils.formatBytes32String("sETH"),
+  //   ethers.utils.formatBytes32String("cfETH"),
   //   deployments["AggregatorETH"]
   // );
   // // await exchangeRates.addAggregator(
@@ -768,8 +768,8 @@ async function main() {
   // );
   // let synthKeys = [];
   // let exchangeFeeRates = [];
-  // synthKeys.push(ethers.utils.formatBytes32String("sUSD"));
-  // synthKeys.push(ethers.utils.formatBytes32String("sETH"));
+  // synthKeys.push(ethers.utils.formatBytes32String("cfUSD"));
+  // synthKeys.push(ethers.utils.formatBytes32String("cfETH"));
   // exchangeFeeRates.push(parseEth(0.001));
   // exchangeFeeRates.push(parseEth(0.001)); // 0.0035
   // await systemSettings.updateExchangeFeeRateForSynths(synthKeys, exchangeFeeRates);
@@ -794,9 +794,9 @@ async function main() {
   //   uniswapRouter,
   //   signer
   // );
-  // const proxysUSD = await ethers.getContractAt(
+  // const proxycfUSD = await ethers.getContractAt(
   //   contractsPath.ProxyERC20,
-  //   deployments["ProxysUSD"],
+  //   deployments["ProxycfUSD"],
   //   signer
   // );
   // const testToken = await ethers.getContractAt(
@@ -804,10 +804,10 @@ async function main() {
   //   deployments["TestToken"],
   //   signer
   // );
-  // await proxysUSD.approve(deployments["UniswapRouter"], parseEth(100));
+  // await proxycfUSD.approve(deployments["UniswapRouter"], parseEth(100));
   // await testToken.approve(deployments["UniswapRouter"], parseEth(100));
   // await RouterContract.addLiquidity(
-  //   deployments["ProxysUSD"],
+  //   deployments["ProxycfUSD"],
   //   deployments["TestToken"],
   //   parseEth(100),
   //   parseEth(100),
@@ -816,11 +816,11 @@ async function main() {
   //   deployer,
   //   Math.round(Date.now() / 1000) + 1000
   // );
-  // await proxysUSD.approve(deployments["UniswapRouter"], parseEth(50));
-  // await proxysETH.approve(deployments["UniswapRouter"], parseEth(50));
+  // await proxycfUSD.approve(deployments["UniswapRouter"], parseEth(50));
+  // await proxycfETH.approve(deployments["UniswapRouter"], parseEth(50));
   // await RouterContract.addLiquidity(
-  //   deployments["ProxysUSD"],
-  //   deployments["ProxysETH"],
+  //   deployments["ProxycfUSD"],
+  //   deployments["ProxycfETH"],
   //   parseEth(50),
   //   parseEth(50),
   //   1,
@@ -835,142 +835,142 @@ async function main() {
 }
 
 async function addSynths() {
-  // Gold | Wheat | Crude Oil | Orange Juice | Silver | Platinum | Palladium | Livestock
-  // Coffee | Sugar | Cotton | Soybeans | Natural Gas | Iron | Cocoa | Steel | Copper
+  // cfGold | cfWheat | Crude Oil | Orange Juice | cfSilver | cfPlatinum | cfPalladium | cfLivestock
+  // cfCoffee | cfSugar | cfCotton | cfSoybeans | Natural Gas | cfIron | cfCocoa | cfSteel | cfCopper
   // await deploySynth(
-  //   "ProxyGold",
-  //   "SynthGold",
-  //   "Gold",
-  //   "TokenStateGold",
-  //   "AggregatorGold",
+  //   "ProxycfGold",
+  //   "SynthcfGold",
+  //   "cfGold",
+  //   "TokenStatecfGold",
+  //   "AggregatorcfGold",
   //   2344 * 10 ** 8
   // );
   // await deploySynth(
-  //   "ProxyWheat",
-  //   "SynthWheat",
-  //   "Wheat",
-  //   "TokenStateWheat",
-  //   "AggregatorWheat",
+  //   "ProxycfWheat",
+  //   "SynthcfWheat",
+  //   "cfWheat",
+  //   "TokenStatecfWheat",
+  //   "AggregatorcfWheat",
   //   729 * 10 ** 8
   // );
   // await deploySynth(
-  //   "ProxyCrudeOil",
-  //   "SynthCrudeOil",
-  //   "CrudeOil",
-  //   "TokenStateCrudeOil",
-  //   "AggregatorCrudeOil",
+  //   "ProxycfCrudeOil",
+  //   "SynthcfCrudeOil",
+  //   "cfCrudeOil",
+  //   "TokenStatecfCrudeOil",
+  //   "AggregatorcfCrudeOil",
   //   79 * 10 ** 8
   // );
   // await deploySynth(
-  //   "ProxyOrangeJuice",
-  //   "SynthOrangeJuice",
-  //   "OrangeJuice",
-  //   "TokenStateOrangeJuice",
-  //   "AggregatorOrangeJuice",
+  //   "ProxycfOrangeJuice",
+  //   "SynthcfOrangeJuice",
+  //   "cfOrangeJuice",
+  //   "TokenStatecfOrangeJuice",
+  //   "AggregatorcfOrangeJuice",
   //   477 * 10 ** 8
   // );
   // await deploySynth(
-  //   "ProxySilver",
-  //   "SynthSilver",
-  //   "Silver",
-  //   "TokenStateSilver",
-  //   "AggregatorSilver",
+  //   "ProxycfSilver",
+  //   "SynthcfSilver",
+  //   "cfSilver",
+  //   "TokenStatecfSilver",
+  //   "AggregatorcfSilver",
   //   32 * 10 ** 8
   // );
   // await deploySynth(
-  //   "ProxyPlatinum",
-  //   "SynthPlatinum",
-  //   "Platinum",
-  //   "TokenStatePlatinum",
-  //   "AggregatorPlatinum",
+  //   "ProxycfPlatinum",
+  //   "SynthcfPlatinum",
+  //   "cfPlatinum",
+  //   "TokenStatecfPlatinum",
+  //   "AggregatorcfPlatinum",
   //   1046 * 10 ** 8
   // );
   // await deploySynth(
-  //   "ProxyPalladium",
-  //   "SynthPalladium",
-  //   "Palladium",
-  //   "TokenStatePalladium",
-  //   "AggregatorPalladium",
+  //   "ProxycfPalladium",
+  //   "SynthcfPalladium",
+  //   "cfPalladium",
+  //   "TokenStatecfPalladium",
+  //   "AggregatorcfPalladium",
   //   957 * 10 ** 8
   // );
   // await deploySynth(
-  //   "ProxyLivestock",
-  //   "SynthLivestock",
-  //   "Livestock",
-  //   "TokenStateLivestock",
-  //   "AggregatorLivestock",
+  //   "ProxycfLivestock",
+  //   "SynthcfLivestock",
+  //   "cfLivestock",
+  //   "TokenStatecfLivestock",
+  //   "AggregatorcfLivestock",
   //   1 * 10 ** 8
   // );
   // await deploySynth(
-  //   "ProxyCoffee",
-  //   "SynthCoffee",
-  //   "Coffee",
-  //   "TokenStateCoffee",
-  //   "AggregatorCoffee",
+  //   "ProxycfCoffee",
+  //   "SynthcfCoffee",
+  //   "cfCoffee",
+  //   "TokenStatecfCoffee",
+  //   "AggregatorcfCoffee",
   //   233 * 10 ** 8
   // );
   // await deploySynth(
-  //   "ProxySugar",
-  //   "SynthSugar",
-  //   "Sugar",
-  //   "TokenStateSugar",
-  //   "AggregatorSugar",
+  //   "ProxycfSugar",
+  //   "SynthcfSugar",
+  //   "cfSugar",
+  //   "TokenStatecfSugar",
+  //   "AggregatorcfSugar",
   //   18 * 10 ** 8
   // );
   // await deploySynth(
-  //   "ProxyCotton",
-  //   "SynthCotton",
-  //   "Cotton",
-  //   "TokenStateCotton",
-  //   "AggregatorCotton",
+  //   "ProxycfCotton",
+  //   "SynthcfCotton",
+  //   "cfCotton",
+  //   "TokenStatecfCotton",
+  //   "AggregatorcfCotton",
   //   81 * 10 ** 8
   // );
   // await deploySynth(
-  //   "ProxySoybeans",
-  //   "SynthSoybeans",
-  //   "Soybeans",
-  //   "TokenStateSoybeans",
-  //   "AggregatorSoybeans",
+  //   "ProxycfSoybeans",
+  //   "SynthcfSoybeans",
+  //   "cfSoybeans",
+  //   "TokenStatecfSoybeans",
+  //   "AggregatorcfSoybeans",
   //   1 * 10 ** 8
   // );
   // await deploySynth(
-  //   "ProxyNaturalGas",
-  //   "SynthNaturalGas",
-  //   "NaturalGas",
-  //   "TokenStateNaturalGas",
-  //   "AggregatorNaturalGas",
+  //   "ProxycfNaturalGas",
+  //   "SynthcfNaturalGas",
+  //   "cfNaturalGas",
+  //   "TokenStatecfNaturalGas",
+  //   "AggregatorcfNaturalGas",
   //   2.456 * 10 ** 8
   // );
   // await deploySynth(
-  //   "ProxyIron",
-  //   "SynthIron",
-  //   "Iron",
-  //   "TokenStateIron",
-  //   "AggregatorIron",
+  //   "ProxycfIron",
+  //   "SynthcfIron",
+  //   "cfIron",
+  //   "TokenStatecfIron",
+  //   "AggregatorcfIron",
   //   1 * 10 ** 8
   // );
   // await deploySynth(
-  //   "ProxyCocoa",
-  //   "SynthCocoa",
-  //   "Cocoa",
-  //   "TokenStateCocoa",
-  //   "AggregatorCocoa",
+  //   "ProxycfCocoa",
+  //   "SynthcfCocoa",
+  //   "cfCocoa",
+  //   "TokenStatecfCocoa",
+  //   "AggregatorcfCocoa",
   //   9423 * 10 ** 8
   // );
   // await deploySynth(
-  //   "ProxySteel",
-  //   "SynthSteel",
-  //   "Steel",
-  //   "TokenStateSteel",
-  //   "AggregatorSteel",
+  //   "ProxycfSteel",
+  //   "SynthcfSteel",
+  //   "cfSteel",
+  //   "TokenStatecfSteel",
+  //   "AggregatorcfSteel",
   //   1 * 10 ** 8
   // );
   // await deploySynth(
-  //   "ProxyCopper",
-  //   "SynthCopper",
-  //   "Copper",
-  //   "TokenStateCopper",
-  //   "AggregatorCopper",
+  //   "ProxycfCopper",
+  //   "SynthcfCopper",
+  //   "cfCopper",
+  //   "TokenStatecfCopper",
+  //   "AggregatorcfCopper",
   //   4.7835 * 10 ** 8
   // );
 }

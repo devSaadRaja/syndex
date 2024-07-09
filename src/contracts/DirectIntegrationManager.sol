@@ -10,10 +10,10 @@ import "../interfaces/IDirectIntegrationManager.sol";
 
 /*
  * SIP-267: Direct Integration
- * https://sips.synthetix.io/sips/sip-267/
+ * https://sips.syndex.io/sips/sip-267/
  *
- * Used by the Spartan Council to approve an external contract, (i.e. one which is not owned or managed by the Synthetix protocol),
- * to interact with Synthetix's core executeExchange functionalities with overridden parameters.
+ * Used by the Spartan Council to approve an external contract, (i.e. one which is not owned or managed by the SynDex protocol),
+ * to interact with SynDex's core executeExchange functionalities with overridden parameters.
  * If no parameter overrides are specified, then the prevailing parameter configuration will be automatically used.
  */
 contract DirectIntegrationManager is
@@ -114,12 +114,12 @@ contract DirectIntegrationManager is
 
     /* ========== MUTATIVE FUNCTIONS ========== */
     /**
-     * Sets an override to be used for a given direct integration that supersedes the default Synthetix parameter value.
+     * Sets an override to be used for a given direct integration that supersedes the default SynDex parameter value.
      * @param integration the address of the external integrator's contract
      * @param settings a collection of parameters to be overridden
      * @dev Invoking this function will overwrite whatever overrides were previously set. Set overrides to zero to "remove" them.
      * @notice This will require a SIP and a presentation, given the importance of clearly presenting
-     * external interactions with Synthetix contracts and the parameter overrides that would be implemented.
+     * external interactions with SynDex contracts and the parameter overrides that would be implemented.
      */
     function setExchangeParameters(
         address integration,

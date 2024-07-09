@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "../interfaces/IIssuer.sol";
-import "../interfaces/ISynthetix.sol";
+import "../interfaces/ISynDex.sol";
 import "../interfaces/IExchanger.sol";
 import "../interfaces/IDebtCache.sol";
 import "../interfaces/IExchangeRates.sol";
@@ -21,10 +21,10 @@ library ExchangeSettlementLib {
         ICircuitBreaker circuitBreaker;
         IExchangerInternalDebtCache debtCache;
         IIssuer issuer;
-        ISynthetix synthetix;
+        ISynDex syndex;
     }
 
-    bytes32 internal constant sUSD = "sUSD";
+    bytes32 internal constant cfUSD = "cfUSD";
 
     function internalSettle(
         ResolvedAddresses calldata resolvedAddresses,
@@ -124,7 +124,7 @@ library ExchangeSettlementLib {
     ) internal {
         // burn amount from user
         resolvedAddresses.issuer.synths(currencyKey).burn(from, amount);
-        ISynthetixInternal(address(resolvedAddresses.synthetix))
+        ISynDexInternal(address(resolvedAddresses.syndex))
             .emitExchangeReclaim(from, currencyKey, amount);
     }
 
@@ -136,7 +136,7 @@ library ExchangeSettlementLib {
     ) internal {
         // issue amount to user
         resolvedAddresses.issuer.synths(currencyKey).issue(from, amount);
-        ISynthetixInternal(address(resolvedAddresses.synthetix))
+        ISynDexInternal(address(resolvedAddresses.syndex))
             .emitExchangeRebate(from, currencyKey, amount);
     }
 
