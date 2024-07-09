@@ -37,7 +37,6 @@ import {ExchangeRates} from "../src/contracts/ExchangeRates.sol";
 import {ExchangeState} from "../src/contracts/ExchangeState.sol";
 import {MixinResolver} from "../src/contracts/MixinResolver.sol";
 import {SynthRedeemer} from "../src/contracts/SynthRedeemer.sol";
-import {AggregatorETH} from "../src/contracts/AggregatorETH.sol";
 import {SynthetixState} from "../src/contracts/SynthetixState.sol";
 import {WrapperFactory} from "../src/contracts/WrapperFactory.sol";
 import {RewardEscrowV2} from "../src/contracts/RewardEscrowV2.sol";
@@ -46,6 +45,7 @@ import {CollateralUtil} from "../src/contracts/CollateralUtil.sol";
 import {EternalStorage} from "../src/contracts/EternalStorage.sol";
 import {SystemSettings} from "../src/contracts/SystemSettings.sol";
 import {CircuitBreaker} from "../src/contracts/CircuitBreaker.sol";
+import {AggregatorSynth} from "../src/contracts/AggregatorSynth.sol";
 import {CollateralErc20} from "../src/contracts/CollateralErc20.sol";
 import {AddressResolver} from "../src/contracts/AddressResolver.sol";
 import {FlexibleStorage} from "../src/contracts/FlexibleStorage.sol";
@@ -147,7 +147,7 @@ contract Setup is Test, Utils {
     CollateralManagerState public collateralManagerState;
     DirectIntegrationManager public directIntegrationManager;
 
-    AggregatorETH public aggregatorETH;
+    AggregatorSynth public aggregatorSynth;
     AggregatorDebtRatio public aggregatorDebtRatio;
     AggregatorCollateral public aggregatorCollateral;
     AggregatorIssuedSynths public aggregatorIssuedSynths;
@@ -329,7 +329,11 @@ contract Setup is Test, Utils {
 
         exchangeRates = new ExchangeRates(owner, address(addressResolver));
 
-        aggregatorETH = new AggregatorETH(addressResolver);
+        aggregatorSynth = new AggregatorSynth(
+            "",
+            1 * 10 ** 8,
+            address(addressResolver)
+        );
         aggregatorDebtRatio = new AggregatorDebtRatio(addressResolver);
         aggregatorIssuedSynths = new AggregatorIssuedSynths(addressResolver);
         aggregatorCollateral = new AggregatorCollateral(
@@ -490,8 +494,8 @@ contract Setup is Test, Utils {
             address(rewardEscrowV2Frozen)
         );
 
-        exchangeRates.addAggregator("SMX", address(aggregatorETH));
-        exchangeRates.addAggregator("sETH", address(aggregatorETH));
+        exchangeRates.addAggregator("SMX", address(aggregatorSynth));
+        exchangeRates.addAggregator("sETH", address(aggregatorSynth));
         exchangeRates.addAggregator("SCFX", address(aggregatorCollateral));
         // exchangeRates.addAggregator(
         //     "ext:AggregatorDebtRatio",

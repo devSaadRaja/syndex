@@ -43,7 +43,10 @@ contract IssuerTest is Setup {
         vm.stopPrank();
 
         // calculateTotalSupplyForPeriod
-        assertEq(synthetixDebtShare.calculateTotalSupplyForPeriod(1), 2.2 ether);
+        assertEq(
+            synthetixDebtShare.calculateTotalSupplyForPeriod(1),
+            2.2 ether
+        );
         // accountBalance
         assertEq(synthetixDebtShare.balanceOf(user1), 1.2 ether);
         assertEq(synthetixDebtShare.balanceOf(user2), 1 ether);
@@ -151,17 +154,19 @@ contract IssuerTest is Setup {
 
     function testEthLiquidate() public {
         vm.startPrank(user1);
-
         console.log("ISSUE");
         synthetix.createSynths(1 ether);
         uint256 id = collateralETH.open{value: 0.15 ether}(0.1 ether, "sUSD");
+        vm.stopPrank();
 
+        vm.startPrank(owner);
         // under-collateralized
-        aggregatorETH.setPrice(0.8 ether);
+        aggregatorSynth.setPrice(0.8 * 10 ** 8);
+        vm.stopPrank();
 
+        vm.startPrank(user1);
         console.log("LIQUIDATE");
         collateralETH.liquidate(user1, id, 0.1 ether);
-
         vm.stopPrank();
     }
 
@@ -208,18 +213,20 @@ contract IssuerTest is Setup {
 
     function testErc20Liquidate() public {
         vm.startPrank(user1);
-
         console.log("ISSUE");
         synthetix.createSynths(1 ether);
         smx.approve(address(collateralErc20), 50 ether);
         uint256 id = collateralErc20.open(0.15 ether, 0.1 ether, "sUSD");
+        vm.stopPrank();
 
+        vm.startPrank(owner);
         // under-collateralized
-        aggregatorETH.setPrice(0.8 ether);
+        aggregatorSynth.setPrice(0.8 * 10 ** 8);
+        vm.stopPrank();
 
+        vm.startPrank(user1);
         console.log("LIQUIDATE");
         collateralErc20.liquidate(user1, id, 0.1 ether);
-
         vm.stopPrank();
     }
 }

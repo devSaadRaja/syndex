@@ -864,15 +864,15 @@ async function main() {
   // );
   // await exchangeRates.addAggregator(
   //   ethers.utils.formatBytes32String("SCFX"),
-  //   deployments["AggregatorCollateral"]
+  //   deployments["AggregatorCollateral"] // aggregatorSynth
   // );
   // await exchangeRates.addAggregator(
   //   ethers.utils.formatBytes32String("sETH"),
-  //   deployments["AggregatorETH"]
+  //   deployments["AggregatorETH"] // aggregatorSynth
   // );
   // // await exchangeRates.addAggregator(
   // //   ethers.utils.formatBytes32String("TKN"),
-  // //   deployments["AggregatorETH"]
+  // //   deployments["AggregatorETH"] // aggregatorSynth
   // // );
 
   // const systemSettings = await ethers.getContractAt(
