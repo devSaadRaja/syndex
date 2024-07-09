@@ -12,6 +12,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import {IFeePool} from "../src/interfaces/IFeePool.sol";
 import {ISynthetix} from "../src/interfaces/ISynthetix.sol";
+import {IMixinResolver} from "../src/interfaces/IMixinResolver.sol";
 import {ISwapRouter} from "../src/contracts/SMX/interfaces/ISwapRouter.sol";
 import {IAggregationRouterV4} from "../src/contracts/SMX/interfaces/IAggregationRouterV4.sol";
 
@@ -35,7 +36,6 @@ import {SystemStatus} from "../src/contracts/SystemStatus.sol";
 import {CollateralEth} from "../src/contracts/CollateralEth.sol";
 import {ExchangeRates} from "../src/contracts/ExchangeRates.sol";
 import {ExchangeState} from "../src/contracts/ExchangeState.sol";
-import {MixinResolver} from "../src/contracts/MixinResolver.sol";
 import {SynthRedeemer} from "../src/contracts/SynthRedeemer.sol";
 import {SynthetixState} from "../src/contracts/SynthetixState.sol";
 import {WrapperFactory} from "../src/contracts/WrapperFactory.sol";
@@ -118,7 +118,6 @@ contract Setup is Test, Utils {
     CollateralEth public collateralETH;
     ExchangeState public exchangeState;
     SynthRedeemer public synthRedeemer;
-    MixinResolver public mixinResolver;
     ExchangeRates public exchangeRates;
     SynthetixState public synthetixState;
     TradingRewards public tradingRewards;
@@ -177,7 +176,6 @@ contract Setup is Test, Utils {
 
         dappMaintenance = new DappMaintenance(owner);
         addressResolver = new AddressResolver(owner);
-        mixinResolver = new MixinResolver(address(addressResolver));
 
         smx = new SMX("SMX", "SMX", owner, 100_000_000 ether);
         synthUtil = new SynthUtil(address(addressResolver));
@@ -252,7 +250,7 @@ contract Setup is Test, Utils {
         etherWrapper = new EtherWrapper(
             owner,
             address(addressResolver),
-            payable(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2)
+            payable(WETH)
         );
         futuresMarketManager = new FuturesMarketManager(
             owner,
@@ -300,7 +298,7 @@ contract Setup is Test, Utils {
         );
         rewardsDistribution = new RewardsDistribution(
             owner,
-            owner, // synthetix
+            address(synthetix),
             address(proxySCFX),
             address(rewardEscrowV2),
             address(proxyFeePool)
@@ -448,7 +446,7 @@ contract Setup is Test, Utils {
 
         addressResolver.loadAddresses(names, addresses);
         for (uint i = count; i < addresses.length; i++) {
-            MixinResolver(addresses[i]).refreshCache();
+            IMixinResolver(addresses[i]).refreshCache();
         }
 
         // for (uint i = 0; i < addresses.length; i++) {
