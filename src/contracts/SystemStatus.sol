@@ -361,8 +361,8 @@ contract SystemStatus is Ownable, ISystemStatus {
         require(
             !systemSuspension.suspended,
             systemSuspension.reason == SUSPENSION_REASON_UPGRADE
-                ? "Synthetix is suspended, upgrade in progress... please stand by"
-                : "Synthetix is suspended. Operation prohibited"
+                ? "SynDex is suspended, upgrade in progress... please stand by"
+                : "SynDex is suspended. Operation prohibited"
         );
     }
 

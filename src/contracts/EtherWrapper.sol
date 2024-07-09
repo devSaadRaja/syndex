@@ -25,14 +25,14 @@ contract EtherWrapper is Ownable, Pausable, MixinSystemSettings, IEtherWrapper {
 
     /* ========== ENCODED NAMES ========== */
 
-    bytes32 internal constant sUSD = "sUSD";
-    bytes32 internal constant sETH = "sETH";
+    bytes32 internal constant cfUSD = "cfUSD";
+    bytes32 internal constant cfETH = "cfETH";
     bytes32 internal constant ETH = "ETH";
-    bytes32 internal constant SCFX = "SCFX";
+    bytes32 internal constant SFCX = "SFCX";
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
-    bytes32 private constant CONTRACT_SYNTHSETH = "SynthsETH";
-    bytes32 private constant CONTRACT_SYNTHSUSD = "SynthsUSD";
+    bytes32 private constant CONTRACT_SYNTHSETH = "SynthcfETH";
+    bytes32 private constant CONTRACT_SYNTHSUSD = "SynthcfUSD";
     bytes32 private constant CONTRACT_ISSUER = "Issuer";
     bytes32 private constant CONTRACT_EXRATES = "ExchangeRates";
     bytes32 private constant CONTRACT_FEEPOOL = "FeePool";
@@ -40,8 +40,8 @@ contract EtherWrapper is Ownable, Pausable, MixinSystemSettings, IEtherWrapper {
     // ========== STATE VARIABLES ==========
     IWETH internal _weth;
 
-    uint public sETHIssued = 0;
-    uint public sUSDIssued = 0;
+    uint public cfETHIssued = 0;
+    uint public cfUSDIssued = 0;
     uint public feesEscrowed = 0;
 
     constructor(
@@ -72,11 +72,11 @@ contract EtherWrapper is Ownable, Pausable, MixinSystemSettings, IEtherWrapper {
     }
 
     /* ========== INTERNAL VIEWS ========== */
-    function synthsUSD() internal view returns (ISynth) {
+    function synthcfUSD() internal view returns (ISynth) {
         return ISynth(requireAndGetAddress(CONTRACT_SYNTHSUSD));
     }
 
-    function synthsETH() internal view returns (ISynth) {
+    function synthcfETH() internal view returns (ISynth) {
         return ISynth(requireAndGetAddress(CONTRACT_SYNTHSETH));
     }
 
@@ -111,14 +111,14 @@ contract EtherWrapper is Ownable, Pausable, MixinSystemSettings, IEtherWrapper {
 
     function totalIssuedSynths() public view returns (uint) {
         // This contract issues two different synths:
-        // 1. sETH
-        // 2. sUSD
+        // 1. cfETH
+        // 2. cfUSD
         //
-        // The sETH is always backed 1:1 with WETH.
-        // The sUSD fees are backed by sETH that is withheld during minting and burning.
+        // The cfETH is always backed 1:1 with WETH.
+        // The cfUSD fees are backed by cfETH that is withheld during minting and burning.
         return
-            exchangeRates().effectiveValue(sETH, sETHIssued, sUSD).add(
-                sUSDIssued
+            exchangeRates().effectiveValue(cfETH, cfETHIssued, cfUSD).add(
+                cfUSDIssued
             );
     }
 
@@ -148,7 +148,7 @@ contract EtherWrapper is Ownable, Pausable, MixinSystemSettings, IEtherWrapper {
 
     /* ========== MUTATIVE FUNCTIONS ========== */
 
-    // Transfers `amountIn` WETH to mint `amountIn - fees` sETH.
+    // Transfers `amountIn` WETH to mint `amountIn - fees` cfETH.
     // `amountIn` is inclusive of fees, calculable via `calculateMintFee`.
     function mint(uint amountIn) external whenNotPaused {
         require(
@@ -167,13 +167,13 @@ contract EtherWrapper is Ownable, Pausable, MixinSystemSettings, IEtherWrapper {
         }
     }
 
-    // Burns `amountIn` sETH for `amountIn - fees` WETH.
+    // Burns `amountIn` cfETH for `amountIn - fees` WETH.
     // `amountIn` is inclusive of fees, calculable via `calculateBurnFee`.
     function burn(uint amountIn) external whenNotPaused {
         uint reserves = getReserves();
         require(
             reserves > 0,
-            "Contract cannot burn sETH for WETH, WETH balance is zero"
+            "Contract cannot burn cfETH for WETH, WETH balance is zero"
         );
 
         // principal = [amountIn / (1 + burnFeeRate)]
@@ -189,27 +189,27 @@ contract EtherWrapper is Ownable, Pausable, MixinSystemSettings, IEtherWrapper {
     }
 
     function distributeFees() external {
-        // Normalize fee to sUSD
+        // Normalize fee to cfUSD
         require(
-            !exchangeRates().rateIsInvalid(sETH),
+            !exchangeRates().rateIsInvalid(cfETH),
             "Currency rate is invalid"
         );
         uint amountSUSD = exchangeRates().effectiveValue(
-            sETH,
+            cfETH,
             feesEscrowed,
-            sUSD
+            cfUSD
         );
 
-        // Burn sETH.
-        synthsETH().burn(address(this), feesEscrowed);
-        // Pay down as much sETH debt as we burn. Any other debt is taken on by the stakers.
-        sETHIssued = sETHIssued < feesEscrowed
+        // Burn cfETH.
+        synthcfETH().burn(address(this), feesEscrowed);
+        // Pay down as much cfETH debt as we burn. Any other debt is taken on by the stakers.
+        cfETHIssued = cfETHIssued < feesEscrowed
             ? 0
-            : sETHIssued.sub(feesEscrowed);
+            : cfETHIssued.sub(feesEscrowed);
 
-        // Issue sUSD to the fee pool
-        issuer().synths(sUSD).issue(feePool().FEE_ADDRESS(), amountSUSD);
-        sUSDIssued = sUSDIssued.add(amountSUSD);
+        // Issue cfUSD to the fee pool
+        issuer().synths(cfUSD).issue(feePool().FEE_ADDRESS(), amountSUSD);
+        cfUSDIssued = cfUSDIssued.add(amountSUSD);
 
         // Tell the fee pool about this
         feePool().recordFeePaid(amountSUSD);
@@ -238,15 +238,15 @@ contract EtherWrapper is Ownable, Pausable, MixinSystemSettings, IEtherWrapper {
         // Transfer WETH from user.
         _weth.transferFrom(msg.sender, address(this), amountIn);
 
-        // Mint `amountIn - fees` sETH to user.
-        synthsETH().issue(msg.sender, principal);
+        // Mint `amountIn - fees` cfETH to user.
+        synthcfETH().issue(msg.sender, principal);
 
         // Escrow fee.
-        synthsETH().issue(address(this), feeAmountEth);
+        synthcfETH().issue(address(this), feeAmountEth);
         feesEscrowed = feesEscrowed.add(feeAmountEth);
 
-        // Add sETH debt.
-        sETHIssued = sETHIssued.add(amountIn);
+        // Add cfETH debt.
+        cfETHIssued = cfETHIssued.add(amountIn);
 
         emit Minted(msg.sender, principal, feeAmountEth, amountIn);
     }
@@ -257,27 +257,27 @@ contract EtherWrapper is Ownable, Pausable, MixinSystemSettings, IEtherWrapper {
 
         require(
             amountIn <=
-                IERC20(address(synthsETH())).allowance(
+                IERC20(address(synthcfETH())).allowance(
                     msg.sender,
                     address(this)
                 ),
             "Allowance not high enough"
         );
         require(
-            amountIn <= IERC20(address(synthsETH())).balanceOf(msg.sender),
+            amountIn <= IERC20(address(synthcfETH())).balanceOf(msg.sender),
             "Balance is too low"
         );
 
-        // Burn `amountIn` sETH from user.
-        synthsETH().burn(msg.sender, amountIn);
-        // sETH debt is repaid by burning.
-        sETHIssued = sETHIssued < principal ? 0 : sETHIssued.sub(principal);
+        // Burn `amountIn` cfETH from user.
+        synthcfETH().burn(msg.sender, amountIn);
+        // cfETH debt is repaid by burning.
+        cfETHIssued = cfETHIssued < principal ? 0 : cfETHIssued.sub(principal);
 
         // We use burn/issue instead of burning the principal and transferring the fee.
         // This saves an approval and is cheaper.
         // Escrow fee.
-        synthsETH().issue(address(this), feeAmountEth);
-        // We don't update sETHIssued, as only the principal was subtracted earlier.
+        synthcfETH().issue(address(this), feeAmountEth);
+        // We don't update cfETHIssued, as only the principal was subtracted earlier.
         feesEscrowed = feesEscrowed.add(feeAmountEth);
 
         // Transfer `amount - fees` WETH to user.

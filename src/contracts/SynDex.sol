@@ -4,16 +4,16 @@ pragma solidity ^0.8.17;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
-import "./BaseSynthetix.sol";
+import "./BaseSynDex.sol";
 
 import "../interfaces/ITaxable.sol";
 import "../interfaces/IRewardEscrow.sol";
 import "../interfaces/IRewardEscrowV2.sol";
 
-contract Synthetix is AccessControl, BaseSynthetix {
+contract SynDex is AccessControl, BaseSynDex {
     using SafeMath for uint;
 
-    bytes32 public constant CONTRACT_NAME = "Synthetix";
+    bytes32 public constant CONTRACT_NAME = "SynDex";
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
@@ -44,7 +44,7 @@ contract Synthetix is AccessControl, BaseSynthetix {
         uint _totalSupply,
         address _resolver
     )
-        BaseSynthetix(
+        BaseSynDex(
             _proxy,
             TokenState(_tokenState),
             _owner,
@@ -87,7 +87,7 @@ contract Synthetix is AccessControl, BaseSynthetix {
         override
         returns (bytes32[] memory addresses)
     {
-        bytes32[] memory existingAddresses = BaseSynthetix
+        bytes32[] memory existingAddresses = BaseSynDex
             .resolverAddressesRequired();
         bytes32[] memory newAddresses = new bytes32[](1);
         newAddresses[0] = CONTRACT_REWARD_ESCROW;
@@ -237,7 +237,7 @@ contract Synthetix is AccessControl, BaseSynthetix {
         emitTransfer(reserveAddr, address(0), burnAmount);
     }
 
-    /* Once off function for SIP-60 to migrate SCFX balances in the RewardEscrow contract
+    /* Once off function for SIP-60 to migrate SFCX balances in the RewardEscrow contract
      * To the new RewardEscrowV2 contract
      */
     function migrateEscrowBalanceToRewardEscrowV2()

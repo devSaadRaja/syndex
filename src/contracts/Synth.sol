@@ -19,12 +19,12 @@ contract Synth is Ownable, ExternStateToken, MixinResolver, ISynth {
 
     /* ========== STATE VARIABLES ========== */
 
-    // Currency key which identifies this Synth to the Synthetix system
+    // Currency key which identifies this Synth to the SynDex system
     bytes32 public currencyKey;
 
     uint8 public constant DECIMALS = 18;
 
-    // Where fees are pooled in sUSD
+    // Where fees are pooled in cfUSD
     address public constant FEE_ADDRESS =
         0xfeEFEEfeefEeFeefEEFEEfEeFeefEEFeeFEEFEeF;
 
@@ -74,7 +74,7 @@ contract Synth is Ownable, ExternStateToken, MixinResolver, ISynth {
     ) public onlyProxyOrInternal returns (bool) {
         _ensureCanTransfer(messageSender, value);
 
-        // transfers to FEE_ADDRESS will be exchanged into sUSD and recorded as fee
+        // transfers to FEE_ADDRESS will be exchanged into cfUSD and recorded as fee
         if (to == FEE_ADDRESS) {
             return _transferToFeeAddress(to, value);
         }
@@ -143,7 +143,7 @@ contract Synth is Ownable, ExternStateToken, MixinResolver, ISynth {
 
     /**
      * @notice _transferToFeeAddress function
-     * non-sUSD synths are exchanged into sUSD via synthInitiatedExchange
+     * non-cfUSD synths are exchanged into cfUSD via synthInitiatedExchange
      * notify feePool to record amount as fee paid to feePool */
     function _transferToFeeAddress(
         address to,
@@ -151,18 +151,18 @@ contract Synth is Ownable, ExternStateToken, MixinResolver, ISynth {
     ) internal returns (bool) {
         uint amountInUSD;
 
-        // sUSD can be transferred to FEE_ADDRESS directly
-        if (currencyKey == "sUSD") {
+        // cfUSD can be transferred to FEE_ADDRESS directly
+        if (currencyKey == "cfUSD") {
             amountInUSD = value;
             super._internalTransfer(messageSender, to, value);
         } else {
-            // else executeExchange synth into sUSD and send to FEE_ADDRESS
+            // else executeExchange synth into cfUSD and send to FEE_ADDRESS
             (amountInUSD, ) = exchanger().executeExchange(
                 messageSender,
                 messageSender,
                 currencyKey,
                 value,
-                "sUSD",
+                "cfUSD",
                 FEE_ADDRESS,
                 false,
                 address(0),
@@ -170,7 +170,7 @@ contract Synth is Ownable, ExternStateToken, MixinResolver, ISynth {
             );
         }
 
-        // Notify feePool to record sUSD to distribute as fees
+        // Notify feePool to record cfUSD to distribute as fees
         feePool().recordFeePaid(amountInUSD);
 
         return true;

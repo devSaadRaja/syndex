@@ -78,7 +78,7 @@ interface IDebtCache {
         int256 delta
     ) external;
 
-    function updateCachedsUSDDebt(int amount) external;
+    function updateCachedcfUSDDebt(int amount) external;
 
     function importExcludedIssuedDebts(
         IDebtCache prevDebtCache,

@@ -13,7 +13,7 @@ import "../interfaces/IERC20.sol";
 import "../interfaces/ISynth.sol";
 import "../interfaces/IIssuer.sol";
 import "../interfaces/IFeePool.sol";
-import "../interfaces/ISynthetix.sol";
+import "../interfaces/ISynDex.sol";
 import "../interfaces/IExchanger.sol";
 import "../interfaces/ISystemStatus.sol";
 import "../interfaces/IEtherWrapper.sol";
@@ -21,10 +21,10 @@ import "../interfaces/IWrapperFactory.sol";
 import "../interfaces/IRewardEscrowV2.sol";
 import "../interfaces/ICollateralManager.sol";
 import "../interfaces/IDelegateApprovals.sol";
-import "../interfaces/ISynthetixDebtShare.sol";
+import "../interfaces/ISynDexDebtShare.sol";
 import "../interfaces/IRewardsDistribution.sol";
 import "../interfaces/IFuturesMarketManager.sol";
-import "../interfaces/ISynthetixBridgeToOptimism.sol";
+import "../interfaces/ISynDexBridgeToOptimism.sol";
 
 import "../libraries/SafeDecimalMath.sol";
 
@@ -40,12 +40,12 @@ contract FeePool is
 
     bytes32 public constant CONTRACT_NAME = "FeePool";
 
-    // Where fees are pooled in sUSD.
+    // Where fees are pooled in cfUSD.
     address public constant FEE_ADDRESS =
         0xfeEFEEfeefEeFeefEEFEEfEeFeefEEFeeFEEFEeF;
 
-    // sUSD currencyKey. Fees stored and paid in sUSD
-    bytes32 private sUSD = "sUSD";
+    // cfUSD currencyKey. Fees stored and paid in cfUSD
+    bytes32 private cfUSD = "cfUSD";
 
     // This struct represents the issuance activity that's happened in a fee period.
     struct FeePeriod {
@@ -72,7 +72,7 @@ contract FeePool is
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
     bytes32 private constant CONTRACT_SYSTEMSTATUS = "SystemStatus";
-    bytes32 private constant CONTRACT_SYNTHETIXDEBTSHARE = "SynthetixDebtShare";
+    bytes32 private constant CONTRACT_SYNTHETIXDEBTSHARE = "SynDexDebtShare";
     bytes32 private constant CONTRACT_FEEPOOLETERNALSTORAGE =
         "FeePoolEternalStorage";
     bytes32 private constant CONTRACT_EXCHANGER = "Exchanger";
@@ -88,9 +88,9 @@ contract FeePool is
     bytes32 private constant CONTRACT_WRAPPER_FACTORY = "WrapperFactory";
 
     bytes32 private constant CONTRACT_SYNTHETIX_BRIDGE_TO_OPTIMISM =
-        "SynthetixBridgeToOptimism";
+        "SynDexBridgeToOptimism";
     bytes32 private constant CONTRACT_SYNTHETIX_BRIDGE_TO_BASE =
-        "SynthetixBridgeToBase";
+        "SynDexBridgeToBase";
 
     bytes32 private constant CONTRACT_EXT_AGGREGATOR_ISSUED_SYNTHS =
         "ext:AggregatorIssuedSynths";
@@ -147,9 +147,9 @@ contract FeePool is
         return ISystemStatus(requireAndGetAddress(CONTRACT_SYSTEMSTATUS));
     }
 
-    function synthetixDebtShare() internal view returns (ISynthetixDebtShare) {
+    function syndexDebtShare() internal view returns (ISynDexDebtShare) {
         return
-            ISynthetixDebtShare(
+            ISynDexDebtShare(
                 requireAndGetAddress(CONTRACT_SYNTHETIXDEBTSHARE)
             );
     }
@@ -313,21 +313,21 @@ contract FeePool is
      * @param amount susd amount in fees being paid.
      */
     function recordFeePaid(uint amount) external onlyInternalContracts {
-        // Keep track off fees in sUSD in the open fee pool period.
+        // Keep track off fees in cfUSD in the open fee pool period.
         _recentFeePeriodsStorage(0).feesToDistribute = _recentFeePeriodsStorage(
             0
         ).feesToDistribute.add(amount);
     }
 
     /**
-     * @notice The RewardsDistribution contract informs us how many SCFX rewards are sent to RewardEscrow to be claimed.
+     * @notice The RewardsDistribution contract informs us how many SFCX rewards are sent to RewardEscrow to be claimed.
      */
     function setRewardsToDistribute(uint amount) external optionalProxy {
         require(
             messageSender == address(rewardsDistribution()),
             "RewardsDistribution only"
         );
-        // Add the amount of SCFX rewards to distribute on top of any rolling unclaimed amount
+        // Add the amount of SFCX rewards to distribute on top of any rolling unclaimed amount
         _recentFeePeriodsStorage(0)
             .rewardsToDistribute = _recentFeePeriodsStorage(0)
             .rewardsToDistribute
@@ -346,19 +346,19 @@ contract FeePool is
         );
 
         // get current oracle values
-        (uint scfxBackedDebt, ) = allNetworksSnxBackedDebt();
+        (uint sfcxBackedDebt, ) = allNetworksSnxBackedDebt();
         (uint debtSharesSupply, ) = allNetworksDebtSharesSupply();
 
         // close on this chain
-        _closeSecondary(scfxBackedDebt, debtSharesSupply);
+        _closeSecondary(sfcxBackedDebt, debtSharesSupply);
 
         // // inform other chain of the chosen values
-        // ISynthetixBridgeToOptimism(
+        // ISynDexBridgeToOptimism(
         //     resolver.requireAndGetAddress(
         //         CONTRACT_SYNTHETIX_BRIDGE_TO_OPTIMISM,
-        //         "Missing contract: SynthetixBridgeToOptimism"
+        //         "Missing contract: SynDexBridgeToOptimism"
         //     )
-        // ).closeFeePeriod(scfxBackedDebt, debtSharesSupply);
+        // ).closeFeePeriod(sfcxBackedDebt, debtSharesSupply);
     }
 
     function closeSecondary(
@@ -378,7 +378,7 @@ contract FeePool is
         etherWrapper().distributeFees();
         wrapperFactory().distributeFees();
 
-        // before closing the current fee period, set the recorded scfxBackedDebt and debtSharesSupply
+        // before closing the current fee period, set the recorded sfcxBackedDebt and debtSharesSupply
         _recentFeePeriodsStorage(0)
             .allNetworksDebtSharesSupply = allNetworksDebtSharesSupply;
         _recentFeePeriodsStorage(0)
@@ -404,10 +404,10 @@ contract FeePool is
             .sub(periodToRollover.rewardsClaimed)
             .add(periodClosing.rewardsToDistribute);
 
-        // Note: As of SIP-255, all sUSD fee are now automatically burned and are effectively shared amongst stakers in the form of reduced debt.
+        // Note: As of SIP-255, all cfUSD fee are now automatically burned and are effectively shared amongst stakers in the form of reduced debt.
         if (_recentFeePeriodsStorage(0).feesToDistribute > 0) {
             issuer().burnSynthsWithoutDebt(
-                sUSD,
+                cfUSD,
                 FEE_ADDRESS,
                 _recentFeePeriodsStorage(0).feesToDistribute
             );
@@ -463,7 +463,7 @@ contract FeePool is
     }
 
     /**
-     * Note: As of SIP-255, all sUSD fees are burned at the closure of the fee period and are no longer claimable.
+     * Note: As of SIP-255, all cfUSD fees are burned at the closure of the fee period and are no longer claimable.
      * @notice Send the rewards to claiming address.
      * @param claimingAddress The address to send the rewards to.
      */
@@ -482,7 +482,7 @@ contract FeePool is
 
         require(feesClaimable, "C-Ratio below penalty threshold");
 
-        require(!anyRateIsInvalid, "A synth or SCFX rate is invalid");
+        require(!anyRateIsInvalid, "A synth or SFCX rate is invalid");
 
         // Get the claimingAddress available fees and rewards
         (availableFees, availableRewards) = feesAvailable(claimingAddress);
@@ -547,11 +547,11 @@ contract FeePool is
 
     /**
      * @notice Record the reward payment in our recentFeePeriods.
-     * @param scfxAmount The amount of SCFX tokens.
+     * @param sfcxAmount The amount of SFCX tokens.
      */
-    function _recordRewardPayment(uint scfxAmount) internal returns (uint) {
+    function _recordRewardPayment(uint sfcxAmount) internal returns (uint) {
         // Don't assign to the parameter
-        uint remainingToAllocate = scfxAmount;
+        uint remainingToAllocate = sfcxAmount;
 
         uint rewardPaid;
 
@@ -586,22 +586,22 @@ contract FeePool is
     /**
      * @notice Send the rewards to claiming address - will be locked in rewardEscrow.
      * @param account The address to send the fees to.
-     * @param scfxAmount The amount of SCFX.
+     * @param sfcxAmount The amount of SFCX.
      */
     function _payRewards(
         address account,
-        uint scfxAmount
+        uint sfcxAmount
     ) internal notFeeAddress(account) {
         /* Escrow the tokens for 1 year. */
         uint escrowDuration = 52 weeks;
 
         // Record vesting entry for claiming address and amount
-        // SCFX already minted to rewardEscrow balance
-        rewardEscrowV2().appendVestingEntry(account, scfxAmount, escrowDuration);
+        // SFCX already minted to rewardEscrow balance
+        rewardEscrowV2().appendVestingEntry(account, sfcxAmount, escrowDuration);
     }
 
     /**
-     * @notice The total fees available in the system to be withdrawn in sUSD.
+     * @notice The total fees available in the system to be withdrawn in cfUSD.
      */
     function totalFeesAvailable() external view returns (uint) {
         uint totalFees = 0;
@@ -625,7 +625,7 @@ contract FeePool is
     }
 
     /**
-     * @notice The total SCFX rewards available in the system to be withdrawn
+     * @notice The total SFCX rewards available in the system to be withdrawn
      */
     function totalRewardsAvailable() external view returns (uint) {
         uint totalRewards = 0;
@@ -644,8 +644,8 @@ contract FeePool is
     }
 
     /**
-     * @notice The fees available to be withdrawn by a specific account, priced in sUSD
-     * @dev Returns two amounts, one for fees and one for SCFX rewards
+     * @notice The fees available to be withdrawn by a specific account, priced in cfUSD
+     * @dev Returns two amounts, one for fees and one for SFCX rewards
      */
     function feesAvailable(address account) public view returns (uint, uint) {
         // Add up the fees
@@ -660,8 +660,8 @@ contract FeePool is
             totalRewards = totalRewards.add(userFees[i][1]);
         }
 
-        // And convert totalFees to sUSD
-        // Return totalRewards as is in SCFX amount
+        // And convert totalFees to cfUSD
+        // Return totalRewards as is in SFCX amount
         return (totalFees, totalRewards);
     }
 
@@ -682,7 +682,7 @@ contract FeePool is
     function feesToBurn(
         address account
     ) public view returns (uint feesFromPeriod) {
-        ISynthetixDebtShare sds = synthetixDebtShare();
+        ISynDexDebtShare sds = syndexDebtShare();
         uint userOwnershipPercentage = sds.sharePercent(account);
         (feesFromPeriod, ) = _feesAndRewardsFromPeriod(
             0,
@@ -726,7 +726,7 @@ contract FeePool is
     }
 
     /**
-     * @notice Calculates fees by period for an account, priced in sUSD
+     * @notice Calculates fees by period for an account, priced in cfUSD
      * @param account The address you want to query the fees for
      */
     function feesByPeriod(
@@ -734,7 +734,7 @@ contract FeePool is
     ) public view returns (uint[FEE_PERIOD_LENGTH][2] memory results) {
         // What's the user's debt entry index and the debt they owe to the system at current feePeriod
         uint userOwnershipPercentage;
-        ISynthetixDebtShare sds = synthetixDebtShare();
+        ISynDexDebtShare sds = syndexDebtShare();
 
         userOwnershipPercentage = sds.sharePercent(account);
 
@@ -817,7 +817,7 @@ contract FeePool is
         if (_recentFeePeriodsStorage(period - 1).startTime == 0) return 0;
 
         return
-            synthetixDebtShare().sharePercentOnPeriod(
+            syndexDebtShare().sharePercentOnPeriod(
                 account,
                 uint(_recentFeePeriods[period].feePeriodId)
             );
@@ -911,17 +911,17 @@ contract FeePool is
         proxy._emit(abi.encode(feePeriodId), 1, FEEPERIODCLOSED_SIG, 0, 0, 0);
     }
 
-    event FeesClaimed(address account, uint sUSDAmount, uint scfxRewards);
+    event FeesClaimed(address account, uint cfUSDAmount, uint sfcxRewards);
     bytes32 private constant FEESCLAIMED_SIG =
         keccak256("FeesClaimed(address,uint256,uint256)");
 
     function emitFeesClaimed(
         address account,
-        uint sUSDAmount,
-        uint scfxRewards
+        uint cfUSDAmount,
+        uint sfcxRewards
     ) internal {
         proxy._emit(
-            abi.encode(account, sUSDAmount, scfxRewards),
+            abi.encode(account, cfUSDAmount, sfcxRewards),
             1,
             FEESCLAIMED_SIG,
             0,

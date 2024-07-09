@@ -6,25 +6,25 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./LimitedSetup.sol";
 
 import "../interfaces/IERC20.sol";
-import "../interfaces/ISynthetix.sol";
+import "../interfaces/ISynDex.sol";
 import "../interfaces/IHasBalance.sol";
 
 import "../libraries/SafeDecimalMath.sol";
 
-contract SynthetixEscrow is Ownable, LimitedSetup(8 weeks), IHasBalance {
+contract SynDexEscrow is Ownable, LimitedSetup(8 weeks), IHasBalance {
     using SafeMath for uint;
 
-    /* The corresponding Synthetix contract. */
-    ISynthetix public synthetix;
+    /* The corresponding SynDex contract. */
+    ISynDex public syndex;
 
     /* Lists of (timestamp, quantity) pairs per account, sorted in ascending time order.
-     * These are the times at which each given quantity of SCFX vests. */
+     * These are the times at which each given quantity of SFCX vests. */
     mapping(address => uint[2][]) public vestingSchedules;
 
-    /* An account's total vested synthetix balance to save recomputing this for fee extraction purposes. */
+    /* An account's total vested syndex balance to save recomputing this for fee extraction purposes. */
     mapping(address => uint) public totalVestedAccountBalance;
 
-    /* The total remaining vested balance, for verifying the actual synthetix balance of this contract against. */
+    /* The total remaining vested balance, for verifying the actual syndex balance of this contract against. */
     uint public totalVestedBalance;
 
     uint public constant TIME_INDEX = 0;
@@ -35,15 +35,15 @@ contract SynthetixEscrow is Ownable, LimitedSetup(8 weeks), IHasBalance {
 
     /* ========== CONSTRUCTOR ========== */
 
-    constructor(address _owner, ISynthetix _synthetix) Ownable(_owner) {
-        synthetix = _synthetix;
+    constructor(address _owner, ISynDex _syndex) Ownable(_owner) {
+        syndex = _syndex;
     }
 
     /* ========== SETTERS ========== */
 
-    function setSynthetix(ISynthetix _synthetix) external onlyOwner {
-        synthetix = _synthetix;
-        emit SynthetixUpdated(address(_synthetix));
+    function setSynDex(ISynDex _syndex) external onlyOwner {
+        syndex = _syndex;
+        emit SynDexUpdated(address(_syndex));
     }
 
     /* ========== VIEW FUNCTIONS ========== */
@@ -64,7 +64,7 @@ contract SynthetixEscrow is Ownable, LimitedSetup(8 weeks), IHasBalance {
 
     /**
      * @notice Get a particular schedule entry for an account.
-     * @return A pair of uints: (timestamp, synthetix quantity).
+     * @return A pair of uints: (timestamp, syndex quantity).
      */
     function getVestingScheduleEntry(
         address account,
@@ -84,7 +84,7 @@ contract SynthetixEscrow is Ownable, LimitedSetup(8 weeks), IHasBalance {
     }
 
     /**
-     * @notice Get the quantity of SCFX associated with a given schedule entry.
+     * @notice Get the quantity of SFCX associated with a given schedule entry.
      */
     function getVestingQuantity(
         address account,
@@ -108,7 +108,7 @@ contract SynthetixEscrow is Ownable, LimitedSetup(8 weeks), IHasBalance {
 
     /**
      * @notice Obtain the next schedule entry that will vest for a given user.
-     * @return A pair of uints: (timestamp, synthetix quantity). */
+     * @return A pair of uints: (timestamp, syndex quantity). */
     function getNextVestingEntry(
         address account
     ) public view returns (uint[2] memory) {
@@ -151,7 +151,7 @@ contract SynthetixEscrow is Ownable, LimitedSetup(8 weeks), IHasBalance {
     /**
      * @notice Add a new vesting entry at a given time and quantity to an account's schedule.
      * @dev A call to this should be accompanied by either enough balance already available
-     * in this contract, or a corresponding call to synthetix.endow(), to ensure that when
+     * in this contract, or a corresponding call to syndex.endow(), to ensure that when
      * the funds are withdrawn, there is enough balance, as well as correctly calculating
      * the fees.
      * This may only be called by the owner during the contract's setup period.
@@ -159,7 +159,7 @@ contract SynthetixEscrow is Ownable, LimitedSetup(8 weeks), IHasBalance {
      * arrays, it's only in the foundation's command to add to these lists.
      * @param account The account to append a new vesting entry to.
      * @param time The absolute unix timestamp after which the vested quantity may be withdrawn.
-     * @param quantity The quantity of SCFX that will vest.
+     * @param quantity The quantity of SFCX that will vest.
      */
     function appendVestingEntry(
         address account,
@@ -174,7 +174,7 @@ contract SynthetixEscrow is Ownable, LimitedSetup(8 weeks), IHasBalance {
         totalVestedBalance = totalVestedBalance.add(quantity);
         require(
             totalVestedBalance <=
-                IERC20(address(synthetix)).balanceOf(address(this)),
+                IERC20(address(syndex)).balanceOf(address(this)),
             "Must be enough balance in the contract to provide for the vesting entry"
         );
 
@@ -188,7 +188,7 @@ contract SynthetixEscrow is Ownable, LimitedSetup(8 weeks), IHasBalance {
         if (scheduleLength == 0) {
             totalVestedAccountBalance[account] = quantity;
         } else {
-            /* Disallow adding new vested SCFX earlier than the last one.
+            /* Disallow adding new vested SFCX earlier than the last one.
              * Since entries are only appended, this means that no vesting date can be repeated. */
             require(
                 getVestingTime(account, numVestingEntries(account) - 1) < time,
@@ -203,7 +203,7 @@ contract SynthetixEscrow is Ownable, LimitedSetup(8 weeks), IHasBalance {
     }
 
     /**
-     * @notice Construct a vesting schedule to release a quantities of SCFX
+     * @notice Construct a vesting schedule to release a quantities of SFCX
      * over a series of intervals.
      * @dev Assumes that the quantities are nonzero
      * and that the sequence of timestamps is strictly increasing.
@@ -220,7 +220,7 @@ contract SynthetixEscrow is Ownable, LimitedSetup(8 weeks), IHasBalance {
     }
 
     /**
-     * @notice Allow a user to withdraw any SCFX in their schedule that have vested.
+     * @notice Allow a user to withdraw any SFCX in their schedule that have vested.
      */
     function vest() external {
         uint numEntries = numVestingEntries(msg.sender);
@@ -243,14 +243,14 @@ contract SynthetixEscrow is Ownable, LimitedSetup(8 weeks), IHasBalance {
             totalVestedAccountBalance[msg.sender] = totalVestedAccountBalance[
                 msg.sender
             ].sub(total);
-            IERC20(address(synthetix)).transfer(msg.sender, total);
+            IERC20(address(syndex)).transfer(msg.sender, total);
             emit Vested(msg.sender, block.timestamp, total);
         }
     }
 
     /* ========== EVENTS ========== */
 
-    event SynthetixUpdated(address newSynthetix);
+    event SynDexUpdated(address newSynDex);
 
     event Vested(address indexed beneficiary, uint time, uint value);
 }

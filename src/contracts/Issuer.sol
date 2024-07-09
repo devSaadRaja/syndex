@@ -18,7 +18,7 @@ import "../interfaces/ISynthRedeemer.sol";
 import "../interfaces/ICircuitBreaker.sol";
 import "../interfaces/IDelegateApprovals.sol";
 import "../interfaces/ILiquidatorRewards.sol";
-import "../interfaces/ISynthetixDebtShare.sol";
+import "../interfaces/ISynDexDebtShare.sol";
 
 import "../libraries/SafeCast.sol";
 import "../libraries/SafeDecimalMath.sol";
@@ -50,7 +50,7 @@ interface IIssuerInternalDebtCache {
         view
         returns (uint cachedDebt, uint timestamp, bool isInvalid, bool isStale);
 
-    function updateCachedsUSDDebt(int amount) external;
+    function updateCachedcfUSDDebt(int amount) external;
 }
 
 contract Issuer is Ownable, MixinSystemSettings {
@@ -66,8 +66,8 @@ contract Issuer is Ownable, MixinSystemSettings {
 
     /* ========== ENCODED NAMES ========== */
 
-    bytes32 internal constant sUSD = "sUSD";
-    bytes32 internal constant SCFX = "SCFX";
+    bytes32 internal constant cfUSD = "cfUSD";
+    bytes32 internal constant SFCX = "SFCX";
 
     // Flexible storage names
 
@@ -75,11 +75,11 @@ contract Issuer is Ownable, MixinSystemSettings {
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
-    bytes32 private constant CONTRACT_SYNTHETIX = "Synthetix";
+    bytes32 private constant CONTRACT_SYNTHETIX = "SynDex";
     bytes32 private constant CONTRACT_EXCHANGER = "Exchanger";
     bytes32 private constant CONTRACT_EXRATES = "ExchangeRates";
     bytes32 private constant CONTRACT_CIRCUIT_BREAKER = "CircuitBreaker";
-    bytes32 private constant CONTRACT_SYNTHETIXDEBTSHARE = "SynthetixDebtShare";
+    bytes32 private constant CONTRACT_SYNTHETIXDEBTSHARE = "SynDexDebtShare";
     bytes32 private constant CONTRACT_FEEPOOL = "FeePool";
     bytes32 private constant CONTRACT_DELEGATEAPPROVALS = "DelegateApprovals";
     bytes32 private constant CONTRACT_REWARDESCROW_V2 = "RewardEscrowV2";
@@ -88,9 +88,9 @@ contract Issuer is Ownable, MixinSystemSettings {
     bytes32 private constant CONTRACT_DEBTCACHE = "DebtCache";
     bytes32 private constant CONTRACT_SYNTHREDEEMER = "SynthRedeemer";
     bytes32 private constant CONTRACT_SYNTHETIXBRIDGETOOPTIMISM =
-        "SynthetixBridgeToOptimism";
+        "SynDexBridgeToOptimism";
     bytes32 private constant CONTRACT_SYNTHETIXBRIDGETOBASE =
-        "SynthetixBridgeToBase";
+        "SynDexBridgeToBase";
     bytes32 private constant CONTRACT_DEBT_MIGRATOR_ON_ETHEREUM =
         "DebtMigratorOnEthereum";
     bytes32 private constant CONTRACT_DEBT_MIGRATOR_ON_OPTIMISM =
@@ -133,7 +133,7 @@ contract Issuer is Ownable, MixinSystemSettings {
         return combineArrays(existingAddresses, newAddresses);
     }
 
-    function synthetixERC20() internal view returns (IERC20) {
+    function syndexERC20() internal view returns (IERC20) {
         return IERC20(requireAndGetAddress(CONTRACT_SYNTHETIX));
     }
 
@@ -149,9 +149,9 @@ contract Issuer is Ownable, MixinSystemSettings {
         return ICircuitBreaker(requireAndGetAddress(CONTRACT_CIRCUIT_BREAKER));
     }
 
-    function synthetixDebtShare() internal view returns (ISynthetixDebtShare) {
+    function syndexDebtShare() internal view returns (ISynDexDebtShare) {
         return
-            ISynthetixDebtShare(
+            ISynDexDebtShare(
                 requireAndGetAddress(CONTRACT_SYNTHETIXDEBTSHARE)
             );
     }
@@ -252,11 +252,11 @@ contract Issuer is Ownable, MixinSystemSettings {
     }
 
     function _debtShareBalanceOf(address account) internal view returns (uint) {
-        return synthetixDebtShare().balanceOf(account);
+        return syndexDebtShare().balanceOf(account);
     }
 
-    function _scfxBalanceOf(address account) internal view returns (uint) {
-        return synthetixERC20().balanceOf(account);
+    function _sfcxBalanceOf(address account) internal view returns (uint) {
+        return syndexERC20().balanceOf(account);
     }
 
     function _rewardEscrowBalanceOf(
@@ -265,26 +265,26 @@ contract Issuer is Ownable, MixinSystemSettings {
         return rewardEscrowV2().balanceOf(account);
     }
 
-    function _availableCurrencyKeysWithOptionalSCFX(
-        bool withSCFX
+    function _availableCurrencyKeysWithOptionalSFCX(
+        bool withSFCX
     ) internal view returns (bytes32[] memory) {
         bytes32[] memory currencyKeys = new bytes32[](
-            availableSynths.length + (withSCFX ? 1 : 0)
+            availableSynths.length + (withSFCX ? 1 : 0)
         );
 
         for (uint i = 0; i < availableSynths.length; i++) {
             currencyKeys[i] = synthsByAddress[address(availableSynths[i])];
         }
 
-        if (withSCFX) {
-            currencyKeys[availableSynths.length] = SCFX;
+        if (withSFCX) {
+            currencyKeys[availableSynths.length] = SFCX;
         }
 
         return currencyKeys;
     }
 
     // Returns the total value of the debt pool in currency specified by `currencyKey`.
-    // To return only the SCFX-backed debt, set `excludeCollateral` to true.
+    // To return only the SFCX-backed debt, set `excludeCollateral` to true.
     function _totalIssuedSynths(
         bytes32 currencyKey,
         bool excludeCollateral
@@ -293,7 +293,7 @@ contract Issuer is Ownable, MixinSystemSettings {
             .cacheInfo();
         anyRateIsInvalid = cacheIsInvalid || cacheIsStale;
 
-        // Add total issued synths from non scfx collateral back into the total if not excluded
+        // Add total issued synths from non sfcx collateral back into the total if not excluded
         if (!excludeCollateral) {
             (uint nonSnxDebt, bool invalid) = debtCache()
                 .totalNonSnxBackedDebt();
@@ -301,7 +301,7 @@ contract Issuer is Ownable, MixinSystemSettings {
             anyRateIsInvalid = anyRateIsInvalid || invalid;
         }
 
-        if (currencyKey == sUSD) {
+        if (currencyKey == cfUSD) {
             return (debt, anyRateIsInvalid);
         }
 
@@ -323,10 +323,10 @@ contract Issuer is Ownable, MixinSystemSettings {
         returns (uint debtBalance, uint totalSystemValue, bool anyRateIsInvalid)
     {
         // What's the total value of the system excluding ETH backed synths in their requested currency?
-        (uint scfxBackedAmount, , bool debtInfoStale) = allNetworksDebtInfo();
+        (uint sfcxBackedAmount, , bool debtInfoStale) = allNetworksDebtInfo();
 
         if (debtShareBalance == 0) {
-            return (0, scfxBackedAmount, debtInfoStale);
+            return (0, sfcxBackedAmount, debtInfoStale);
         }
 
         // existing functionality requires for us to convert into the executeExchange rate specified by `currencyKey`
@@ -337,7 +337,7 @@ contract Issuer is Ownable, MixinSystemSettings {
         debtBalance = _debtForShares(debtShareBalance).divideDecimalRound(
             currencyRate
         );
-        totalSystemValue = scfxBackedAmount;
+        totalSystemValue = sfcxBackedAmount;
 
         anyRateIsInvalid = currencyRateInvalid || debtInfoStale;
     }
@@ -373,7 +373,7 @@ contract Issuer is Ownable, MixinSystemSettings {
             alreadyIssued,
             totalSystemDebt,
             anyRateIsInvalid
-        ) = _debtBalanceOfAndTotalDebt(_debtShareBalanceOf(_issuer), sUSD);
+        ) = _debtBalanceOfAndTotalDebt(_debtShareBalanceOf(_issuer), cfUSD);
         (uint issuable, bool isInvalid) = _maxIssuableSynths(_issuer);
         maxIssuable = issuable;
         anyRateIsInvalid = anyRateIsInvalid || isInvalid;
@@ -385,20 +385,20 @@ contract Issuer is Ownable, MixinSystemSettings {
         }
     }
 
-    function _scfxToUSD(uint amount, uint scfxRate) internal pure returns (uint) {
-        return amount.multiplyDecimalRound(scfxRate);
+    function _sfcxToUSD(uint amount, uint sfcxRate) internal pure returns (uint) {
+        return amount.multiplyDecimalRound(sfcxRate);
     }
 
-    function _usdToSnx(uint amount, uint scfxRate) internal pure returns (uint) {
-        return amount.divideDecimalRound(scfxRate);
+    function _usdToSnx(uint amount, uint sfcxRate) internal pure returns (uint) {
+        return amount.divideDecimalRound(sfcxRate);
     }
 
     function _maxIssuableSynths(
         address _issuer
     ) internal view returns (uint, bool) {
-        // What is the value of their SCFX balance in sUSD
-        (uint scfxRate, bool isInvalid) = _rateAndInvalid(SCFX);
-        uint destinationValue = _scfxToUSD(_collateral(_issuer), scfxRate);
+        // What is the value of their SFCX balance in cfUSD
+        (uint sfcxRate, bool isInvalid) = _rateAndInvalid(SFCX);
+        uint destinationValue = _sfcxToUSD(_collateral(_issuer), sfcxRate);
 
         // They're allowed to issue up to issuanceRatio of that value
         return (
@@ -410,26 +410,26 @@ contract Issuer is Ownable, MixinSystemSettings {
     function _collateralisationRatio(
         address _issuer
     ) internal view returns (uint, bool) {
-        uint totalOwnedSynthetix = _collateral(_issuer);
+        uint totalOwnedSynDex = _collateral(_issuer);
 
         (
             uint debtBalance,
             ,
             bool anyRateIsInvalid
-        ) = _debtBalanceOfAndTotalDebt(_debtShareBalanceOf(_issuer), SCFX);
+        ) = _debtBalanceOfAndTotalDebt(_debtShareBalanceOf(_issuer), SFCX);
 
-        // it's more gas intensive to put this check here if they have 0 SCFX, but it complies with the interface
-        if (totalOwnedSynthetix == 0) return (0, anyRateIsInvalid);
+        // it's more gas intensive to put this check here if they have 0 SFCX, but it complies with the interface
+        if (totalOwnedSynDex == 0) return (0, anyRateIsInvalid);
 
         return (
-            debtBalance.divideDecimalRound(totalOwnedSynthetix),
+            debtBalance.divideDecimalRound(totalOwnedSynDex),
             anyRateIsInvalid
         );
     }
 
     function _collateral(address account) internal view returns (uint) {
         return
-            _scfxBalanceOf(account).add(_rewardEscrowBalanceOf(account)).add(
+            _sfcxBalanceOf(account).add(_rewardEscrowBalanceOf(account)).add(
                 liquidatorRewards().earned(account)
             );
     }
@@ -443,20 +443,20 @@ contract Issuer is Ownable, MixinSystemSettings {
     }
 
     function availableCurrencyKeys() external view returns (bytes32[] memory) {
-        return _availableCurrencyKeysWithOptionalSCFX(false);
+        return _availableCurrencyKeysWithOptionalSFCX(false);
     }
 
     function availableSynthCount() external view returns (uint) {
         return availableSynths.length;
     }
 
-    function anySynthOrSCFXRateIsInvalid()
+    function anySynthOrSFCXRateIsInvalid()
         external
         view
         returns (bool anyRateInvalid)
     {
         (, anyRateInvalid) = exchangeRates().ratesAndInvalidForCurrencies(
-            _availableCurrencyKeysWithOptionalSCFX(true)
+            _availableCurrencyKeysWithOptionalSFCX(true)
         );
     }
 
@@ -526,32 +526,32 @@ contract Issuer is Ownable, MixinSystemSettings {
         return maxIssuable;
     }
 
-    function transferableSynthetixAndAnyRateIsInvalid(
+    function transferableSynDexAndAnyRateIsInvalid(
         address account,
         uint balance
     ) external view returns (uint transferable, bool anyRateIsInvalid) {
-        // How many SCFX do they have, excluding escrow?
+        // How many SFCX do they have, excluding escrow?
         // Note: We're excluding escrow here because we're interested in their transferable amount
-        // and escrowed SCFX are not transferable.
+        // and escrowed SFCX are not transferable.
 
         // How many of those will be locked by the amount they've issued?
-        // Assuming issuance ratio is 20%, then issuing 20 SCFX of value would require
-        // 100 SCFX to be locked in their wallet to maintain their collateralisation ratio
-        // The locked synthetix value can exceed their balance.
+        // Assuming issuance ratio is 20%, then issuing 20 SFCX of value would require
+        // 100 SFCX to be locked in their wallet to maintain their collateralisation ratio
+        // The locked syndex value can exceed their balance.
         uint debtBalance;
         (debtBalance, , anyRateIsInvalid) = _debtBalanceOfAndTotalDebt(
             _debtShareBalanceOf(account),
-            SCFX
+            SFCX
         );
-        uint lockedSynthetixValue = debtBalance.divideDecimalRound(
+        uint lockedSynDexValue = debtBalance.divideDecimalRound(
             getIssuanceRatio()
         );
 
-        // If we exceed the balance, no SCFX are transferable, otherwise the difference is.
-        if (lockedSynthetixValue >= balance) {
+        // If we exceed the balance, no SFCX are transferable, otherwise the difference is.
+        if (lockedSynDexValue >= balance) {
             transferable = 0;
         } else {
-            transferable = balance.sub(lockedSynthetixValue);
+            transferable = balance.sub(lockedSynDexValue);
         }
     }
 
@@ -568,13 +568,13 @@ contract Issuer is Ownable, MixinSystemSettings {
         return addresses;
     }
 
-    /// @notice Provide the results that would be returned by the mutative liquidateAccount() method (that's reserved to Synthetix)
+    /// @notice Provide the results that would be returned by the mutative liquidateAccount() method (that's reserved to SynDex)
     /// @param account The account to be liquidated
     /// @param isSelfLiquidation boolean to determine if this is a forced or self-invoked liquidation
-    /// @return totalRedeemed the total amount of collateral (SCFX) to redeem (liquid and escrow)
-    /// @return debtToRemove the amount of debt (sUSD) to burn in order to fix the account's c-ratio
-    /// @return escrowToLiquidate the amount of escrow SCFX that will be revoked during liquidation
-    /// @return initialDebtBalance the amount of initial (sUSD) debt the account has
+    /// @return totalRedeemed the total amount of collateral (SFCX) to redeem (liquid and escrow)
+    /// @return debtToRemove the amount of debt (cfUSD) to burn in order to fix the account's c-ratio
+    /// @return escrowToLiquidate the amount of escrow SFCX that will be revoked during liquidation
+    /// @return initialDebtBalance the amount of initial (cfUSD) debt the account has
     function liquidationAmounts(
         address account,
         bool isSelfLiquidation
@@ -629,18 +629,18 @@ contract Issuer is Ownable, MixinSystemSettings {
     function _removeSynth(bytes32 currencyKey) internal {
         address synthToRemove = address(synths[currencyKey]);
         require(synthToRemove != address(0), "Synth does not exist");
-        require(currencyKey != sUSD, "Cannot remove synth");
+        require(currencyKey != cfUSD, "Cannot remove synth");
 
         uint synthSupply = IERC20(synthToRemove).totalSupply();
 
         if (synthSupply > 0) {
-            (uint amountOfsUSD, uint rateToRedeem, ) = exchangeRates()
-                .effectiveValueAndRates(currencyKey, synthSupply, "sUSD");
+            (uint amountOfcfUSD, uint rateToRedeem, ) = exchangeRates()
+                .effectiveValueAndRates(currencyKey, synthSupply, "cfUSD");
             require(rateToRedeem > 0, "Cannot remove without rate");
             ISynthRedeemer _synthRedeemer = synthRedeemer();
-            synths[sUSD].issue(address(_synthRedeemer), amountOfsUSD);
-            // ensure the debt cache is aware of the new sUSD issued
-            debtCache().updateCachedsUSDDebt(SafeCast.toInt256(amountOfsUSD));
+            synths[cfUSD].issue(address(_synthRedeemer), amountOfcfUSD);
+            // ensure the debt cache is aware of the new cfUSD issued
+            debtCache().updateCachedcfUSDDebt(SafeCast.toInt256(amountOfcfUSD));
             _synthRedeemer.deprecate(
                 IERC20(address(Proxyable(synthToRemove).proxy())),
                 rateToRedeem
@@ -715,7 +715,7 @@ contract Issuer is Ownable, MixinSystemSettings {
 
         // Account for the issued debt in the cache
         (uint rate, bool rateInvalid) = _rateAndInvalid(currencyKey);
-        debtCache().updateCachedsUSDDebt(
+        debtCache().updateCachedcfUSDDebt(
             SafeCast.toInt256(amount.multiplyDecimal(rate))
         );
 
@@ -741,7 +741,7 @@ contract Issuer is Ownable, MixinSystemSettings {
 
         // Account for the burnt debt in the cache. If rate is invalid, the user won't be able to executeExchange
         (uint rate, bool rateInvalid) = _rateAndInvalid(currencyKey);
-        debtCache().updateCachedsUSDDebt(
+        debtCache().updateCachedcfUSDDebt(
             -SafeCast.toInt256(amount.multiplyDecimal(rate))
         );
 
@@ -751,7 +751,7 @@ contract Issuer is Ownable, MixinSystemSettings {
 
     /**
      * SIP-237: Debt Migration
-     * Function used for the one-way migration of all debt and liquid + escrowed SCFX from L1 -> L2
+     * Function used for the one-way migration of all debt and liquid + escrowed SFCX from L1 -> L2
      * @param account The address of the account that is being migrated
      * @param amount The amount of debt shares moving across layers
      */
@@ -759,7 +759,7 @@ contract Issuer is Ownable, MixinSystemSettings {
         address account,
         uint amount
     ) external onlyTrustedMigrators {
-        ISynthetixDebtShare sds = synthetixDebtShare();
+        ISynDexDebtShare sds = syndexDebtShare();
 
         if (
             msg.sender ==
@@ -777,7 +777,7 @@ contract Issuer is Ownable, MixinSystemSettings {
     /**
      * Function used to migrate balances from the CollateralShort contract
      * @param short The address of the CollateralShort contract to be upgraded
-     * @param amount The amount of sUSD collateral to be burnt
+     * @param amount The amount of cfUSD collateral to be burnt
      */
     function upgradeCollateralShort(
         address short,
@@ -789,18 +789,18 @@ contract Issuer is Ownable, MixinSystemSettings {
         );
         require(amount > 0, "cannot burn 0 synths");
 
-        exchanger().settle(short, sUSD);
+        exchanger().settle(short, cfUSD);
 
-        synths[sUSD].burn(short, amount);
+        synths[cfUSD].burn(short, amount);
     }
 
-    function createSynths(address from, uint amount) external onlySynthetix {
+    function createSynths(address from, uint amount) external onlySynDex {
         require(amount > 0, "cannot issue 0 synths");
 
         _createSynths(from, amount, false);
     }
 
-    function createMaxSynths(address from) external onlySynthetix {
+    function createMaxSynths(address from) external onlySynDex {
         _createSynths(from, 0, true);
     }
 
@@ -808,7 +808,7 @@ contract Issuer is Ownable, MixinSystemSettings {
         address issueForAddress,
         address from,
         uint amount
-    ) external onlySynthetix {
+    ) external onlySynDex {
         _requireCanIssueOnBehalf(issueForAddress, from);
         _createSynths(issueForAddress, amount, false);
     }
@@ -816,12 +816,12 @@ contract Issuer is Ownable, MixinSystemSettings {
     function issueMaxSynthsOnBehalf(
         address issueForAddress,
         address from
-    ) external onlySynthetix {
+    ) external onlySynDex {
         _requireCanIssueOnBehalf(issueForAddress, from);
         _createSynths(issueForAddress, 0, true);
     }
 
-    function burnSynths(address from, uint amount) external onlySynthetix {
+    function burnSynths(address from, uint amount) external onlySynDex {
         _voluntaryBurnSynths(from, amount, false);
     }
 
@@ -829,19 +829,19 @@ contract Issuer is Ownable, MixinSystemSettings {
         address burnForAddress,
         address from,
         uint amount
-    ) external onlySynthetix {
+    ) external onlySynDex {
         _requireCanBurnOnBehalf(burnForAddress, from);
         _voluntaryBurnSynths(burnForAddress, amount, false);
     }
 
-    function burnSynthsToTarget(address from) external onlySynthetix {
+    function burnSynthsToTarget(address from) external onlySynDex {
         _voluntaryBurnSynths(from, 0, true);
     }
 
     function burnSynthsToTargetOnBehalf(
         address burnForAddress,
         address from
-    ) external onlySynthetix {
+    ) external onlySynDex {
         _requireCanBurnOnBehalf(burnForAddress, from);
         _voluntaryBurnSynths(burnForAddress, 0, true);
     }
@@ -855,20 +855,20 @@ contract Issuer is Ownable, MixinSystemSettings {
     }
 
     // SIP-148: Upgraded Liquidation Mechanism
-    /// @notice This is where the core internal liquidation logic resides. This function can only be invoked by Synthetix.
+    /// @notice This is where the core internal liquidation logic resides. This function can only be invoked by SynDex.
     /// Reverts if liquidator().isLiquidationOpen() returns false (e.g. c-ratio is too high, delay hasn't passed,
     ///     account wasn't flagged etc)
     /// @param account The account to be liquidated
     /// @param isSelfLiquidation boolean to determine if this is a forced or self-invoked liquidation
-    /// @return totalRedeemed the total amount of collateral (SCFX) to redeem (liquid and escrow)
-    /// @return debtRemoved the amount of debt (sUSD) to burn in order to fix the account's c-ratio
-    /// @return escrowToLiquidate the amount of escrow SCFX that will be revoked during liquidation
+    /// @return totalRedeemed the total amount of collateral (SFCX) to redeem (liquid and escrow)
+    /// @return debtRemoved the amount of debt (cfUSD) to burn in order to fix the account's c-ratio
+    /// @return escrowToLiquidate the amount of escrow SFCX that will be revoked during liquidation
     function liquidateAccount(
         address account,
         bool isSelfLiquidation
     )
         external
-        onlySynthetix
+        onlySynDex
         returns (uint totalRedeemed, uint debtRemoved, uint escrowToLiquidate)
     {
         require(
@@ -912,34 +912,34 @@ contract Issuer is Ownable, MixinSystemSettings {
         bool anyRateIsInvalid;
         (debtBalance, , anyRateIsInvalid) = _debtBalanceOfAndTotalDebt(
             _debtShareBalanceOf(account),
-            sUSD
+            cfUSD
         );
 
-        // Get the SCFX rate
-        (uint scfxRate, bool scfxRateInvalid) = _rateAndInvalid(SCFX);
-        _requireRatesNotInvalid(anyRateIsInvalid || scfxRateInvalid);
+        // Get the SFCX rate
+        (uint sfcxRate, bool sfcxRateInvalid) = _rateAndInvalid(SFCX);
+        _requireRatesNotInvalid(anyRateIsInvalid || sfcxRateInvalid);
 
         uint penalty;
         if (isSelfLiquidation) {
             // Get self liquidation penalty
             penalty = getSelfLiquidationPenalty();
 
-            // Calculate the amount of debt to remove and SCFX to redeem for a self liquidation
+            // Calculate the amount of debt to remove and SFCX to redeem for a self liquidation
             debtToRemove = liquidator().calculateAmountToFixCollateral(
                 debtBalance,
-                _scfxToUSD(_collateral(account), scfxRate),
+                _sfcxToUSD(_collateral(account), sfcxRate),
                 penalty
             );
 
             // Get the minimum values for both totalRedeemed and debtToRemove
             totalRedeemed = _getMinValue(
-                _usdToSnx(debtToRemove, scfxRate).multiplyDecimal(
+                _usdToSnx(debtToRemove, sfcxRate).multiplyDecimal(
                     SafeDecimalMath.unit().add(penalty)
                 ),
-                _scfxBalanceOf(account)
+                _sfcxBalanceOf(account)
             );
             debtToRemove = _getMinValue(
-                _scfxToUSD(totalRedeemed, scfxRate).divideDecimal(
+                _sfcxToUSD(totalRedeemed, sfcxRate).divideDecimal(
                     SafeDecimalMath.unit().add(penalty)
                 ),
                 debtToRemove
@@ -953,19 +953,19 @@ contract Issuer is Ownable, MixinSystemSettings {
             penalty = getSnxLiquidationPenalty();
             uint rewardsSum = getLiquidateReward().add(getFlagReward());
 
-            // Get the total USD value of their SCFX collateral (including escrow and rewards minus the flag and liquidate rewards)
-            uint collateralForAccountUSD = _scfxToUSD(
+            // Get the total USD value of their SFCX collateral (including escrow and rewards minus the flag and liquidate rewards)
+            uint collateralForAccountUSD = _sfcxToUSD(
                 _collateral(account).sub(rewardsSum),
-                scfxRate
+                sfcxRate
             );
 
-            // Calculate the amount of debt to remove and the sUSD value of the SCFX required to liquidate.
+            // Calculate the amount of debt to remove and the cfUSD value of the SFCX required to liquidate.
             debtToRemove = liquidator().calculateAmountToFixCollateral(
                 debtBalance,
                 collateralForAccountUSD,
                 penalty
             );
-            uint redeemTarget = _usdToSnx(debtToRemove, scfxRate)
+            uint redeemTarget = _usdToSnx(debtToRemove, sfcxRate)
                 .multiplyDecimal(SafeDecimalMath.unit().add(penalty));
 
             if (redeemTarget.add(rewardsSum) >= _collateral(account)) {
@@ -1000,7 +1000,7 @@ contract Issuer is Ownable, MixinSystemSettings {
     }
 
     // SIP-252
-    // calculates the amount of SCFX that can be force liquidated (redeemed)
+    // calculates the amount of SFCX that can be force liquidated (redeemed)
     // for the various cases of transferrable & escrowed collateral
     function _redeemableCollateralForTarget(
         address account,
@@ -1008,8 +1008,8 @@ contract Issuer is Ownable, MixinSystemSettings {
         uint rewardsSum
     ) internal view returns (uint totalRedeemed, uint escrowToLiquidate) {
         // The balanceOf here can be considered "transferable" since it's not escrowed,
-        // and it is the only SCFX that can potentially be transfered if unstaked.
-        uint transferable = _scfxBalanceOf(account);
+        // and it is the only SFCX that can potentially be transfered if unstaked.
+        uint transferable = _sfcxBalanceOf(account);
         if (redeemTarget.add(rewardsSum) <= transferable) {
             // transferable is enough
             return (redeemTarget, 0);
@@ -1031,7 +1031,7 @@ contract Issuer is Ownable, MixinSystemSettings {
             "Must be fee pool"
         );
 
-        ISynthetixDebtShare sds = synthetixDebtShare();
+        ISynDexDebtShare sds = syndexDebtShare();
 
         if (sds.currentPeriodId() < periodId) {
             sds.takeSnapshot(periodId);
@@ -1041,7 +1041,7 @@ contract Issuer is Ownable, MixinSystemSettings {
     /* ========== INTERNAL FUNCTIONS ========== */
 
     function _requireRatesNotInvalid(bool anyRateIsInvalid) internal pure {
-        require(!anyRateIsInvalid, "A synth or SCFX rate is invalid");
+        require(!anyRateIsInvalid, "A synth or SFCX rate is invalid");
     }
 
     function _requireCanIssueOnBehalf(
@@ -1090,10 +1090,10 @@ contract Issuer is Ownable, MixinSystemSettings {
         _setLastIssueEvent(from);
 
         // Create their synths
-        synths[sUSD].issue(from, amount);
+        synths[cfUSD].issue(from, amount);
 
         // Account for the issued debt in the cache
-        debtCache().updateCachedsUSDDebt(SafeCast.toInt256(amount));
+        debtCache().updateCachedcfUSDDebt(SafeCast.toInt256(amount));
     }
 
     function _burnSynths(
@@ -1106,7 +1106,7 @@ contract Issuer is Ownable, MixinSystemSettings {
             return 0;
         }
 
-        // liquidation requires sUSD to be already settled / not in waiting period
+        // liquidation requires cfUSD to be already settled / not in waiting period
 
         // If they're trying to burn more debt than they actually owe, rather than fail the transaction, let's just
         // clear their debt and leave them be.
@@ -1116,13 +1116,13 @@ contract Issuer is Ownable, MixinSystemSettings {
         _removeFromDebtRegister(debtAccount, amountBurnt, existingDebt);
 
         // synth.burn does a safe subtraction on balance (so it will revert if there are not enough synths).
-        synths[sUSD].burn(burnAccount, amountBurnt);
+        synths[cfUSD].burn(burnAccount, amountBurnt);
 
         // Account for the burnt debt in the cache.
-        debtCache().updateCachedsUSDDebt(-SafeCast.toInt256(amountBurnt));
+        debtCache().updateCachedcfUSDDebt(-SafeCast.toInt256(amountBurnt));
     }
 
-    // If burning to currentTarget, `amount` is ignored, and the correct quantity of sUSD is burnt to reach the currentTarget
+    // If burning to currentTarget, `amount` is ignored, and the correct quantity of cfUSD is burnt to reach the currentTarget
     // c-ratio, allowing fees to be claimed. In this case, pending settlements will be skipped as the user
     // will still have debt remaining after reaching their currentTarget.
     function _voluntaryBurnSynths(
@@ -1137,15 +1137,15 @@ contract Issuer is Ownable, MixinSystemSettings {
         if (!burnToTarget) {
             // If not burning to currentTarget, then burning requires that the minimum stake time has elapsed.
             require(_canBurnSynths(from), "Minimum stake time not reached");
-            // First settle anything pending into sUSD as burning or issuing impacts the size of the debt pool
+            // First settle anything pending into cfUSD as burning or issuing impacts the size of the debt pool
             (, uint refunded, uint numEntriesSettled) = exchanger().settle(
                 from,
-                sUSD
+                cfUSD
             );
             if (numEntriesSettled > 0) {
                 amount = exchanger().calculateAmountAfterSettlement(
                     from,
-                    sUSD,
+                    cfUSD,
                     amount,
                     refunded
                 );
@@ -1156,12 +1156,12 @@ contract Issuer is Ownable, MixinSystemSettings {
             uint existingDebt,
             ,
             bool anyRateIsInvalid
-        ) = _debtBalanceOfAndTotalDebt(_debtShareBalanceOf(from), sUSD);
+        ) = _debtBalanceOfAndTotalDebt(_debtShareBalanceOf(from), cfUSD);
         (
             uint maxIssuableSynthsForAccount,
-            bool scfxRateInvalid
+            bool sfcxRateInvalid
         ) = _maxIssuableSynths(from);
-        _requireRatesNotInvalid(anyRateIsInvalid || scfxRateInvalid);
+        _requireRatesNotInvalid(anyRateIsInvalid || sfcxRateInvalid);
         require(existingDebt > 0, "No debt to forgive");
 
         if (burnToTarget) {
@@ -1190,7 +1190,7 @@ contract Issuer is Ownable, MixinSystemSettings {
         // important: this has to happen before any updates to user's debt shares
         liquidatorRewards().updateEntry(from);
 
-        ISynthetixDebtShare sds = synthetixDebtShare();
+        ISynDexDebtShare sds = syndexDebtShare();
 
         // it is possible (eg in tests, system initialized with extra debt) to have issued debt without any shares issued
         // in which case, the first account to mint gets the debt. yw.
@@ -1210,7 +1210,7 @@ contract Issuer is Ownable, MixinSystemSettings {
         // important: this has to happen before any updates to user's debt shares
         liquidatorRewards().updateEntry(from);
 
-        ISynthetixDebtShare sds = synthetixDebtShare();
+        ISynDexDebtShare sds = syndexDebtShare();
 
         uint currentDebtShare = _debtShareBalanceOf(from);
 
@@ -1234,7 +1234,7 @@ contract Issuer is Ownable, MixinSystemSettings {
         );
         (, int256 rawRatio, , , ) = AggregatorV2V3Interface(debtRatioAggregator)
             .latestRoundData();
-        (, bool broken, ) = exchangeRates().rateWithSafetyChecks(SCFX);
+        (, bool broken, ) = exchangeRates().rateWithSafetyChecks(SFCX);
 
         return
             circuitBreaker().probeCircuitBreaker(
@@ -1244,8 +1244,8 @@ contract Issuer is Ownable, MixinSystemSettings {
     }
 
     /* ========== MODIFIERS ========== */
-    modifier onlySynthetix() {
-        require(msg.sender == address(synthetixERC20()), "Only Synthetix");
+    modifier onlySynDex() {
+        require(msg.sender == address(syndexERC20()), "Only SynDex");
         _;
     }
 

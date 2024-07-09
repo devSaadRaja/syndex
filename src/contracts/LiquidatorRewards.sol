@@ -9,13 +9,13 @@ import "./MixinSystemSettings.sol";
 
 import "../interfaces/IIssuer.sol";
 import "../interfaces/IRewardEscrowV2.sol";
-import "../interfaces/ISynthetixDebtShare.sol";
+import "../interfaces/ISynDexDebtShare.sol";
 
 import "../libraries/SafeDecimalMath.sol";
 
 /// @title Liquidator Rewards (SIP-148)
-/// @notice This contract holds SCFX from liquidated positions.
-/// @dev SCFX stakers may claim their rewards based on their share of the debt pool.
+/// @notice This contract holds SFCX from liquidated positions.
+/// @dev SFCX stakers may claim their rewards based on their share of the debt pool.
 contract LiquidatorRewards is Ownable, MixinSystemSettings, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeDecimalMath for uint256;
@@ -37,10 +37,10 @@ contract LiquidatorRewards is Ownable, MixinSystemSettings, ReentrancyGuard {
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
-    bytes32 private constant CONTRACT_SYNTHETIXDEBTSHARE = "SynthetixDebtShare";
+    bytes32 private constant CONTRACT_SYNTHETIXDEBTSHARE = "SynDexDebtShare";
     bytes32 private constant CONTRACT_ISSUER = "Issuer";
     bytes32 private constant CONTRACT_REWARDESCROW_V2 = "RewardEscrowV2";
-    bytes32 private constant CONTRACT_SYNTHETIX = "Synthetix";
+    bytes32 private constant CONTRACT_SYNTHETIX = "SynDex";
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -67,9 +67,9 @@ contract LiquidatorRewards is Ownable, MixinSystemSettings, ReentrancyGuard {
         return combineArrays(existingAddresses, newAddresses);
     }
 
-    function synthetixDebtShare() internal view returns (ISynthetixDebtShare) {
+    function syndexDebtShare() internal view returns (ISynDexDebtShare) {
         return
-            ISynthetixDebtShare(
+            ISynDexDebtShare(
                 requireAndGetAddress(CONTRACT_SYNTHETIXDEBTSHARE)
             );
     }
@@ -82,14 +82,14 @@ contract LiquidatorRewards is Ownable, MixinSystemSettings, ReentrancyGuard {
         return IRewardEscrowV2(requireAndGetAddress(CONTRACT_REWARDESCROW_V2));
     }
 
-    function synthetix() internal view returns (IERC20) {
+    function syndex() internal view returns (IERC20) {
         return IERC20(requireAndGetAddress(CONTRACT_SYNTHETIX));
     }
 
     function earned(address account) public view returns (uint256) {
         AccountRewardsEntry memory entry = entries[account];
         return
-            synthetixDebtShare()
+            syndexDebtShare()
                 .balanceOf(account)
                 .multiplyDecimal(
                     accumulatedRewardsPerShare.sub(
@@ -107,7 +107,7 @@ contract LiquidatorRewards is Ownable, MixinSystemSettings, ReentrancyGuard {
         uint256 reward = entries[account].claimable;
         if (reward > 0) {
             entries[account].claimable = 0;
-            synthetix().approve(address(rewardEscrowV2()), reward);
+            syndex().approve(address(rewardEscrowV2()), reward);
             rewardEscrowV2().createEscrowEntry(
                 account,
                 reward,
@@ -136,9 +136,9 @@ contract LiquidatorRewards is Ownable, MixinSystemSettings, ReentrancyGuard {
 
     /* ========== RESTRICTED FUNCTIONS ========== */
 
-    /// @notice This is called only after an account is liquidated and the SCFX rewards are sent to this contract.
-    function notifyRewardAmount(uint256 reward) external onlySynthetix {
-        uint sharesSupply = synthetixDebtShare().totalSupply();
+    /// @notice This is called only after an account is liquidated and the SFCX rewards are sent to this contract.
+    function notifyRewardAmount(uint256 reward) external onlySynDex {
+        uint sharesSupply = syndexDebtShare().totalSupply();
 
         if (sharesSupply > 0) {
             accumulatedRewardsPerShare = accumulatedRewardsPerShare.add(
@@ -149,9 +149,9 @@ contract LiquidatorRewards is Ownable, MixinSystemSettings, ReentrancyGuard {
 
     /* ========== MODIFIERS ========== */
 
-    modifier onlySynthetix() {
-        bool isSynthetix = msg.sender == address(synthetix());
-        require(isSynthetix, "Synthetix only");
+    modifier onlySynDex() {
+        bool isSynDex = msg.sender == address(syndex());
+        require(isSynDex, "SynDex only");
         _;
     }
 

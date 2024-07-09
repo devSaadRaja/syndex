@@ -60,7 +60,7 @@ interface ILiquidator {
     // Mutative Functions
     function flagAccountForLiquidation(address account) external;
 
-    // Restricted: used internally to Synthetix contracts
+    // Restricted: used internally to SynDex contracts
     function removeAccountInLiquidation(address account) external;
 
     function checkAndRemoveAccountInLiquidation(address account) external;

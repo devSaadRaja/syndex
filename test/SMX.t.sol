@@ -55,11 +55,11 @@ contract SMXTest is Setup {
         vm.stopPrank();
 
         vm.startPrank(user7);
-        synthetix.createMaxSynths();
+        syndex.createMaxSynths();
         vm.stopPrank();
 
         vm.startPrank(user8);
-        synthetix.createMaxSynths();
+        syndex.createMaxSynths();
         vm.stopPrank();
 
         vm.startPrank(user7);
@@ -90,7 +90,7 @@ contract SMXTest is Setup {
 
         token = new Token("Token", "TKN", user7, 1_000_000 ether);
         synthSwap2 = new SynthSwap(
-            address(proxysUSD),
+            address(proxycfUSD),
             address(swapRouter), // routerV4, aggregationRouterV4
             address(addressResolver),
             user7,
@@ -103,9 +103,9 @@ contract SMXTest is Setup {
 
         // ! MAKE POOL ---
 
-        v3factory.createPool(address(proxysUSD), address(token), 3000); // take care of sequence of tokens
+        v3factory.createPool(address(proxycfUSD), address(token), 3000); // take care of sequence of tokens
         address pool = v3factory.getPool(
-            address(proxysUSD),
+            address(proxycfUSD),
             address(token),
             3000
         );
@@ -115,7 +115,7 @@ contract SMXTest is Setup {
 
         // ! ADD LIQUIDITY ---
 
-        IERC20(address(proxysUSD)).approve(
+        IERC20(address(proxycfUSD)).approve(
             address(nonfungiblePositionManager),
             50 ether
         );
@@ -154,11 +154,11 @@ contract SMXTest is Setup {
         // tickLower = nearestUsableTick(tick, tickSpacing) - tickSpacing * 2;
         // tickUpper = nearestUsableTick(tick, tickSpacing) + tickSpacing * 2;
 
-        address token0 = address(token) < address(proxysUSD)
+        address token0 = address(token) < address(proxycfUSD)
             ? address(token)
-            : address(proxysUSD);
+            : address(proxycfUSD);
         address token1 = token0 == address(token)
-            ? address(proxysUSD)
+            ? address(proxycfUSD)
             : address(token);
 
         INonfungiblePositionManager.MintParams
@@ -191,7 +191,7 @@ contract SMXTest is Setup {
         ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
             .ExactInputSingleParams({
                 tokenIn: address(token),
-                tokenOut: address(proxysUSD),
+                tokenOut: address(proxycfUSD),
                 fee: v3Pool.fee(),
                 recipient: address(synthSwap2),
                 deadline: block.timestamp + 10 minutes,
@@ -206,7 +206,7 @@ contract SMXTest is Setup {
 
         // IAggregationRouterV4.SwapDescription memory desc = IAggregationRouterV4
         //     .SwapDescription({
-        //         srcToken: address(proxysUSD),
+        //         srcToken: address(proxycfUSD),
         //         dstToken: address(token),
         //         srcReceiver: payable(user7),
         //         dstReceiver: payable(user7),
@@ -225,24 +225,24 @@ contract SMXTest is Setup {
         // );
 
         console.log("BEFORE token\n", token.balanceOf(user7));
-        console.log("BEFORE proxysETH\n", proxysETH.balanceOf(user7));
+        console.log("BEFORE proxycfETH\n", proxycfETH.balanceOf(user7));
 
         IERC20(address(token)).approve(address(synthSwap2), 2 ether);
-        synthSwap2.uniswapSwapInto("sETH", address(token), 1 ether, _data);
-        // // IERC20(address(proxysUSD)).approve(address(synthSwap2), 10 ether);
-        // // synthSwap2.uniswapSwapInto("sETH", address(proxysUSD), 10 ether, data);
+        synthSwap2.uniswapSwapInto("cfETH", address(token), 1 ether, _data);
+        // // IERC20(address(proxycfUSD)).approve(address(synthSwap2), 10 ether);
+        // // synthSwap2.uniswapSwapInto("cfETH", address(proxycfUSD), 10 ether, data);
 
         console.log("AFTER uniswapSwapInto token\n", token.balanceOf(user7));
         console.log(
-            "AFTER uniswapSwapInto proxysETH\n",
-            proxysETH.balanceOf(user7)
+            "AFTER uniswapSwapInto proxycfETH\n",
+            proxycfETH.balanceOf(user7)
         );
 
         // ? uniswapSwapOutOf
 
         ISwapRouter.ExactInputSingleParams memory outParams = ISwapRouter
             .ExactInputSingleParams({
-                tokenIn: address(proxysUSD),
+                tokenIn: address(proxycfUSD),
                 tokenOut: address(token),
                 fee: v3Pool.fee(),
                 recipient: address(synthSwap2),
@@ -256,9 +256,9 @@ contract SMXTest is Setup {
             outParams
         );
 
-        IERC20(address(proxysETH)).approve(address(synthSwap2), 2 ether);
+        IERC20(address(proxycfETH)).approve(address(synthSwap2), 2 ether);
         synthSwap2.uniswapSwapOutOf(
-            "sETH",
+            "cfETH",
             address(token),
             0.8 ether,
             2 ether,
@@ -267,14 +267,14 @@ contract SMXTest is Setup {
 
         console.log("AFTER uniswapSwapOutOf token\n", token.balanceOf(user7));
         console.log(
-            "AFTER uniswapSwapOutOf proxysETH\n",
-            proxysETH.balanceOf(user7)
+            "AFTER uniswapSwapOutOf proxycfETH\n",
+            proxycfETH.balanceOf(user7)
         );
 
         ISwapRouter.ExactInputSingleParams memory paramsss = ISwapRouter
             .ExactInputSingleParams({
                 tokenIn: address(token),
-                tokenOut: address(proxysUSD),
+                tokenOut: address(proxycfUSD),
                 fee: v3Pool.fee(),
                 recipient: address(synthSwap2),
                 deadline: block.timestamp + 10 minutes,
@@ -291,13 +291,13 @@ contract SMXTest is Setup {
         console.log();
 
         console.log("BEFORE token\n", token.balanceOf(user7));
-        console.log("BEFORE proxysUSD\n", proxysUSD.balanceOf(user7));
+        console.log("BEFORE proxycfUSD\n", proxycfUSD.balanceOf(user7));
 
         IERC20(address(token)).approve(address(synthSwap2), 2 ether);
-        synthSwap2.uniswapSwapInto("sUSD", address(token), 1 ether, _dataaa);
+        synthSwap2.uniswapSwapInto("cfUSD", address(token), 1 ether, _dataaa);
 
         console.log("AFTER token\n", token.balanceOf(user7));
-        console.log("AFTER proxysUSD\n", proxysUSD.balanceOf(user7));
+        console.log("AFTER proxycfUSD\n", proxycfUSD.balanceOf(user7));
 
         vm.stopPrank();
     }
@@ -307,10 +307,10 @@ contract SMXTest is Setup {
 
         // ! SWAP ---
 
-        IERC20(address(proxysUSD)).approve(address(swapRouter), 10 ether);
+        IERC20(address(proxycfUSD)).approve(address(swapRouter), 10 ether);
         ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
             .ExactInputSingleParams({
-                tokenIn: address(proxysUSD),
+                tokenIn: address(proxycfUSD),
                 tokenOut: address(token),
                 fee: v3Pool.fee(),
                 recipient: user7,
@@ -327,7 +327,7 @@ contract SMXTest is Setup {
         ISwapRouter.ExactOutputSingleParams memory outputParams = ISwapRouter
             .ExactOutputSingleParams({
                 tokenIn: address(token),
-                tokenOut: address(proxysUSD),
+                tokenOut: address(proxycfUSD),
                 fee: v3Pool.fee(),
                 recipient: user7,
                 deadline: block.timestamp + 10 minutes,
@@ -360,36 +360,36 @@ contract SMXTest is Setup {
 
     function testExchange() public {
         vm.startPrank(user7);
-        proxysUSD.transfer(user6, 100 ether);
+        proxycfUSD.transfer(user6, 100 ether);
         vm.stopPrank();
 
-        assertEq(proxysUSD.balanceOf(user6), 100 ether);
-        assertEq(proxysETH.balanceOf(user6), 0);
-        console.log(proxysUSD.balanceOf(user6), "<<< sUSD balanceOf user6");
-        console.log(proxysETH.balanceOf(user6), "<<< sETH balanceOf user6");
+        assertEq(proxycfUSD.balanceOf(user6), 100 ether);
+        assertEq(proxycfETH.balanceOf(user6), 0);
+        console.log(proxycfUSD.balanceOf(user6), "<<< cfUSD balanceOf user6");
+        console.log(proxycfETH.balanceOf(user6), "<<< cfETH balanceOf user6");
 
         vm.startPrank(user6);
-        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        syndex.executeExchange("cfUSD", 50 ether, "cfETH");
         vm.stopPrank();
 
-        assertEq(proxysUSD.balanceOf(user6), 50 ether);
-        assertEq(proxysETH.balanceOf(user6), 49.9 ether);
-        console.log(proxysUSD.balanceOf(user6), "<<< sUSD balanceOf user6");
-        console.log(proxysETH.balanceOf(user6), "<<< sETH balanceOf user6");
+        assertEq(proxycfUSD.balanceOf(user6), 50 ether);
+        assertEq(proxycfETH.balanceOf(user6), 49.9 ether);
+        console.log(proxycfUSD.balanceOf(user6), "<<< cfUSD balanceOf user6");
+        console.log(proxycfETH.balanceOf(user6), "<<< cfETH balanceOf user6");
     }
 
     function testClaimTimeEnded() public {
         vm.startPrank(user7);
-        proxysUSD.transfer(user6, 100 ether);
-        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        proxycfUSD.transfer(user6, 100 ether);
+        syndex.executeExchange("cfUSD", 50 ether, "cfETH");
         vm.stopPrank();
 
         vm.startPrank(user6);
-        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        syndex.executeExchange("cfUSD", 50 ether, "cfETH");
         vm.stopPrank();
 
         vm.startPrank(user8);
-        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        syndex.executeExchange("cfUSD", 50 ether, "cfETH");
         vm.stopPrank();
 
         _passTime(7 days);
@@ -425,20 +425,20 @@ contract SMXTest is Setup {
 
     function testStakersTradeFee() public {
         // vm.startPrank(user7);
-        // IERC20(address(proxysUSD)).transfer(address(feePool), 10 ether);
+        // IERC20(address(proxycfUSD)).transfer(address(feePool), 10 ether);
         // vm.stopPrank();
 
         vm.startPrank(user7);
-        proxysUSD.transfer(user6, 100 ether);
-        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        proxycfUSD.transfer(user6, 100 ether);
+        syndex.executeExchange("cfUSD", 50 ether, "cfETH");
         vm.stopPrank();
 
         vm.startPrank(user6);
-        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        syndex.executeExchange("cfUSD", 50 ether, "cfETH");
         vm.stopPrank();
 
         vm.startPrank(user8);
-        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        syndex.executeExchange("cfUSD", 50 ether, "cfETH");
         vm.stopPrank();
 
         console.log(
@@ -453,12 +453,12 @@ contract SMXTest is Setup {
         vm.stopPrank();
 
         console.log(
-            IERC20(address(proxysUSD)).balanceOf(address(user7)),
-            "<-- proxysUSD balanceOf(address(user7))"
+            IERC20(address(proxycfUSD)).balanceOf(address(user7)),
+            "<-- proxycfUSD balanceOf(address(user7))"
         );
         console.log(
-            IERC20(address(proxysETH)).balanceOf(address(user7)),
-            "<-- proxysETH balanceOf(address(user7))"
+            IERC20(address(proxycfETH)).balanceOf(address(user7)),
+            "<-- proxycfETH balanceOf(address(user7))"
         );
 
         // vm.startPrank(user7);
@@ -466,12 +466,12 @@ contract SMXTest is Setup {
         // vm.stopPrank();
 
         console.log(
-            IERC20(address(proxysUSD)).balanceOf(address(user7)),
-            "<-- proxysUSD balanceOf(address(user7))"
+            IERC20(address(proxycfUSD)).balanceOf(address(user7)),
+            "<-- proxycfUSD balanceOf(address(user7))"
         );
         console.log(
-            IERC20(address(proxysETH)).balanceOf(address(user7)),
-            "<-- proxysETH balanceOf(address(user7))"
+            IERC20(address(proxycfETH)).balanceOf(address(user7)),
+            "<-- proxycfETH balanceOf(address(user7))"
         );
 
         console.log();
@@ -502,23 +502,23 @@ contract SMXTest is Setup {
 
         console.log();
         console.log(
-            IERC20(address(proxysUSD)).balanceOf(address(feePool)),
-            "<-- proxysUSD balanceOf(address(feePool))"
+            IERC20(address(proxycfUSD)).balanceOf(address(feePool)),
+            "<-- proxycfUSD balanceOf(address(feePool))"
         );
         console.log(
-            IERC20(address(proxysUSD)).balanceOf(address(tradingRewards)),
-            "<-- proxysUSD balanceOf(address(tradingRewards))"
+            IERC20(address(proxycfUSD)).balanceOf(address(tradingRewards)),
+            "<-- proxycfUSD balanceOf(address(tradingRewards))"
         );
         console.log(
-            IERC20(address(proxysUSD)).balanceOf(FEE_ADDRESS),
-            "<-- proxysUSD balanceOf(FEE_ADDRESS)"
+            IERC20(address(proxycfUSD)).balanceOf(FEE_ADDRESS),
+            "<-- proxycfUSD balanceOf(FEE_ADDRESS)"
         );
     }
 
     function testTradersTradeFee() public {
         // vm.startPrank(user4);
-        // IERC20(address(proxySCFX)).transfer(address(tradingRewards), 250 ether);
-        // IERC20(address(proxySCFX)).transfer(
+        // IERC20(address(proxySFCX)).transfer(address(tradingRewards), 250 ether);
+        // IERC20(address(proxySFCX)).transfer(
         //     address(rewardsDistribution),
         //     250 ether
         // );
@@ -526,47 +526,47 @@ contract SMXTest is Setup {
 
         console.log("----------");
         console.log(
-            IERC20(address(proxysUSD)).balanceOf(address(user6)),
-            "<-- proxysUSD balanceOf(address(user6))"
+            IERC20(address(proxycfUSD)).balanceOf(address(user6)),
+            "<-- proxycfUSD balanceOf(address(user6))"
         );
         console.log(
-            IERC20(address(proxysUSD)).balanceOf(address(user7)),
-            "<-- proxysUSD balanceOf(address(user7))"
+            IERC20(address(proxycfUSD)).balanceOf(address(user7)),
+            "<-- proxycfUSD balanceOf(address(user7))"
         );
         console.log(
-            IERC20(address(proxysUSD)).balanceOf(address(user8)),
-            "<-- proxysUSD balanceOf(address(user8))"
+            IERC20(address(proxycfUSD)).balanceOf(address(user8)),
+            "<-- proxycfUSD balanceOf(address(user8))"
         );
 
         vm.startPrank(user7);
-        proxysUSD.transfer(user6, 100 ether);
+        proxycfUSD.transfer(user6, 100 ether);
         vm.stopPrank();
 
         console.log("----------");
         console.log(
-            IERC20(address(proxysUSD)).balanceOf(address(user6)),
-            "<-- proxysUSD balanceOf(address(user6))"
+            IERC20(address(proxycfUSD)).balanceOf(address(user6)),
+            "<-- proxycfUSD balanceOf(address(user6))"
         );
         console.log(
-            IERC20(address(proxysUSD)).balanceOf(address(user7)),
-            "<-- proxysUSD balanceOf(address(user7))"
+            IERC20(address(proxycfUSD)).balanceOf(address(user7)),
+            "<-- proxycfUSD balanceOf(address(user7))"
         );
         console.log(
-            IERC20(address(proxysUSD)).balanceOf(address(user8)),
-            "<-- proxysUSD balanceOf(address(user8))"
+            IERC20(address(proxycfUSD)).balanceOf(address(user8)),
+            "<-- proxycfUSD balanceOf(address(user8))"
         );
         console.log();
 
         vm.startPrank(user6);
-        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        syndex.executeExchange("cfUSD", 50 ether, "cfETH");
         vm.stopPrank();
 
         vm.startPrank(user7);
-        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        syndex.executeExchange("cfUSD", 50 ether, "cfETH");
         vm.stopPrank();
 
         vm.startPrank(user8);
-        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        syndex.executeExchange("cfUSD", 50 ether, "cfETH");
         vm.stopPrank();
 
         console.log(
@@ -618,29 +618,29 @@ contract SMXTest is Setup {
         //     1002
         // );
 
-        // uint256 amountBefore = IERC20(address(proxySCFX)).balanceOf(user8);
+        // uint256 amountBefore = IERC20(address(proxySFCX)).balanceOf(user8);
         // uint256 rewardAmount = tradingRewards
         //     .getAvailableRewardsForAccountForPeriod(user8, 0);
 
         // tradingRewards.redeemRewardsForPeriod(0);
 
         // assertEq(
-        //     IERC20(address(proxySCFX)).balanceOf(user8),
+        //     IERC20(address(proxySFCX)).balanceOf(user8),
         //     amountBefore + rewardAmount
         // );
 
         console.log();
         console.log(
-            IERC20(address(proxysUSD)).balanceOf(address(feePool)),
-            "<-- proxysUSD balanceOf(address(feePool))"
+            IERC20(address(proxycfUSD)).balanceOf(address(feePool)),
+            "<-- proxycfUSD balanceOf(address(feePool))"
         );
         console.log(
-            IERC20(address(proxysUSD)).balanceOf(address(tradingRewards)),
-            "<-- proxysUSD balanceOf(address(tradingRewards))"
+            IERC20(address(proxycfUSD)).balanceOf(address(tradingRewards)),
+            "<-- proxycfUSD balanceOf(address(tradingRewards))"
         );
         console.log(
-            IERC20(address(proxysUSD)).balanceOf(address(FEE_ADDRESS)),
-            "<-- proxysUSD balanceOf(address(FEE_ADDRESS))"
+            IERC20(address(proxycfUSD)).balanceOf(address(FEE_ADDRESS)),
+            "<-- proxycfUSD balanceOf(address(FEE_ADDRESS))"
         );
 
         console.log();
@@ -672,22 +672,22 @@ contract SMXTest is Setup {
         // ! ---
         console.log();
         console.log(
-            synthetixDebtShare.totalSupply(),
-            "<-- synthetixDebtShare.totalSupply()"
+            syndexDebtShare.totalSupply(),
+            "<-- syndexDebtShare.totalSupply()"
         );
         console.log();
-        // "<-- synthetixDebtShare.calculateTotalSupplyForPeriod(1)"
+        // "<-- syndexDebtShare.calculateTotalSupplyForPeriod(1)"
         console.log(
-            synthetixDebtShare.balanceOf(user6),
-            "<-- synthetixDebtShare.balanceOf(user6)"
+            syndexDebtShare.balanceOf(user6),
+            "<-- syndexDebtShare.balanceOf(user6)"
         );
         console.log(
-            synthetixDebtShare.balanceOf(user7),
-            "<-- synthetixDebtShare.balanceOf(user7)"
+            syndexDebtShare.balanceOf(user7),
+            "<-- syndexDebtShare.balanceOf(user7)"
         );
         console.log(
-            synthetixDebtShare.balanceOf(user8),
-            "<-- synthetixDebtShare.balanceOf(user8)"
+            syndexDebtShare.balanceOf(user8),
+            "<-- syndexDebtShare.balanceOf(user8)"
         );
     }
 
@@ -699,20 +699,20 @@ contract SMXTest is Setup {
             "<-- token balanceOf(user6)"
         );
         console.log(
-            synthetix.transferableSynthetix(user6),
-            "<-- synthetix transferableSynthetix(user6)"
+            syndex.transferableSynDex(user6),
+            "<-- syndex transferableSynDex(user6)"
         );
         console.log(
-            IERC20(address(proxySCFX)).balanceOf(user6),
-            "<-- SCFX balanceOf(user6)"
+            IERC20(address(proxySFCX)).balanceOf(user6),
+            "<-- SFCX balanceOf(user6)"
         );
         console.log(
-            IERC20(address(proxysUSD)).balanceOf(user6),
-            "<-- sUSD balanceOf(user6)"
+            IERC20(address(proxycfUSD)).balanceOf(user6),
+            "<-- cfUSD balanceOf(user6)"
         );
         console.log(
-            IERC20(address(proxysETH)).balanceOf(user6),
-            "<-- sETH balanceOf(user6)"
+            IERC20(address(proxycfETH)).balanceOf(user6),
+            "<-- cfETH balanceOf(user6)"
         );
         console.log(address(user6).balance, "<-- ETH balance address(user6)");
         console.log(
@@ -728,16 +728,16 @@ contract SMXTest is Setup {
             "<-- smx balanceOf(address(collateralErc20))"
         );
         console.log(
-            synthetixDebtShare.totalSupply(),
-            "<-- synthetixDebtShare.totalSupply()"
+            syndexDebtShare.totalSupply(),
+            "<-- syndexDebtShare.totalSupply()"
         );
         console.log(
-            synthetixDebtShare.balanceOf(user6),
-            "<-- synthetixDebtShare.balanceOf(user6)"
+            syndexDebtShare.balanceOf(user6),
+            "<-- syndexDebtShare.balanceOf(user6)"
         );
         console.log(
-            synthetixDebtShare.calculateTotalSupplyForPeriod(1),
-            "<-- synthetixDebtShare.calculateTotalSupplyForPeriod(1)"
+            syndexDebtShare.calculateTotalSupplyForPeriod(1),
+            "<-- syndexDebtShare.calculateTotalSupplyForPeriod(1)"
         );
         console.log(
             collateralManager.state().totalLoans(),
@@ -745,10 +745,10 @@ contract SMXTest is Setup {
         );
 
         (uint long, uint short) = collateralManager.state().totalIssuedSynths(
-            "sUSD"
+            "cfUSD"
         );
-        console.log(long, "<-- totalIssuedSynths(sUSD) long");
-        console.log(short, "<-- totalIssuedSynths(sUSD) short");
+        console.log(long, "<-- totalIssuedSynths(cfUSD) long");
+        console.log(short, "<-- totalIssuedSynths(cfUSD) short");
 
         (uint susdValue, ) = collateralManager.totalLongAndShort();
         console.log(susdValue, "<-- susdValue");
@@ -759,19 +759,19 @@ contract SMXTest is Setup {
 
         _consoleData("--- BEFORE ---");
 
-        synthetix.createSynths(1 ether);
+        syndex.createSynths(1 ether);
 
-        uint256 id = collateralETH.open{value: 1.5 ether}(1 ether, "sUSD");
+        uint256 id = collateralETH.open{value: 1.5 ether}(1 ether, "cfUSD");
 
         smx.approve(address(collateralErc20), 50 ether);
-        uint256 idErc = collateralErc20.open(3 ether, 2 ether, "sUSD");
+        uint256 idErc = collateralErc20.open(3 ether, 2 ether, "cfUSD");
 
         _consoleData("--- AFTER SWAP ---");
 
         ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
             .ExactInputSingleParams({
                 tokenIn: address(token),
-                tokenOut: address(proxysUSD),
+                tokenOut: address(proxycfUSD),
                 fee: v3Pool.fee(),
                 recipient: address(synthSwap),
                 deadline: block.timestamp + 10 minutes,
@@ -785,12 +785,12 @@ contract SMXTest is Setup {
         );
 
         IERC20(address(token)).approve(address(synthSwap), 1 ether);
-        synthSwap.uniswapSwapInto("sETH", address(token), 1 ether, _data);
+        synthSwap.uniswapSwapInto("cfETH", address(token), 1 ether, _data);
 
         _consoleData("--- AFTER SYNTH SWAP ---");
 
-        synthetix.burnSynths(1 ether);
-        // // synthetix.burnSynthsToTarget();
+        syndex.burnSynths(1 ether);
+        // // syndex.burnSynthsToTarget();
 
         collateralETH.close(id);
         collateralETH.claim(1.5 ether);
@@ -848,30 +848,30 @@ contract SMXTest is Setup {
         vm.stopPrank();
     }
 
-    function testSCFXBlacklist() public {
+    function testSFCXBlacklist() public {
         vm.startPrank(owner);
-        synthetix.updateBlacklist(user1, true);
+        syndex.updateBlacklist(user1, true);
         vm.stopPrank();
         vm.startPrank(user1);
         vm.expectRevert("Address is blacklisted");
-        proxySCFX.transfer(reserveAddr, 1 ether);
+        proxySFCX.transfer(reserveAddr, 1 ether);
         vm.stopPrank();
     }
 
-    function testSCFXOnlyBurner() public {
+    function testSFCXOnlyBurner() public {
         vm.startPrank(user8);
         vm.expectRevert();
-        synthetix.burn();
+        syndex.burn();
         vm.stopPrank();
 
         vm.startPrank(owner);
-        synthetix.grantRole(keccak256("BURNER_ROLE"), user8);
+        syndex.grantRole(keccak256("BURNER_ROLE"), user8);
         vm.stopPrank();
 
         vm.startPrank(user8);
-        assertEq(proxySCFX.balanceOf(reserveAddr), 200000 ether);
-        synthetix.burn();
-        assertEq(proxySCFX.balanceOf(reserveAddr), 100000 ether);
+        assertEq(proxySFCX.balanceOf(reserveAddr), 200000 ether);
+        syndex.burn();
+        assertEq(proxySFCX.balanceOf(reserveAddr), 100000 ether);
         vm.stopPrank();
     }
 

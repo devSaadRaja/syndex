@@ -140,7 +140,7 @@ interface IRewardEscrowV2 {
         VestingEntries.VestingEntry[] calldata vestingEntries
     ) external;
 
-    // Return amount of SCFX transfered to SynthetixBridgeToOptimism deposit contract
+    // Return amount of SFCX transfered to SynDexBridgeToOptimism deposit contract
     function burnForMigration(
         address account,
         uint256[] calldata entryIDs
@@ -165,7 +165,7 @@ interface IRewardEscrowV2 {
 
     /// below are methods not available in IRewardEscrowV2Frozen
 
-    // revoke entries for liquidations (access controlled to Synthetix)
+    // revoke entries for liquidations (access controlled to SynDex)
     function revokeFrom(
         address account,
         address recipient,

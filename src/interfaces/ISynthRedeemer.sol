@@ -9,16 +9,16 @@ interface ISynthRedeemer {
         address synthProxy
     ) external view returns (uint redeemRate);
 
-    // sUSD balance of deprecated token holder
+    // cfUSD balance of deprecated token holder
     function balanceOf(
         IERC20 synthProxy,
         address account
-    ) external view returns (uint balanceOfInsUSD);
+    ) external view returns (uint balanceOfIncfUSD);
 
-    // Full sUSD supply of token
+    // Full cfUSD supply of token
     function totalSupply(
         IERC20 synthProxy
-    ) external view returns (uint totalSupplyInsUSD);
+    ) external view returns (uint totalSupplyIncfUSD);
 
     function redeem(IERC20 synthProxy) external;
 

@@ -21,7 +21,7 @@ contract ExchangeRates is Ownable, MixinSystemSettings {
     bytes32 internal constant CONTRACT_CIRCUIT_BREAKER = "CircuitBreaker";
 
     //slither-disable-next-line naming-convention
-    bytes32 internal constant sUSD = "sUSD";
+    bytes32 internal constant cfUSD = "cfUSD";
 
     // Decentralized oracle networks that feed into pricing aggregators
     mapping(bytes32 => AggregatorV2V3Interface) public aggregators;
@@ -85,14 +85,14 @@ contract ExchangeRates is Ownable, MixinSystemSettings {
     ) external returns (uint rate, bool broken, bool staleOrInvalid) {
         address aggregatorAddress = address(aggregators[currencyKey]);
         require(
-            currencyKey == sUSD || aggregatorAddress != address(0),
+            currencyKey == cfUSD || aggregatorAddress != address(0),
             "No aggregator for asset"
         );
 
         IExchangeRates.RateAndUpdatedTime
             memory rateAndTime = _getRateAndUpdatedTime(currencyKey);
 
-        if (currencyKey == sUSD) {
+        if (currencyKey == cfUSD) {
             return (rateAndTime.rate, false, false);
         }
 
@@ -348,7 +348,7 @@ contract ExchangeRates is Ownable, MixinSystemSettings {
         IExchangeRates.RateAndUpdatedTime
             memory rateAndTime = _getRateAndUpdatedTime(currencyKey);
 
-        if (currencyKey == sUSD) {
+        if (currencyKey == cfUSD) {
             return (rateAndTime.rate, false);
         }
         return (
@@ -377,7 +377,7 @@ contract ExchangeRates is Ownable, MixinSystemSettings {
             IExchangeRates.RateAndUpdatedTime
                 memory rateEntry = _getRateAndUpdatedTime(currencyKeys[i]);
             rates[i] = rateEntry.rate;
-            if (!anyRateInvalid && currencyKeys[i] != sUSD) {
+            if (!anyRateInvalid && currencyKeys[i] != cfUSD) {
                 anyRateInvalid =
                     flagList[i] ||
                     _rateIsStaleWithTime(_rateStalePeriod, rateEntry.time) ||
@@ -412,7 +412,7 @@ contract ExchangeRates is Ownable, MixinSystemSettings {
         bool[] memory flagList = getFlagsForRates(currencyKeys);
 
         for (uint i = 0; i < currencyKeys.length; i++) {
-            if (currencyKeys[i] == sUSD) {
+            if (currencyKeys[i] == cfUSD) {
                 continue;
             }
 
@@ -448,7 +448,7 @@ contract ExchangeRates is Ownable, MixinSystemSettings {
         bool[] memory flagList = getFlagsForRates(currencyKeys);
 
         for (uint i = 0; i < currencyKeys.length; i++) {
-            if (currencyKeys[i] == sUSD) {
+            if (currencyKeys[i] == cfUSD) {
                 continue;
             }
 
@@ -549,8 +549,8 @@ contract ExchangeRates is Ownable, MixinSystemSettings {
     function _getRateAndUpdatedTime(
         bytes32 currencyKey
     ) internal view returns (IExchangeRates.RateAndUpdatedTime memory) {
-        // sUSD rate is 1.0
-        if (currencyKey == sUSD) {
+        // cfUSD rate is 1.0
+        if (currencyKey == cfUSD) {
             return
                 IExchangeRates.RateAndUpdatedTime({
                     rate: uint216(SafeDecimalMath.unit()),
@@ -589,7 +589,7 @@ contract ExchangeRates is Ownable, MixinSystemSettings {
     function _getCurrentRoundId(
         bytes32 currencyKey
     ) internal view returns (uint) {
-        if (currencyKey == sUSD) {
+        if (currencyKey == cfUSD) {
             return 0;
         }
         AggregatorV2V3Interface aggregator = aggregators[currencyKey];
@@ -602,9 +602,9 @@ contract ExchangeRates is Ownable, MixinSystemSettings {
         bytes32 currencyKey,
         uint roundId
     ) internal view returns (uint rate, uint time) {
-        // short circuit sUSD
-        if (currencyKey == sUSD) {
-            // sUSD has no rounds, and 0 time is preferrable for "volatility" heuristics
+        // short circuit cfUSD
+        if (currencyKey == cfUSD) {
+            // cfUSD has no rounds, and 0 time is preferrable for "volatility" heuristics
             // which are used in atomic swaps and fee reclamation
             return (SafeDecimalMath.unit(), 0);
         } else {
@@ -674,8 +674,8 @@ contract ExchangeRates is Ownable, MixinSystemSettings {
         bytes32 currencyKey,
         uint _rateStalePeriod
     ) internal view returns (bool) {
-        // sUSD is a special case and is never stale (check before an SLOAD of getRateAndUpdatedTime)
-        if (currencyKey == sUSD) {
+        // cfUSD is a special case and is never stale (check before an SLOAD of getRateAndUpdatedTime)
+        if (currencyKey == cfUSD) {
             return false;
         }
         return
@@ -696,8 +696,8 @@ contract ExchangeRates is Ownable, MixinSystemSettings {
         bytes32 currencyKey,
         FlagsInterface flags
     ) internal view returns (bool) {
-        // sUSD is a special case and is never invalid
-        if (currencyKey == sUSD) {
+        // cfUSD is a special case and is never invalid
+        if (currencyKey == cfUSD) {
             return false;
         }
         address aggregator = address(aggregators[currencyKey]);

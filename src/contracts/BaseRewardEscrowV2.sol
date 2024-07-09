@@ -41,7 +41,7 @@ contract BaseRewardEscrowV2 is
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
-    bytes32 private constant CONTRACT_SYNTHETIX = "Synthetix";
+    bytes32 private constant CONTRACT_SYNTHETIX = "SynDex";
     bytes32 private constant CONTRACT_ISSUER = "Issuer";
     bytes32 private constant CONTRACT_FEEPOOL = "FeePool";
     bytes32 private constant CONTRACT_REWARDESCROWV2STORAGE =
@@ -60,7 +60,7 @@ contract BaseRewardEscrowV2 is
         return IFeePool(requireAndGetAddress(CONTRACT_FEEPOOL));
     }
 
-    function synthetixERC20() internal view returns (IERC20) {
+    function syndexERC20() internal view returns (IERC20) {
         return IERC20(requireAndGetAddress(CONTRACT_SYNTHETIX));
     }
 
@@ -299,17 +299,17 @@ contract BaseRewardEscrowV2 is
     }
 
     /// method for revoking vesting entries regardless of schedule to be used for liquidations
-    /// access controlled to only Synthetix contract
+    /// access controlled to only SynDex contract
     /// @param account: account
     /// @param recipient: account to transfer the revoked tokens to
-    /// @param targetAmount: amount of SCFX to revoke, when this amount is reached, no more entries are revoked
+    /// @param targetAmount: amount of SFCX to revoke, when this amount is reached, no more entries are revoked
     /// @param startIndex: index into accountVestingEntryIDs[account] to start iterating from
     function revokeFrom(
         address account,
         address recipient,
         uint targetAmount,
         uint startIndex
-    ) external onlySynthetix {
+    ) external onlySynDex {
         require(account != address(0), "account not set");
         require(recipient != address(0), "recipient not set");
 
@@ -362,11 +362,11 @@ contract BaseRewardEscrowV2 is
             subtractFrom,
             -SafeCast.toInt256(amount)
         );
-        synthetixERC20().transfer(transferTo, amount);
+        syndexERC20().transfer(transferTo, amount);
     }
 
     /**
-     * @notice Create an escrow entry to lock SCFX for a given duration in seconds
+     * @notice Create an escrow entry to lock SFCX for a given duration in seconds
      * @dev This call expects that the depositor (msg.sender) has already approved the Reward escrow contract
      to spend the the amount being escrowed.
      */
@@ -380,9 +380,9 @@ contract BaseRewardEscrowV2 is
             "Cannot create escrow with address(0)"
         );
 
-        /* Transfer SCFX from msg.sender */
+        /* Transfer SFCX from msg.sender */
         require(
-            synthetixERC20().transferFrom(msg.sender, address(this), deposit),
+            syndexERC20().transferFrom(msg.sender, address(this), deposit),
             "token transfer failed"
         );
 
@@ -392,11 +392,11 @@ contract BaseRewardEscrowV2 is
 
     /**
      * @notice Add a new vesting entry at a given time and quantity to an account's schedule.
-     * @dev A call to this should accompany a previous successful call to synthetix.transfer(rewardEscrow, amount),
+     * @dev A call to this should accompany a previous successful call to syndex.transfer(rewardEscrow, amount),
      * to ensure that when the funds are withdrawn, there is enough balance.
      * @param account The account to append a new vesting entry to.
-     * @param quantity The quantity of SCFX that will be escrowed.
-     * @param duration The duration that SCFX will be emitted.
+     * @param quantity The quantity of SFCX that will be escrowed.
+     * @param duration The duration that SFCX will be emitted.
      */
     function appendVestingEntry(
         address account,
@@ -426,7 +426,7 @@ contract BaseRewardEscrowV2 is
 
         /* There must be enough balance in the contract to provide for the vesting entry. */
         require(
-            totalEscrowedBalance() <= synthetixERC20().balanceOf(address(this)),
+            totalEscrowedBalance() <= syndexERC20().balanceOf(address(this)),
             "Must be enough balance in the contract to provide for the vesting entry"
         );
 
@@ -491,7 +491,7 @@ contract BaseRewardEscrowV2 is
         require(account != msg.sender, "Cannot nominate own account to merge");
         require(accountMergingIsOpen(), "Account merging has ended");
         require(
-            issuer().debtBalanceOf(msg.sender, "sUSD") == 0,
+            issuer().debtBalanceOf(msg.sender, "cfUSD") == 0,
             "Cannot merge accounts with debt"
         );
         nominatedReceiver[msg.sender] = account;
@@ -501,7 +501,7 @@ contract BaseRewardEscrowV2 is
     function mergeAccount(address from, uint256[] calldata entryIDs) external {
         require(accountMergingIsOpen(), "Account merging has ended");
         require(
-            issuer().debtBalanceOf(from, "sUSD") == 0,
+            issuer().debtBalanceOf(from, "cfUSD") == 0,
             "Cannot merge accounts with debt"
         );
         require(
@@ -591,8 +591,8 @@ contract BaseRewardEscrowV2 is
         _;
     }
 
-    modifier onlySynthetix() {
-        require(msg.sender == address(synthetixERC20()), "Only Synthetix");
+    modifier onlySynDex() {
+        require(msg.sender == address(syndexERC20()), "Only SynDex");
         _;
     }
 

@@ -23,10 +23,10 @@ contract Wrapper is Ownable, Pausable, MixinSystemSettings, IWrapper {
 
     /* ========== ENCODED NAMES ========== */
 
-    bytes32 internal constant sUSD = "sUSD";
+    bytes32 internal constant cfUSD = "cfUSD";
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
-    bytes32 private constant CONTRACT_SYNTH_SUSD = "SynthsUSD";
+    bytes32 private constant CONTRACT_SYNTH_SUSD = "SynthcfUSD";
     bytes32 private constant CONTRACT_EXRATES = "ExchangeRates";
     bytes32 private constant CONTRACT_DEBTCACHE = "DebtCache";
     bytes32 private constant CONTRACT_SYSTEMSTATUS = "SystemStatus";
@@ -76,7 +76,7 @@ contract Wrapper is Ownable, Pausable, MixinSystemSettings, IWrapper {
     }
 
     /* ========== INTERNAL VIEWS ========== */
-    function synthsUSD() internal view returns (ISynth) {
+    function synthcfUSD() internal view returns (ISynth) {
         return ISynth(requireAndGetAddress(CONTRACT_SYNTH_SUSD));
     }
 
@@ -120,7 +120,7 @@ contract Wrapper is Ownable, Pausable, MixinSystemSettings, IWrapper {
             exchangeRates().effectiveValue(
                 currencyKey,
                 targetSynthIssued,
-                sUSD
+                cfUSD
             );
     }
 
@@ -287,7 +287,7 @@ contract Wrapper is Ownable, Pausable, MixinSystemSettings, IWrapper {
         uint excessAmountUsd = exchangeRates().effectiveValue(
             currencyKey,
             excessAmount,
-            sUSD
+            cfUSD
         );
 
         // Mint `amount` to user.
@@ -295,10 +295,10 @@ contract Wrapper is Ownable, Pausable, MixinSystemSettings, IWrapper {
 
         // Escrow fee.
         if (excessAmountUsd > 0) {
-            synthsUSD().issue(address(wrapperFactory()), excessAmountUsd);
+            synthcfUSD().issue(address(wrapperFactory()), excessAmountUsd);
         }
 
-        // in the case of a negative fee extra synths will be issued, billed to the scfx stakers
+        // in the case of a negative fee extra synths will be issued, billed to the sfcx stakers
         _setTargetSynthIssued(reserves);
     }
 
@@ -313,7 +313,7 @@ contract Wrapper is Ownable, Pausable, MixinSystemSettings, IWrapper {
         uint excessAmountUsd = exchangeRates().effectiveValue(
             currencyKey,
             excessAmount,
-            sUSD
+            cfUSD
         );
 
         // Burn `amount` of currencyKey from user.
@@ -323,10 +323,10 @@ contract Wrapper is Ownable, Pausable, MixinSystemSettings, IWrapper {
         // This saves an approval and is cheaper.
         // Escrow fee.
         if (excessAmountUsd > 0) {
-            synthsUSD().issue(address(wrapperFactory()), excessAmountUsd);
+            synthcfUSD().issue(address(wrapperFactory()), excessAmountUsd);
         }
 
-        // in the case of a negative fee fewer synths will be burned, billed to the scfx stakers
+        // in the case of a negative fee fewer synths will be burned, billed to the sfcx stakers
         _setTargetSynthIssued(reserves);
     }
 

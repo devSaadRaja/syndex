@@ -21,7 +21,7 @@ interface ISystemSettings {
 
     function liquidationPenalty() external view returns (uint);
 
-    function scfxLiquidationPenalty() external view returns (uint);
+    function sfcxLiquidationPenalty() external view returns (uint);
 
     function selfLiquidationPenalty() external view returns (uint);
 

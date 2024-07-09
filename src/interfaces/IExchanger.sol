@@ -110,8 +110,8 @@ interface IExchanger {
     ) external returns (uint reclaimed, uint refunded, uint numEntries);
 }
 
-// Used to have strongly-typed access to internal mutative functions in Synthetix
-interface ISynthetixInternal {
+// Used to have strongly-typed access to internal mutative functions in SynDex
+interface ISynDexInternal {
     function emitExchangeTracking(
         bytes32 trackingCode,
         bytes32 toCurrencyKey,

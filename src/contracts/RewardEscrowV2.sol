@@ -9,7 +9,7 @@ contract RewardEscrowV2 is BaseRewardEscrowV2 {
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
     bytes32 private constant CONTRACT_SYNTHETIX_BRIDGE_OPTIMISM =
-        "SynthetixBridgeToOptimism";
+        "SynDexBridgeToOptimism";
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -33,7 +33,7 @@ contract RewardEscrowV2 is BaseRewardEscrowV2 {
         return combineArrays(existingAddresses, newAddresses);
     }
 
-    function synthetixBridgeToOptimism() internal view returns (address) {
+    function syndexBridgeToOptimism() internal view returns (address) {
         return requireAndGetAddress(CONTRACT_SYNTHETIX_BRIDGE_OPTIMISM);
     }
 
@@ -45,7 +45,7 @@ contract RewardEscrowV2 is BaseRewardEscrowV2 {
     )
         external
         override
-        onlySynthetixBridge
+        onlySynDexBridge
         returns (
             uint256 escrowedAccountBalance,
             VestingEntries.VestingEntry[] memory vestingEntries
@@ -77,15 +77,15 @@ contract RewardEscrowV2 is BaseRewardEscrowV2 {
 
         /**
          *  update account total escrow balances for migration
-         *  transfer the escrowed SCFX being migrated to the L2 deposit contract
+         *  transfer the escrowed SFCX being migrated to the L2 deposit contract
          */
         if (escrowedAccountBalance > 0) {
             state().updateEscrowAccountBalance(
                 account,
                 -SafeCast.toInt256(escrowedAccountBalance)
             );
-            synthetixERC20().transfer(
-                synthetixBridgeToOptimism(),
+            syndexERC20().transfer(
+                syndexBridgeToOptimism(),
                 escrowedAccountBalance
             );
         }
@@ -102,10 +102,10 @@ contract RewardEscrowV2 is BaseRewardEscrowV2 {
 
     /* ========== MODIFIERS ========== */
 
-    modifier onlySynthetixBridge() {
+    modifier onlySynDexBridge() {
         require(
-            msg.sender == synthetixBridgeToOptimism(),
-            "Can only be invoked by SynthetixBridgeToOptimism contract"
+            msg.sender == syndexBridgeToOptimism(),
+            "Can only be invoked by SynDexBridgeToOptimism contract"
         );
         _;
     }

@@ -3,27 +3,27 @@ pragma solidity ^0.8.17;
 
 import "../interfaces/IERC20.sol";
 import "../interfaces/ISynth.sol";
-import "../interfaces/ISynthetix.sol";
+import "../interfaces/ISynDex.sol";
 import "../interfaces/IExchangeRates.sol";
 import "../interfaces/IAddressResolver.sol";
 
 contract SynthUtil {
     IAddressResolver public addressResolver;
 
-    bytes32 internal constant CONTRACT_SYNTHETIX = "Synthetix";
+    bytes32 internal constant CONTRACT_SYNTHETIX = "SynDex";
     bytes32 internal constant CONTRACT_EXRATES = "ExchangeRates";
-    bytes32 internal constant SUSD = "sUSD";
+    bytes32 internal constant SUSD = "cfUSD";
 
     constructor(address resolver) {
         addressResolver = IAddressResolver(resolver);
     }
 
-    function _synthetix() internal view returns (ISynthetix) {
+    function _syndex() internal view returns (ISynDex) {
         return
-            ISynthetix(
+            ISynDex(
                 addressResolver.requireAndGetAddress(
                     CONTRACT_SYNTHETIX,
-                    "Missing Synthetix address"
+                    "Missing SynDex address"
                 )
             );
     }
@@ -42,11 +42,11 @@ contract SynthUtil {
         address account,
         bytes32 currencyKey
     ) external view returns (uint total) {
-        ISynthetix synthetix = _synthetix();
+        ISynDex syndex = _syndex();
         IExchangeRates exchangeRates = _exchangeRates();
-        uint numSynths = synthetix.availableSynthCount();
+        uint numSynths = syndex.availableSynthCount();
         for (uint i = 0; i < numSynths; i++) {
-            ISynth synth = synthetix.availableSynths(i);
+            ISynth synth = syndex.availableSynths(i);
             total += exchangeRates.effectiveValue(
                 synth.currencyKey(),
                 IERC20(address(synth)).balanceOf(account),
@@ -59,23 +59,23 @@ contract SynthUtil {
     function synthsBalances(
         address account
     ) external view returns (bytes32[] memory, uint[] memory, uint[] memory) {
-        ISynthetix synthetix = _synthetix();
+        ISynDex syndex = _syndex();
         IExchangeRates exchangeRates = _exchangeRates();
-        uint numSynths = synthetix.availableSynthCount();
+        uint numSynths = syndex.availableSynthCount();
         bytes32[] memory currencyKeys = new bytes32[](numSynths);
         uint[] memory balances = new uint[](numSynths);
-        uint[] memory sUSDBalances = new uint[](numSynths);
+        uint[] memory cfUSDBalances = new uint[](numSynths);
         for (uint i = 0; i < numSynths; i++) {
-            ISynth synth = synthetix.availableSynths(i);
+            ISynth synth = syndex.availableSynths(i);
             currencyKeys[i] = synth.currencyKey();
             balances[i] = IERC20(address(synth)).balanceOf(account);
-            sUSDBalances[i] = exchangeRates.effectiveValue(
+            cfUSDBalances[i] = exchangeRates.effectiveValue(
                 currencyKeys[i],
                 balances[i],
                 SUSD
             );
         }
-        return (currencyKeys, balances, sUSDBalances);
+        return (currencyKeys, balances, cfUSDBalances);
     }
 
     function synthsRates()
@@ -83,7 +83,7 @@ contract SynthUtil {
         view
         returns (bytes32[] memory, uint[] memory)
     {
-        bytes32[] memory currencyKeys = _synthetix().availableCurrencyKeys();
+        bytes32[] memory currencyKeys = _syndex().availableCurrencyKeys();
         return (
             currencyKeys,
             _exchangeRates().ratesForCurrencies(currencyKeys)
@@ -95,23 +95,23 @@ contract SynthUtil {
         view
         returns (bytes32[] memory, uint256[] memory, uint256[] memory)
     {
-        ISynthetix synthetix = _synthetix();
+        ISynDex syndex = _syndex();
         IExchangeRates exchangeRates = _exchangeRates();
 
-        uint256 numSynths = synthetix.availableSynthCount();
+        uint256 numSynths = syndex.availableSynthCount();
         bytes32[] memory currencyKeys = new bytes32[](numSynths);
         uint256[] memory balances = new uint256[](numSynths);
-        uint256[] memory sUSDBalances = new uint256[](numSynths);
+        uint256[] memory cfUSDBalances = new uint256[](numSynths);
         for (uint256 i = 0; i < numSynths; i++) {
-            ISynth synth = synthetix.availableSynths(i);
+            ISynth synth = syndex.availableSynths(i);
             currencyKeys[i] = synth.currencyKey();
             balances[i] = IERC20(address(synth)).totalSupply();
-            sUSDBalances[i] = exchangeRates.effectiveValue(
+            cfUSDBalances[i] = exchangeRates.effectiveValue(
                 currencyKeys[i],
                 balances[i],
                 SUSD
             );
         }
-        return (currencyKeys, balances, sUSDBalances);
+        return (currencyKeys, balances, cfUSDBalances);
     }
 }

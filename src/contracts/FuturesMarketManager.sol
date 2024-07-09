@@ -62,8 +62,8 @@ contract FuturesMarketManager is Ownable, MixinResolver, IFuturesMarketManager {
 
     bytes32 public constant CONTRACT_NAME = "FuturesMarketManager";
 
-    bytes32 internal constant SUSD = "sUSD";
-    bytes32 internal constant CONTRACT_SYNTHSUSD = "SynthsUSD";
+    bytes32 internal constant SUSD = "cfUSD";
+    bytes32 internal constant CONTRACT_SYNTHSUSD = "SynthcfUSD";
     bytes32 internal constant CONTRACT_FEEPOOL = "FeePool";
     bytes32 internal constant CONTRACT_EXCHANGER = "Exchanger";
 
@@ -88,7 +88,7 @@ contract FuturesMarketManager is Ownable, MixinResolver, IFuturesMarketManager {
         addresses[2] = CONTRACT_EXCHANGER;
     }
 
-    function _sUSD() internal view returns (ISynth) {
+    function _cfUSD() internal view returns (ISynth) {
         return ISynth(requireAndGetAddress(CONTRACT_SYNTHSUSD));
     }
 
@@ -408,7 +408,7 @@ contract FuturesMarketManager is Ownable, MixinResolver, IFuturesMarketManager {
     }
 
     /*
-     * Allows a market to issue sUSD to an account when it withdraws margin.
+     * Allows a market to issue cfUSD to an account when it withdraws margin.
      * This function is not callable through the proxy, only underlying contracts interact;
      * it reverts if not called by a known market.
      */
@@ -417,11 +417,11 @@ contract FuturesMarketManager is Ownable, MixinResolver, IFuturesMarketManager {
         uint amount
     ) external onlyMarketImplementations {
         // No settlement is required to issue synths into the currentTarget account.
-        _sUSD().issue(account, amount);
+        _cfUSD().issue(account, amount);
     }
 
     /*
-     * Allows a market to burn sUSD from an account when it deposits margin.
+     * Allows a market to burn cfUSD from an account when it deposits margin.
      * This function is not callable through the proxy, only underlying contracts interact;
      * it reverts if not called by a known market.
      */
@@ -434,18 +434,18 @@ contract FuturesMarketManager is Ownable, MixinResolver, IFuturesMarketManager {
         // the settled remainder will be the resulting deposit.
 
         // Exchanger.settle ensures synth is active
-        ISynth sUSD = _sUSD();
+        ISynth cfUSD = _cfUSD();
         (uint reclaimed, , ) = _exchanger().settle(account, SUSD);
 
         uint balanceAfter = amount;
         if (0 < reclaimed) {
-            balanceAfter = IERC20(address(sUSD)).balanceOf(account);
+            balanceAfter = IERC20(address(cfUSD)).balanceOf(account);
         }
 
         // Reduce the value to burn if balance is insufficient after reclamation
         amount = balanceAfter < amount ? balanceAfter : amount;
 
-        sUSD.burn(account, amount);
+        cfUSD.burn(account, amount);
 
         return amount;
     }
@@ -470,7 +470,7 @@ contract FuturesMarketManager is Ownable, MixinResolver, IFuturesMarketManager {
     function _payFee(uint amount, bytes32 trackingCode) internal {
         delete trackingCode; // unused for now, will be used SIP 203
         IFeePool pool = _feePool();
-        _sUSD().issue(pool.FEE_ADDRESS(), amount);
+        _cfUSD().issue(pool.FEE_ADDRESS(), amount);
         pool.recordFeePaid(amount);
     }
 

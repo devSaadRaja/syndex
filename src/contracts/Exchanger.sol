@@ -26,14 +26,14 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
 
     bytes32 public constant CONTRACT_NAME = "Exchanger";
 
-    bytes32 internal constant sUSD = "sUSD";
+    bytes32 internal constant cfUSD = "cfUSD";
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
     bytes32 private constant CONTRACT_SYSTEMSTATUS = "SystemStatus";
     bytes32 private constant CONTRACT_EXCHANGESTATE = "ExchangeState";
     bytes32 private constant CONTRACT_EXRATES = "ExchangeRates";
-    bytes32 private constant CONTRACT_SYNTHETIX = "Synthetix";
+    bytes32 private constant CONTRACT_SYNTHETIX = "SynDex";
     bytes32 private constant CONTRACT_FEEPOOL = "FeePool";
     bytes32 private constant CONTRACT_TRADING_REWARDS = "TradingRewards";
     bytes32 private constant CONTRACT_DELEGATEAPPROVALS = "DelegateApprovals";
@@ -89,8 +89,8 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         return ICircuitBreaker(requireAndGetAddress(CONTRACT_CIRCUIT_BREAKER));
     }
 
-    function synthetix() internal view returns (ISynthetix) {
-        return ISynthetix(requireAndGetAddress(CONTRACT_SYNTHETIX));
+    function syndex() internal view returns (ISynDex) {
+        return ISynDex(requireAndGetAddress(CONTRACT_SYNTHETIX));
     }
 
     function feePool() internal view returns (IFeePool) {
@@ -142,7 +142,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
                 circuitBreaker(),
                 debtCache(),
                 issuer(),
-                synthetix()
+                syndex()
             );
     }
 
@@ -254,7 +254,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         bytes32 trackingCode
     )
         external
-        onlySynthetixorSynth
+        onlySynDexorSynth
         returns (uint amountReceived, IVirtualSynth vSynth)
     {
         uint fee;
@@ -312,7 +312,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         uint256 toAmount,
         uint256 fee
     ) internal {
-        ISynthetixInternal(address(synthetix())).emitExchangeTracking(
+        ISynDexInternal(address(syndex())).emitExchangeTracking(
             trackingCode,
             toCurrencyKey,
             toAmount,
@@ -328,11 +328,11 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         }
     }
 
-    function _updateSCFXIssuedDebtOnExchange(
+    function _updateSFCXIssuedDebtOnExchange(
         bytes32[2] memory currencyKeys,
         uint[2] memory currencyRates
     ) internal {
-        bool includesSUSD = currencyKeys[0] == sUSD || currencyKeys[1] == sUSD;
+        bool includesSUSD = currencyKeys[0] == cfUSD || currencyKeys[1] == cfUSD;
         uint numKeys = includesSUSD ? 2 : 3;
 
         bytes32[] memory keys = new bytes32[](numKeys);
@@ -344,7 +344,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         rates[1] = currencyRates[1];
 
         if (!includesSUSD) {
-            keys[2] = sUSD; // And we'll also update sUSD to account for any fees if it wasn't one of the exchanged currencies
+            keys[2] = cfUSD; // And we'll also update cfUSD to account for any fees if it wasn't one of the exchanged currencies
             rates[2] = SafeDecimalMath.unit();
         }
 
@@ -485,36 +485,36 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
 
         // Remit the fee if required
         if (fee > 0) {
-            // Normalize fee to sUSD
+            // Normalize fee to cfUSD
             // Note: `fee` is being reused to avoid stack too deep errors.
             fee = addrs.exchangeRates.effectiveValue(
                 destinationSettings.currencyKey,
                 fee,
-                sUSD
+                cfUSD
             );
 
             console.log(fee, "<-- fee");
             console.log();
 
-            // Remit the fee in sUSDs
-            issuer().synths(sUSD).issue(feePool().FEE_ADDRESS(), fee);
+            // Remit the fee in cfUSDs
+            issuer().synths(cfUSD).issue(feePool().FEE_ADDRESS(), fee);
 
             // Tell the fee pool about this
             feePool().recordFeePaid(fee);
         }
 
-        // Note: As of this point, `fee` is denominated in sUSD.
+        // Note: As of this point, `fee` is denominated in cfUSD.
 
         // Nothing changes as far as issuance data goes because the total value in the system hasn't changed.
         // But we will update the debt snapshot in case executeExchange rates have fluctuated since the last executeExchange
         // in these currencies
-        _updateSCFXIssuedDebtOnExchange(
+        _updateSFCXIssuedDebtOnExchange(
             [sourceSettings.currencyKey, destinationSettings.currencyKey],
             [entry.sourceRate, entry.destinationRate]
         );
 
         // Let the DApps know there was a Synth executeExchange
-        ISynthetixInternal(address(synthetix())).emitSynthExchange(
+        ISynDexInternal(address(syndex())).emitSynthExchange(
             from,
             sourceSettings.currencyKey,
             entry.sourceAmountAfterSettlement,
@@ -628,11 +628,11 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         );
         require(sourceAmount > 0, "Zero amount");
 
-        (, bool srcBroken, bool srcStaleOrInvalid) = sourceCurrencyKey != sUSD
+        (, bool srcBroken, bool srcStaleOrInvalid) = sourceCurrencyKey != cfUSD
             ? exchangeRates().rateWithSafetyChecks(sourceCurrencyKey)
             : (0, false, false);
         (, bool dstBroken, bool dstStaleOrInvalid) = destinationCurrencyKey !=
-            sUSD
+            cfUSD
             ? exchangeRates().rateWithSafetyChecks(destinationCurrencyKey)
             : (0, false, false);
 
@@ -822,9 +822,9 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
     function _dynamicFeeRateForCurrency(
         IDirectIntegrationManager.ParameterIntegrationSettings memory settings
     ) internal view returns (uint dynamicFee, bool tooVolatile) {
-        // no dynamic dynamicFee for sUSD or too few rounds
+        // no dynamic dynamicFee for cfUSD or too few rounds
         if (
-            settings.currencyKey == sUSD ||
+            settings.currencyKey == cfUSD ||
             settings.exchangeDynamicFeeRounds <= 1
         ) {
             return (0, false);
@@ -841,9 +841,9 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         IDirectIntegrationManager.ParameterIntegrationSettings memory settings,
         uint roundId
     ) internal view returns (uint dynamicFee, bool tooVolatile) {
-        // no dynamic dynamicFee for sUSD or too few rounds
+        // no dynamic dynamicFee for cfUSD or too few rounds
         if (
-            settings.currencyKey == sUSD ||
+            settings.currencyKey == cfUSD ||
             settings.exchangeDynamicFeeRounds <= 1
         ) {
             return (0, false);
@@ -939,13 +939,13 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
             );
 
         require(
-            sourceCurrencyKey == sUSD ||
+            sourceCurrencyKey == cfUSD ||
                 !exchangeRates().rateIsInvalid(sourceCurrencyKey),
             "src synth rate invalid"
         );
 
         require(
-            destinationCurrencyKey == sUSD ||
+            destinationCurrencyKey == cfUSD ||
                 !exchangeRates().rateIsInvalid(destinationCurrencyKey),
             "dest synth rate invalid"
         );
@@ -986,12 +986,12 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
 
     // ========== MODIFIERS ==========
 
-    modifier onlySynthetixorSynth() {
-        ISynthetix _synthetix = synthetix();
+    modifier onlySynDexorSynth() {
+        ISynDex _syndex = syndex();
         require(
-            msg.sender == address(_synthetix) ||
-                _synthetix.synthsByAddress(msg.sender) != bytes32(0),
-            "Exchanger: Only synthetix or a synth contract can perform this action"
+            msg.sender == address(_syndex) ||
+                _syndex.synthsByAddress(msg.sender) != bytes32(0),
+            "Exchanger: Only syndex or a synth contract can perform this action"
         );
         _;
     }

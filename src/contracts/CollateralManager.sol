@@ -25,7 +25,7 @@ contract CollateralManager is Ownable, Pausable, MixinResolver {
 
     /* ========== CONSTANTS ========== */
 
-    bytes32 private constant sUSD = "sUSD";
+    bytes32 private constant cfUSD = "cfUSD";
 
     uint private constant SECONDS_IN_A_YEAR = 31556926 * 1e18;
 
@@ -58,7 +58,7 @@ contract CollateralManager is Ownable, Pausable, MixinResolver {
     // The factor that will scale the utilisation ratio.
     uint public utilisationMultiplier = 1e18;
 
-    // The maximum amount of debt in sUSD that can be issued by non scfx collateral.
+    // The maximum amount of debt in cfUSD that can be issued by non sfcx collateral.
     uint public maxDebt;
 
     // The rate that determines the skew limit maximum.
@@ -188,7 +188,7 @@ contract CollateralManager is Ownable, Pausable, MixinResolver {
         if (synths.length > 0) {
             for (uint i = 0; i < synths.length; i++) {
                 bytes32 synth = synths[i];
-                if (synth == sUSD) {
+                if (synth == cfUSD) {
                     susdValue = susdValue.add(state.long(synth));
                 } else {
                     (uint rate, bool invalid) = _exchangeRates().rateAndInvalid(
@@ -256,14 +256,14 @@ contract CollateralManager is Ownable, Pausable, MixinResolver {
         view
         returns (uint borrowRate, bool anyRateIsInvalid)
     {
-        // get the scfx backed debt.
-        uint scfxDebt = _issuer().totalIssuedSynths(sUSD, true);
+        // get the sfcx backed debt.
+        uint sfcxDebt = _issuer().totalIssuedSynths(cfUSD, true);
 
-        // now get the non scfx backed debt.
+        // now get the non sfcx backed debt.
         (uint nonSnxDebt, bool ratesInvalid) = totalLong();
 
         // the total.
-        uint totalDebt = scfxDebt.add(nonSnxDebt);
+        uint totalDebt = sfcxDebt.add(nonSnxDebt);
 
         // now work out the utilisation ratio, and divide through to get a per second value.
         uint utilisation = nonSnxDebt.divideDecimal(totalDebt).divideDecimal(
@@ -343,7 +343,7 @@ contract CollateralManager is Ownable, Pausable, MixinResolver {
         uint usdAmount = _exchangeRates().effectiveValue(
             currency,
             amount,
-            sUSD
+            cfUSD
         );
 
         (uint longAndShortValue, bool invalid) = totalLongAndShort();

@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "../interfaces/IERC20.sol";
 import "../interfaces/IFeePool.sol";
-import "../interfaces/ISynthetix.sol";
+import "../interfaces/ISynDex.sol";
 import "../interfaces/IRewardEscrow.sol";
 
 import "../libraries/SafeDecimalMath.sol";
@@ -13,22 +13,22 @@ import "../libraries/SafeDecimalMath.sol";
 contract RewardEscrow is Ownable, IRewardEscrow {
     using SafeMath for uint;
 
-    /* The corresponding Synthetix contract. */
-    ISynthetix public synthetix;
+    /* The corresponding SynDex contract. */
+    ISynDex public syndex;
 
     IFeePool public feePool;
 
     /* Lists of (timestamp, quantity) pairs per account, sorted in ascending time order.
-     * These are the times at which each given quantity of SCFX vests. */
+     * These are the times at which each given quantity of SFCX vests. */
     mapping(address => uint[2][]) public vestingSchedules;
 
-    /* An account's total escrowed synthetix balance to save recomputing this for fee extraction purposes. */
+    /* An account's total escrowed syndex balance to save recomputing this for fee extraction purposes. */
     mapping(address => uint) public totalEscrowedAccountBalance;
 
-    /* An account's total vested reward synthetix. */
+    /* An account's total vested reward syndex. */
     mapping(address => uint) public totalVestedAccountBalance;
 
-    /* The total remaining escrowed balance, for verifying the actual synthetix balance of this contract against. */
+    /* The total remaining escrowed balance, for verifying the actual syndex balance of this contract against. */
     uint public totalEscrowedBalance;
 
     uint internal constant TIME_INDEX = 0;
@@ -42,21 +42,21 @@ contract RewardEscrow is Ownable, IRewardEscrow {
 
     constructor(
         address _owner,
-        address _synthetix,
+        address _syndex,
         address _feePool
     ) Ownable(_owner) {
-        synthetix = ISynthetix(_synthetix);
+        syndex = ISynDex(_syndex);
         feePool = IFeePool(_feePool);
     }
 
     /* ========== SETTERS ========== */
 
     /**
-     * @notice set the synthetix contract address as we need to transfer SCFX when the user vests
+     * @notice set the syndex contract address as we need to transfer SFCX when the user vests
      */
-    function setSynthetix(ISynthetix _synthetix) external onlyOwner {
-        synthetix = _synthetix;
-        emit SynthetixUpdated(address(_synthetix));
+    function setSynDex(ISynDex _syndex) external onlyOwner {
+        syndex = _syndex;
+        emit SynDexUpdated(address(_syndex));
     }
 
     /**
@@ -90,7 +90,7 @@ contract RewardEscrow is Ownable, IRewardEscrow {
 
     /**
      * @notice Get a particular schedule entry for an account.
-     * @return A pair of uints: (timestamp, synthetix quantity).
+     * @return A pair of uints: (timestamp, syndex quantity).
      */
     function getVestingScheduleEntry(
         address account,
@@ -110,7 +110,7 @@ contract RewardEscrow is Ownable, IRewardEscrow {
     }
 
     /**
-     * @notice Get the quantity of SCFX associated with a given schedule entry.
+     * @notice Get the quantity of SFCX associated with a given schedule entry.
      */
     function getVestingQuantity(
         address account,
@@ -134,7 +134,7 @@ contract RewardEscrow is Ownable, IRewardEscrow {
 
     /**
      * @notice Obtain the next schedule entry that will vest for a given user.
-     * @return A pair of uints: (timestamp, synthetix quantity). */
+     * @return A pair of uints: (timestamp, syndex quantity). */
     function getNextVestingEntry(
         address account
     ) public view returns (uint[2] memory) {
@@ -190,7 +190,7 @@ contract RewardEscrow is Ownable, IRewardEscrow {
         totalEscrowedBalance = totalEscrowedBalance.add(quantity);
         require(
             totalEscrowedBalance <=
-                IERC20(address(synthetix)).balanceOf(address(this)),
+                IERC20(address(syndex)).balanceOf(address(this)),
             "Must be enough balance in the contract to provide for the vesting entry"
         );
 
@@ -207,7 +207,7 @@ contract RewardEscrow is Ownable, IRewardEscrow {
         if (scheduleLength == 0) {
             totalEscrowedAccountBalance[account] = quantity;
         } else {
-            /* Disallow adding new vested SCFX earlier than the last one.
+            /* Disallow adding new vested SFCX earlier than the last one.
              * Since entries are only appended, this means that no vesting date can be repeated. */
             require(
                 getVestingTime(account, scheduleLength - 1) < time,
@@ -225,12 +225,12 @@ contract RewardEscrow is Ownable, IRewardEscrow {
 
     /**
      * @notice Add a new vesting entry at a given time and quantity to an account's schedule.
-     * @dev A call to this should accompany a previous successful call to synthetix.transfer(rewardEscrow, amount),
+     * @dev A call to this should accompany a previous successful call to syndex.transfer(rewardEscrow, amount),
      * to ensure that when the funds are withdrawn, there is enough balance.
      * Note; although this function could technically be used to produce unbounded
      * arrays, it's only withinn the 4 year period of the weekly inflation schedule.
      * @param account The account to append a new vesting entry to.
-     * @param quantity The quantity of SCFX that will be escrowed.
+     * @param quantity The quantity of SFCX that will be escrowed.
      */
     function appendVestingEntry(
         address account,
@@ -240,7 +240,7 @@ contract RewardEscrow is Ownable, IRewardEscrow {
     }
 
     /**
-     * @notice Allow a user to withdraw any SCFX in their schedule that have vested.
+     * @notice Allow a user to withdraw any SFCX in their schedule that have vested.
      */
     function vest() external {
         uint numEntries = _numVestingEntries(msg.sender);
@@ -266,7 +266,7 @@ contract RewardEscrow is Ownable, IRewardEscrow {
             totalVestedAccountBalance[msg.sender] = totalVestedAccountBalance[
                 msg.sender
             ].add(total);
-            IERC20(address(synthetix)).transfer(msg.sender, total);
+            IERC20(address(syndex)).transfer(msg.sender, total);
             emit Vested(msg.sender, block.timestamp, total);
         }
     }
@@ -285,7 +285,7 @@ contract RewardEscrow is Ownable, IRewardEscrow {
 
     /* ========== EVENTS ========== */
 
-    event SynthetixUpdated(address newSynthetix);
+    event SynDexUpdated(address newSynDex);
 
     event FeePoolUpdated(address newFeePool);
 

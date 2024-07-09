@@ -5,11 +5,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./MixinResolver.sol";
 
-import "../interfaces/ISynthetixDebtShare.sol";
+import "../interfaces/ISynDexDebtShare.sol";
 
 import "../libraries/SafeDecimalMath.sol";
 
-contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
+contract SynDexDebtShare is Ownable, MixinResolver, ISynDexDebtShare {
     using SafeMath for uint;
     using SafeDecimalMath for uint;
 
@@ -18,7 +18,7 @@ contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
         uint128 periodId;
     }
 
-    bytes32 public constant CONTRACT_NAME = "SynthetixDebtShare";
+    bytes32 public constant CONTRACT_NAME = "SynDexDebtShare";
 
     bytes32 private constant CONTRACT_ISSUER = "Issuer";
 
@@ -73,7 +73,7 @@ contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
         address _owner,
         address _resolver
     ) Ownable(_owner) MixinResolver(_resolver) {
-        name = "Synthetix Debt Shares";
+        name = "SynDex Debt Shares";
         symbol = "SDS";
         decimals = 18;
 
@@ -125,7 +125,7 @@ contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
             }
         }
 
-        require(i < 0, "SynthetixDebtShare: not found in recent history");
+        require(i < 0, "SynDexDebtShare: not found in recent history");
         return 0;
     }
 
@@ -297,7 +297,7 @@ contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
 
         require(
             accountBalanceCount != 0,
-            "SynthetixDebtShare: account has no share to deduct"
+            "SynDexDebtShare: account has no share to deduct"
         );
 
         uint128 newAmount = uint128(
@@ -319,7 +319,7 @@ contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
     modifier onlyIssuer() {
         require(
             msg.sender == requireAndGetAddress(CONTRACT_ISSUER),
-            "SynthetixDebtShare: only issuer can mint/burn"
+            "SynDexDebtShare: only issuer can mint/burn"
         );
         _;
     }
@@ -328,7 +328,7 @@ contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
         require(
             authorizedToSnapshot[msg.sender] ||
                 msg.sender == requireAndGetAddress(CONTRACT_ISSUER),
-            "SynthetixDebtShare: not authorized to snapshot"
+            "SynDexDebtShare: not authorized to snapshot"
         );
         _;
     }
@@ -336,7 +336,7 @@ contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
     modifier onlyAuthorizedBrokers() {
         require(
             authorizedBrokers[msg.sender],
-            "SynthetixDebtShare: only brokers can transferFrom"
+            "SynDexDebtShare: only brokers can transferFrom"
         );
         _;
     }
@@ -344,7 +344,7 @@ contract SynthetixDebtShare is Ownable, MixinResolver, ISynthetixDebtShare {
     modifier onlySetup() {
         require(
             !isInitialized,
-            "SynthetixDebt: only callable while still initializing"
+            "SynDexDebt: only callable while still initializing"
         );
         _;
     }

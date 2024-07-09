@@ -4,9 +4,9 @@ pragma solidity ^0.8.17;
 import "./ISynth.sol";
 import "./IVirtualSynth.sol";
 
-interface ISynthetix {
+interface ISynDex {
     // Views
-    function anySynthOrSCFXRateIsInvalid()
+    function anySynthOrSFCXRateIsInvalid()
         external
         view
         returns (bool anyRateInvalid);
@@ -55,7 +55,7 @@ interface ISynthetix {
         bytes32 currencyKey
     ) external view returns (uint);
 
-    function transferableSynthetix(
+    function transferableSynDex(
         address account
     ) external view returns (uint transferable);
 

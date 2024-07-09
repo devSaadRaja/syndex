@@ -45,7 +45,7 @@ contract TradingRewards is
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
     bytes32 private constant CONTRACT_EXCHANGER = "Exchanger";
-    bytes32 private constant CONTRACT_SYNTHETIX = "ProxySCFX"; // ProxySCFX, Synthetix
+    bytes32 private constant CONTRACT_SYNTHETIX = "ProxySFCX"; // ProxySFCX, SynDex
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -72,7 +72,7 @@ contract TradingRewards is
         addresses[1] = CONTRACT_SYNTHETIX;
     }
 
-    function synthetix() internal view returns (IERC20) {
+    function syndex() internal view returns (IERC20) {
         return IERC20(requireAndGetAddress(CONTRACT_SYNTHETIX));
     }
 
@@ -86,11 +86,11 @@ contract TradingRewards is
 
     function getUnassignedRewards() external view returns (uint) {
         return
-            synthetix().balanceOf(address(this)).sub(_balanceAssignedToRewards);
+            syndex().balanceOf(address(this)).sub(_balanceAssignedToRewards);
     }
 
     function getRewardsToken() external view returns (address) {
-        return address(synthetix());
+        return address(syndex());
     }
 
     function getPeriodController() external view returns (address) {
@@ -207,7 +207,7 @@ contract TradingRewards is
             amountToClaim
         );
 
-        synthetix().safeTransfer(account, amountToClaim);
+        syndex().safeTransfer(account, amountToClaim);
 
         emit RewardsClaimed(account, amountToClaim, periodID);
     }
@@ -233,7 +233,7 @@ contract TradingRewards is
     function closeCurrentPeriodWithRewards(
         uint rewards
     ) external onlyPeriodController {
-        uint currentBalance = synthetix().balanceOf(address(this));
+        uint currentBalance = syndex().balanceOf(address(this));
         uint availableForNewRewards = currentBalance.sub(
             _balanceAssignedToRewards
         );
@@ -260,7 +260,7 @@ contract TradingRewards is
     ) external onlyOwner {
         _validateRecoverAddress(recoverAddress);
         require(
-            tokenAddress != address(synthetix()),
+            tokenAddress != address(syndex()),
             "Must use another function"
         );
 
@@ -279,13 +279,13 @@ contract TradingRewards is
     ) external onlyOwner {
         _validateRecoverAddress(recoverAddress);
 
-        uint tokenBalance = synthetix().balanceOf(address(this));
+        uint tokenBalance = syndex().balanceOf(address(this));
         require(tokenBalance > 0, "No tokens to recover");
 
         uint unassignedBalance = tokenBalance.sub(_balanceAssignedToRewards);
         require(unassignedBalance > 0, "No tokens to recover");
 
-        synthetix().safeTransfer(recoverAddress, unassignedBalance);
+        syndex().safeTransfer(recoverAddress, unassignedBalance);
 
         emit UnassignedRewardTokensRecovered(recoverAddress, unassignedBalance);
     }
@@ -301,7 +301,7 @@ contract TradingRewards is
         require(period.availableRewards > 0, "No rewards available to recover");
 
         uint amount = period.availableRewards;
-        synthetix().safeTransfer(recoverAddress, amount);
+        syndex().safeTransfer(recoverAddress, amount);
 
         _balanceAssignedToRewards = _balanceAssignedToRewards.sub(amount);
 

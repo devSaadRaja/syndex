@@ -33,8 +33,8 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
 
     /* ========== ENCODED NAMES ========== */
 
-    bytes32 internal constant sUSD = "sUSD";
-    bytes32 internal constant sETH = "sETH";
+    bytes32 internal constant cfUSD = "cfUSD";
+    bytes32 internal constant cfETH = "cfETH";
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
@@ -174,7 +174,7 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
         internal
         view
         returns (
-            uint[] memory scfxIssuedDebts,
+            uint[] memory sfcxIssuedDebts,
             uint _futuresDebt,
             uint _excludedDebt,
             bool anyRateIsInvalid
@@ -226,7 +226,7 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
 
     function cachedSynthDebts(
         bytes32[] calldata currencyKeys
-    ) external view returns (uint[] memory scfxIssuedDebts) {
+    ) external view returns (uint[] memory sfcxIssuedDebts) {
         return _cachedSynthDebts(currencyKeys);
     }
 
@@ -286,7 +286,7 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
         }
     }
 
-    // Returns the total sUSD debt backed by non-SCFX collateral.
+    // Returns the total cfUSD debt backed by non-SFCX collateral.
     function totalNonSnxBackedDebt()
         external
         view
@@ -317,7 +317,7 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
         excludedDebt = longValue.add(shortValue);
 
         // 2. EtherWrapper.
-        // Subtract sETH and sUSD issued by EtherWrapper.
+        // Subtract cfETH and cfUSD issued by EtherWrapper.
         excludedDebt = excludedDebt.add(etherWrapper().totalIssuedSynths());
 
         // 3. WrapperFactory.
@@ -360,7 +360,7 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
             .totalDebt();
         total = total.add(futuresDebt);
 
-        // Ensure that if the excluded non-SCFX debt exceeds SCFX-backed debt, no overflow occurs
+        // Ensure that if the excluded non-SFCX debt exceeds SFCX-backed debt, no overflow occurs
         total = total < excludedDebt ? 0 : total.sub(excludedDebt);
 
         return (
@@ -416,7 +416,7 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
         int256 delta
     ) external virtual {}
 
-    function updateCachedsUSDDebt(int amount) external virtual {}
+    function updateCachedcfUSDDebt(int amount) external virtual {}
 
     /* ========== MODIFIERS ========== */
 

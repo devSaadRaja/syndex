@@ -7,7 +7,7 @@ import "./MixinSystemSettings.sol";
 
 import "../interfaces/IERC20.sol";
 import "../interfaces/IIssuer.sol";
-import "../interfaces/ISynthetix.sol";
+import "../interfaces/ISynDex.sol";
 import "../interfaces/ILiquidator.sol";
 import "../interfaces/IHasBalance.sol";
 import "../interfaces/ISystemStatus.sol";
@@ -30,10 +30,10 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
     bytes32 private constant CONTRACT_SYSTEMSTATUS = "SystemStatus";
-    bytes32 private constant CONTRACT_SYNTHETIX = "Synthetix";
+    bytes32 private constant CONTRACT_SYNTHETIX = "SynDex";
     bytes32 private constant CONTRACT_ISSUER = "Issuer";
     bytes32 private constant CONTRACT_EXRATES = "ExchangeRates";
-    bytes32 private constant CONTRACT_SYNTHETIXESCROW = "SynthetixEscrow";
+    bytes32 private constant CONTRACT_SYNTHETIXESCROW = "SynDexEscrow";
     bytes32 private constant CONTRACT_V3_LEGACYMARKET = "LegacyMarket";
 
     /* ========== CONSTANTS ========== */
@@ -66,8 +66,8 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
         addresses = combineArrays(existingAddresses, newAddresses);
     }
 
-    function synthetix() internal view returns (ISynthetix) {
-        return ISynthetix(requireAndGetAddress(CONTRACT_SYNTHETIX));
+    function syndex() internal view returns (ISynDex) {
+        return ISynDex(requireAndGetAddress(CONTRACT_SYNTHETIX));
     }
 
     function systemStatus() internal view returns (ISystemStatus) {
@@ -141,12 +141,12 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
 
     /// @notice Determines if an account is eligible for forced or self liquidation
     /// @dev An account is eligible to self liquidate if its c-ratio is below the currentTarget c-ratio
-    /// @dev An account with no SCFX collateral will not be open for liquidation since the ratio is 0
+    /// @dev An account with no SFCX collateral will not be open for liquidation since the ratio is 0
     function isLiquidationOpen(
         address account,
         bool isSelfLiquidation
     ) external view returns (bool) {
-        uint accountCollateralisationRatio = synthetix().collateralisationRatio(
+        uint accountCollateralisationRatio = syndex().collateralisationRatio(
             account
         );
 
@@ -159,10 +159,10 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
             LiquidationEntry
                 memory liquidation = _getLiquidationEntryForAccount(account);
 
-            // Open for liquidation if the deadline has passed and the user has enough SCFX collateral.
+            // Open for liquidation if the deadline has passed and the user has enough SFCX collateral.
             if (
                 _deadlinePassed(liquidation.deadline) &&
-                _hasEnoughSCFXForRewards(account)
+                _hasEnoughSFCXForRewards(account)
             ) {
                 return true;
             }
@@ -184,10 +184,10 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
     /// be removed.
     /// @param account The account to be liquidated
     /// @param isSelfLiquidation boolean to determine if this is a forced or self-invoked liquidation
-    /// @return totalRedeemed the total amount of collateral (SCFX) to redeem (liquid and escrow)
-    /// @return debtToRemove the amount of debt (sUSD) to burn in order to fix the account's c-ratio
-    /// @return escrowToLiquidate the amount of escrow SCFX that will be revoked during liquidation
-    /// @return initialDebtBalance the amount of initial (sUSD) debt the account has
+    /// @return totalRedeemed the total amount of collateral (SFCX) to redeem (liquid and escrow)
+    /// @return debtToRemove the amount of debt (cfUSD) to burn in order to fix the account's c-ratio
+    /// @return escrowToLiquidate the amount of escrow SFCX that will be revoked during liquidation
+    /// @return initialDebtBalance the amount of initial (cfUSD) debt the account has
     function liquidationAmounts(
         address account,
         bool isSelfLiquidation
@@ -203,7 +203,7 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
     {
         // return zeroes otherwise calculateAmountToFixCollateral reverts with unhelpful underflow error
         if (!this.isLiquidationOpen(account, isSelfLiquidation)) {
-            return (0, 0, 0, issuer().debtBalanceOf(account, "sUSD"));
+            return (0, 0, 0, issuer().debtBalanceOf(account, "cfUSD"));
         }
 
         return issuer().liquidationAmounts(account, isSelfLiquidation);
@@ -224,8 +224,8 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
         return deadline > 0 && block.timestamp > deadline;
     }
 
-    /// @notice Checks if an account has enough SCFX balance to be considered open for forced liquidation.
-    function _hasEnoughSCFXForRewards(
+    /// @notice Checks if an account has enough SFCX balance to be considered open for forced liquidation.
+    function _hasEnoughSFCXForRewards(
         address account
     ) internal view returns (bool) {
         uint balance = issuer().collateral(account);
@@ -289,10 +289,10 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
     /* ========== MUTATIVE FUNCTIONS ========== */
 
     // totalIssuedSynths checks synths for staleness
-    // check scfx rate is not stale
+    // check sfcx rate is not stale
     function flagAccountForLiquidation(
         address account
-    ) external rateNotInvalid("SCFX") {
+    ) external rateNotInvalid("SFCX") {
         systemStatus().requireSystemActive();
 
         require(
@@ -311,7 +311,7 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
             "Account already flagged for liquidation"
         );
 
-        uint accountsCollateralisationRatio = synthetix()
+        uint accountsCollateralisationRatio = syndex()
             .collateralisationRatio(account);
 
         // if accounts issuance ratio is greater than or equal to liquidation ratio set liquidation entry
@@ -322,7 +322,7 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
 
         // if account doesn't have enough liquidatable collateral for rewards the liquidation transaction
         // is not possible
-        require(_hasEnoughSCFXForRewards(account), "not enough SCFX for rewards");
+        require(_hasEnoughSFCXForRewards(account), "not enough SFCX for rewards");
 
         uint deadline = block.timestamp.add(getLiquidationDelay());
 
@@ -343,10 +343,10 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
     }
 
     /// @notice External function to allow anyone to remove an account's liquidation entry
-    /// @dev This function checks if the account's c-ratio is OK and that the rate of SCFX is not stale
+    /// @dev This function checks if the account's c-ratio is OK and that the rate of SFCX is not stale
     function checkAndRemoveAccountInLiquidation(
         address account
-    ) external rateNotInvalid("SCFX") {
+    ) external rateNotInvalid("SFCX") {
         systemStatus().requireSystemActive();
 
         LiquidationEntry memory liquidation = _getLiquidationEntryForAccount(
@@ -355,7 +355,7 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
 
         require(liquidation.deadline > 0, "Account has no liquidation set");
 
-        uint accountsCollateralisationRatio = synthetix()
+        uint accountsCollateralisationRatio = syndex()
             .collateralisationRatio(account);
 
         // Remove from liquidator if accountsCollateralisationRatio is fixed (less than equal currentTarget issuance ratio)

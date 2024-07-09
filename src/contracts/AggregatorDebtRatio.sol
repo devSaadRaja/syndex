@@ -19,10 +19,10 @@ contract AggregatorDebtRatio is BaseAggregator {
     ) public view override returns (uint80, int256, uint256, uint256, uint80) {
         uint totalIssuedSynths = IIssuer(
             resolver.requireAndGetAddress("Issuer", "aggregate debt info")
-        ).totalIssuedSynths("sUSD", true);
-        uint totalDebtShares = ISynthetixDebtShare(
+        ).totalIssuedSynths("cfUSD", true);
+        uint totalDebtShares = ISynDexDebtShare(
             resolver.requireAndGetAddress(
-                "SynthetixDebtShare",
+                "SynDexDebtShare",
                 "aggregate debt info"
             )
         ).totalSupply();

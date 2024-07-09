@@ -9,7 +9,7 @@ import "./MixinResolver.sol";
 import "../interfaces/IERC20.sol";
 import "../interfaces/IIssuer.sol";
 import "../interfaces/IFeePool.sol";
-import "../interfaces/ISynthetix.sol";
+import "../interfaces/ISynDex.sol";
 import "../interfaces/IRewardEscrowV2Frozen.sol";
 
 import "../libraries/SafeDecimalMath.sol";
@@ -35,16 +35,16 @@ contract BaseRewardEscrowV2Frozen is
     /*Counter for new vesting entry ids. */
     uint256 public nextEntryId;
 
-    /* An account's total escrowed synthetix balance to save recomputing this for fee extraction purposes. */
+    /* An account's total escrowed syndex balance to save recomputing this for fee extraction purposes. */
     mapping(address => uint256) public totalEscrowedAccountBalance;
 
-    /* An account's total vested reward synthetix. */
+    /* An account's total vested reward syndex. */
     mapping(address => uint256) public totalVestedAccountBalance;
 
     /* Mapping of nominated address to recieve account merging */
     mapping(address => address) public nominatedReceiver;
 
-    /* The total remaining escrowed balance, for verifying the actual synthetix balance of this contract against. */
+    /* The total remaining escrowed balance, for verifying the actual syndex balance of this contract against. */
     uint256 public totalEscrowedBalance;
 
     /* Max escrow duration */
@@ -61,7 +61,7 @@ contract BaseRewardEscrowV2Frozen is
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
-    bytes32 private constant CONTRACT_SYNTHETIX = "Synthetix";
+    bytes32 private constant CONTRACT_SYNTHETIX = "SynDex";
     bytes32 private constant CONTRACT_ISSUER = "Issuer";
     bytes32 private constant CONTRACT_FEEPOOL = "FeePool";
 
@@ -80,8 +80,8 @@ contract BaseRewardEscrowV2Frozen is
         return IFeePool(requireAndGetAddress(CONTRACT_FEEPOOL));
     }
 
-    function synthetix() internal view returns (ISynthetix) {
-        return ISynthetix(requireAndGetAddress(CONTRACT_SYNTHETIX));
+    function syndex() internal view returns (ISynDex) {
+        return ISynDex(requireAndGetAddress(CONTRACT_SYNTHETIX));
     }
 
     function issuer() internal view returns (IIssuer) {
@@ -270,7 +270,7 @@ contract BaseRewardEscrowV2Frozen is
     }
 
     /**
-     * @notice Create an escrow entry to lock SCFX for a given duration in seconds
+     * @notice Create an escrow entry to lock SFCX for a given duration in seconds
      * @dev This call expects that the depositor (msg.sender) has already approved the Reward escrow contract
      to spend the the amount being escrowed.
      */
@@ -284,9 +284,9 @@ contract BaseRewardEscrowV2Frozen is
             "Cannot create escrow with address(0)"
         );
 
-        /* Transfer SCFX from msg.sender */
+        /* Transfer SFCX from msg.sender */
         require(
-            IERC20(address(synthetix())).transferFrom(
+            IERC20(address(syndex())).transferFrom(
                 msg.sender,
                 address(this),
                 deposit
@@ -300,11 +300,11 @@ contract BaseRewardEscrowV2Frozen is
 
     /**
      * @notice Add a new vesting entry at a given time and quantity to an account's schedule.
-     * @dev A call to this should accompany a previous successful call to synthetix.transfer(rewardEscrow, amount),
+     * @dev A call to this should accompany a previous successful call to syndex.transfer(rewardEscrow, amount),
      * to ensure that when the funds are withdrawn, there is enough balance.
      * @param account The account to append a new vesting entry to.
-     * @param quantity The quantity of SCFX that will be escrowed.
-     * @param duration The duration that SCFX will be emitted.
+     * @param quantity The quantity of SFCX that will be escrowed.
+     * @param duration The duration that SFCX will be emitted.
      */
     function appendVestingEntry(
         address account,
@@ -320,7 +320,7 @@ contract BaseRewardEscrowV2Frozen is
         totalVestedAccountBalance[_account] = totalVestedAccountBalance[
             _account
         ].add(_amount);
-        IERC20(address(synthetix())).transfer(_account, _amount);
+        IERC20(address(syndex())).transfer(_account, _amount);
         emit Vested(_account, block.timestamp, _amount);
     }
 
@@ -375,7 +375,7 @@ contract BaseRewardEscrowV2Frozen is
         require(account != msg.sender, "Cannot nominate own account to merge");
         require(accountMergingIsOpen(), "Account merging has ended");
         require(
-            issuer().debtBalanceOf(msg.sender, "sUSD") == 0,
+            issuer().debtBalanceOf(msg.sender, "cfUSD") == 0,
             "Cannot merge accounts with debt"
         );
         nominatedReceiver[msg.sender] = account;
@@ -388,7 +388,7 @@ contract BaseRewardEscrowV2Frozen is
     ) external {
         require(accountMergingIsOpen(), "Account merging has ended");
         require(
-            issuer().debtBalanceOf(accountToMerge, "sUSD") == 0,
+            issuer().debtBalanceOf(accountToMerge, "cfUSD") == 0,
             "Cannot merge accounts with debt"
         );
         require(
@@ -507,7 +507,7 @@ contract BaseRewardEscrowV2Frozen is
 
         require(
             totalEscrowedBalance <=
-                IERC20(address(synthetix())).balanceOf(address(this)),
+                IERC20(address(syndex())).balanceOf(address(this)),
             "Must be enough balance in the contract to provide for the vesting entry"
         );
 

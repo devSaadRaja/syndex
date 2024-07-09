@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-interface ISynthetixDebtShare {
+interface ISynDexDebtShare {
     // Views
 
     function currentPeriodId() external view returns (uint128);
