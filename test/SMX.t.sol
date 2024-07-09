@@ -358,6 +358,26 @@ contract SMXTest is Setup {
         vm.stopPrank();
     }
 
+    function testExchange() public {
+        vm.startPrank(user7);
+        proxysUSD.transfer(user6, 100 ether);
+        vm.stopPrank();
+
+        assertEq(proxysUSD.balanceOf(user6), 100 ether);
+        assertEq(proxysETH.balanceOf(user6), 0);
+        console.log(proxysUSD.balanceOf(user6), "<<< sUSD balanceOf user6");
+        console.log(proxysETH.balanceOf(user6), "<<< sETH balanceOf user6");
+
+        vm.startPrank(user6);
+        synthetix.executeExchange("sUSD", 50 ether, "sETH");
+        vm.stopPrank();
+
+        assertEq(proxysUSD.balanceOf(user6), 50 ether);
+        assertEq(proxysETH.balanceOf(user6), 49.9 ether);
+        console.log(proxysUSD.balanceOf(user6), "<<< sUSD balanceOf user6");
+        console.log(proxysETH.balanceOf(user6), "<<< sETH balanceOf user6");
+    }
+
     function testClaimTimeEnded() public {
         vm.startPrank(user7);
         proxysUSD.transfer(user6, 100 ether);
