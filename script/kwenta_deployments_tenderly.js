@@ -6,7 +6,7 @@ var url, chainId, outputFilePath;
 const option = Number(process.env.TENDERLY_MAIN_OPTION);
 if (option == 1) {
   url = process.env.TENDERLY_MAINNET_FORK_URL_TEST;
-  outputFilePath = "./test_tenderly_deployments.json";
+  outputFilePath = "./tenderly_deployments_test.json";
   chainId = 1;
 } else if (option == 2) {
   url = process.env.TENDERLY_MAINNET_FORK_URL;

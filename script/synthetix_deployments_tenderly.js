@@ -6,7 +6,7 @@ var url, chainId, outputFilePath;
 const option = Number(process.env.TENDERLY_MAIN_OPTION);
 if (option == 1) {
   url = process.env.TENDERLY_MAINNET_FORK_URL_TEST;
-  outputFilePath = "./test_tenderly_deployments.json";
+  outputFilePath = "./tenderly_deployments_test.json";
   chainId = 1;
 } else if (option == 2) {
   url = process.env.TENDERLY_MAINNET_FORK_URL;
@@ -159,7 +159,7 @@ async function main() {
   // await verify("CollateralManager", CollateralManager.address);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
-  // const CollateralEth = await contractDeploy("CollateralEth", [
+  // const CollateralEth = await contractDeploy("CollateralEth", [ // ! deploy it later
   //   deployer,
   //   deployments["CollateralManager"],
   //   deployments["AddressResolver"],
@@ -551,6 +551,15 @@ async function main() {
   // });
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
 
+  // const AggregatorSynth = await contractDeploy("AggregatorSynth", [
+  //   "",
+  //   1 * 10 ** 8,
+  //   deployments["AddressResolver"],
+  // ]);
+  // deployments["AggregatorSynth"] = AggregatorSynth.address;
+  // await verify("AggregatorSynth", AggregatorSynth.address);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+
   // const AggregatorETH = await contractDeploy("AggregatorETH", [
   //   deployments["AddressResolver"],
   // ]);
@@ -864,11 +873,11 @@ async function main() {
   // );
   // await exchangeRates.addAggregator(
   //   ethers.utils.formatBytes32String("SFCX"),
-  //   deployments["AggregatorCollateral"] // aggregatorSynth
+  //   deployments["AggregatorCollateral"]
   // );
   // await exchangeRates.addAggregator(
   //   ethers.utils.formatBytes32String("cfETH"),
-  //   deployments["AggregatorETH"] // aggregatorSynth
+  //   deployments["AggregatorSynth"]
   // );
   // // await exchangeRates.addAggregator(
   // //   ethers.utils.formatBytes32String("TKN"),
@@ -927,6 +936,8 @@ async function main() {
   // await proxySFCX.transfer(user2, parseEth(1000));
   // await proxySFCX.transfer(reserveAddr, parseEth(200000));
 
+  // await syndex.createSynths(parseEth(300));
+
   // // await syndex.createMaxSynths();
   // // await syndex.executeExchange(
   // //   ethers.utils.formatBytes32String("cfUSD"),
@@ -963,18 +974,18 @@ async function main() {
   //   Math.round(Date.now() / 1000) + 1000
   // );
 
-  // await proxycfUSD.approve(deployments["UniswapRouter"], parseEth(50));
-  // await proxycfETH.approve(deployments["UniswapRouter"], parseEth(50));
-  // await RouterContract.addLiquidity(
-  //   deployments["ProxycfUSD"],
-  //   deployments["ProxycfETH"],
-  //   parseEth(50),
-  //   parseEth(50),
-  //   1,
-  //   1,
-  //   deployer,
-  //   Math.round(Date.now() / 1000) + 1000
-  // );
+  // // await proxycfUSD.approve(deployments["UniswapRouter"], parseEth(50));
+  // // await proxycfETH.approve(deployments["UniswapRouter"], parseEth(50));
+  // // await RouterContract.addLiquidity(
+  // //   deployments["ProxycfUSD"],
+  // //   deployments["ProxycfETH"],
+  // //   parseEth(50),
+  // //   parseEth(50),
+  // //   1,
+  // //   1,
+  // //   deployer,
+  // //   Math.round(Date.now() / 1000) + 1000
+  // // );
   // console.log("ADDED LIQUIDITY");
 
   // ! ------------------------------------------------------------
