@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "forge-std/Test.sol";
-
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./Proxyable.sol";
@@ -492,9 +490,6 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
                 fee,
                 cfUSD
             );
-
-            console.log(fee, "<-- fee");
-            console.log();
 
             // Remit the fee in cfUSDs
             issuer().synths(cfUSD).issue(feePool().FEE_ADDRESS(), fee);

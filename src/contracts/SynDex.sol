@@ -19,16 +19,17 @@ contract SynDex is AccessControl, BaseSynDex {
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
     bool public activeTrade = false;
-    bool public deploymentSet = false; // make it true once all prerequisites are set
     mapping(address => bool) public pool;
 
     address public reserveAddr;
     uint256 burnAmount = 100000 ether;
 
-    uint256 public MAX_SUPPLY = 1_000_000_000 ether;
+    uint256 public constant MAX_SUPPLY = 1_000_000_000 ether;
 
     // ========== ADDRESS RESOLVER CONFIGURATION ==========
     bytes32 private constant CONTRACT_REWARD_ESCROW = "RewardEscrow";
+
+    // ========== MODIFIER ==========
 
     modifier isValidAddress(address _address) {
         require(_address != address(0), "Invalid address");

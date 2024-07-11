@@ -9,21 +9,13 @@ import "@uniswap/core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 import {Token} from "../src/contracts/test/Token.sol";
+import {SynthSwap} from "../src/contracts/Synthswap.sol";
 
-import {ISwapRouter} from "../src/contracts/SMX/interfaces/ISwapRouter.sol";
-import {IUniswapV3Pool} from "../src/contracts/SMX/interfaces/IUniswapV3Pool.sol";
-import {IUniswapV3Factory} from "../src/contracts/SMX/interfaces/IUniswapV3Factory.sol";
-import {IAggregationRouterV4} from "../src/contracts/SMX/interfaces/IAggregationRouterV4.sol";
-import {INonfungiblePositionManager} from "../src/contracts/SMX/interfaces/INonfungiblePositionManager.sol";
-
-import {RewardEscrow} from "../src/contracts/SMX/RewardEscrow.sol";
-import {vSMXRedeemer} from "../src/contracts/SMX/vSMXRedeemer.sol";
-import {SupplySchedule} from "../src/contracts/SMX/SupplySchedule.sol";
-import {MultipleMerkleDistributor} from "../src/contracts/SMX/MultipleMerkleDistributor.sol";
-
-import {SynthSwap} from "../src/contracts/SMX/Synthswap2.sol";
-import {AggregationRouterV4} from "../src/contracts/SMX/AggregationRouterV4.sol";
-import {IClipperExchangeInterface} from "../src/contracts/SMX/interfaces/IClipperExchangeInterface.sol";
+import {ISwapRouter} from "../src/interfaces/ISwapRouter.sol";
+import {IUniswapV3Pool} from "../src/interfaces/IUniswapV3Pool.sol";
+import {IUniswapV3Factory} from "../src/interfaces/IUniswapV3Factory.sol";
+import {IAggregationRouterV4} from "../src/interfaces/IAggregationRouterV4.sol";
+import {INonfungiblePositionManager} from "../src/interfaces/INonfungiblePositionManager.sol";
 
 contract SMXTest is Setup {
     address public constant FEE_ADDRESS =
@@ -34,25 +26,12 @@ contract SMXTest is Setup {
     INonfungiblePositionManager nonfungiblePositionManager =
         INonfungiblePositionManager(0xC36442b4a4522E871399CD717aBDD847Ab11FE88);
 
-    Token public token;
     IUniswapV3Pool v3Pool;
 
-    RewardEscrow public rewardEscrow2;
-    vSMXRedeemer public vSmxRedeemer;
-    SupplySchedule public supplySchedule2;
-    MultipleMerkleDistributor public multipleMerkleDistributor;
-
     SynthSwap public synthSwap2;
-    AggregationRouterV4 public aggregationRouterV4;
 
     function setUp() public override {
         super.setUp();
-
-        vm.startPrank(owner);
-        smx.transfer(user6, 1000 ether);
-        smx.transfer(user7, 1000 ether);
-        smx.transfer(user8, 1000 ether);
-        vm.stopPrank();
 
         vm.startPrank(user7);
         syndex.createMaxSynths();
@@ -63,30 +42,6 @@ contract SMXTest is Setup {
         vm.stopPrank();
 
         vm.startPrank(user7);
-
-        supplySchedule2 = new SupplySchedule(user7, treasury);
-        // vSmxRedeemer = new vSMXRedeemer(address(smx), address(smx));
-        rewardEscrow2 = new RewardEscrow(user7, address(smx));
-        multipleMerkleDistributor = new MultipleMerkleDistributor(
-            user7,
-            address(smx),
-            address(rewardEscrow2)
-        );
-
-        supplySchedule2.setSMX(address(smx));
-        supplySchedule2.setStakingRewards(address(stakingAddr));
-        supplySchedule2.setTradingRewards(address(multipleMerkleDistributor));
-
-        // multipleMerkleDistributor.setMerkleRootForEpoch();
-
-        // IClipperExchangeInterface clipperExchangeInterface = IClipperExchangeInterface(
-        //         0x655eDCE464CC797526600a462A8154650EEe4B77
-        //     );
-
-        // aggregationRouterV4 = new AggregationRouterV4(
-        //     WETH,
-        //     address(clipperExchangeInterface)
-        // );
 
         token = new Token("Token", "TKN", user7, 1_000_000 ether);
         synthSwap2 = new SynthSwap(
@@ -338,23 +293,6 @@ contract SMXTest is Setup {
         uint256 amountIn = swapRouter.exactOutputSingle(outputParams);
         console.log("amountIn", amountIn);
 
-        vm.stopPrank();
-    }
-
-    function testOnlyBurner() public {
-        vm.startPrank(user8);
-        vm.expectRevert();
-        smx.burn();
-        vm.stopPrank();
-
-        vm.startPrank(owner);
-        smx.grantRole(keccak256("BURNER_ROLE"), user8);
-        vm.stopPrank();
-
-        vm.startPrank(user8);
-        assertEq(smx.balanceOf(reserveAddr), 200000 ether);
-        smx.burn();
-        assertEq(smx.balanceOf(reserveAddr), 100000 ether);
         vm.stopPrank();
     }
 
@@ -720,14 +658,6 @@ contract SMXTest is Setup {
             "<-- ETH balance address(collateralETH)"
         );
         console.log(
-            IERC20(address(smx)).balanceOf(address(user6)),
-            "<-- smx balanceOf(address(user6))"
-        );
-        console.log(
-            IERC20(address(smx)).balanceOf(address(collateralErc20)),
-            "<-- smx balanceOf(address(collateralErc20))"
-        );
-        console.log(
             syndexDebtShare.totalSupply(),
             "<-- syndexDebtShare.totalSupply()"
         );
@@ -763,9 +693,6 @@ contract SMXTest is Setup {
 
         uint256 id = collateralETH.open{value: 1.5 ether}(1 ether, "cfUSD");
 
-        smx.approve(address(collateralErc20), 50 ether);
-        uint256 idErc = collateralErc20.open(3 ether, 2 ether, "cfUSD");
-
         _consoleData("--- AFTER SWAP ---");
 
         ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
@@ -795,56 +722,8 @@ contract SMXTest is Setup {
         collateralETH.close(id);
         collateralETH.claim(1.5 ether);
 
-        collateralErc20.close(idErc);
-
         _consoleData("--- AFTER SYNTH BURN ---");
 
-        vm.stopPrank();
-    }
-
-    function testTax() public {
-        vm.startPrank(owner);
-        smx.approve(address(router), 50 ether);
-        IERC20(WETH).approve(address(router), 50 ether);
-        router.addLiquidity(
-            address(smx),
-            WETH,
-            50 ether,
-            50 ether,
-            0,
-            0,
-            user7,
-            block.timestamp + 10 minutes
-        );
-        vm.stopPrank();
-
-        vm.startPrank(user8);
-
-        _swap(WETH, address(smx), 10 ether, user8); // BUY
-        _swap(address(smx), WETH, 5 ether, user8); // SELL
-
-        console.log();
-        console.log("threshold\n", smx.threshold());
-        console.log("currentFeeAmount\n", smx.currentFeeAmount());
-        console.log("balanceOf smx\n", smx.balanceOf(address(smx)));
-
-        smx.transfer(user3, 1 ether);
-
-        vm.stopPrank();
-
-        console.log();
-        console.log("BALANCE WETH");
-        console.log("balanceOf smx\n", smx.balanceOf(address(smx)));
-        console.log("user2 balance\n", IERC20(WETH).balanceOf(user2));
-    }
-
-    function testBlacklist() public {
-        vm.startPrank(owner);
-        smx.updateBlacklist(user8, true);
-        vm.stopPrank();
-        vm.startPrank(user8);
-        vm.expectRevert("Address is blacklisted");
-        smx.transfer(user3, 1 ether);
         vm.stopPrank();
     }
 

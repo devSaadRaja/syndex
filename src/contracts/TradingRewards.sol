@@ -85,8 +85,7 @@ contract TradingRewards is
     }
 
     function getUnassignedRewards() external view returns (uint) {
-        return
-            syndex().balanceOf(address(this)).sub(_balanceAssignedToRewards);
+        return syndex().balanceOf(address(this)).sub(_balanceAssignedToRewards);
     }
 
     function getRewardsToken() external view returns (address) {
@@ -259,10 +258,7 @@ contract TradingRewards is
         address recoverAddress
     ) external onlyOwner {
         _validateRecoverAddress(recoverAddress);
-        require(
-            tokenAddress != address(syndex()),
-            "Must use another function"
-        );
+        require(tokenAddress != address(syndex()), "Must use another function");
 
         IERC20 token = IERC20(tokenAddress);
 

@@ -5,13 +5,13 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import "./interfaces/ISynthSwap.sol";
-import "../../interfaces/ISynDex.sol";
-import "./interfaces/IAggregationExecutor.sol";
-import "../../interfaces/IAddressResolver.sol";
-import {ISwapRouter} from "./interfaces/ISwapRouter.sol";
+import "../interfaces/ISynthSwap.sol";
+import "../interfaces/ISynDex.sol";
+import "../interfaces/IAddressResolver.sol";
+import "../interfaces/IAggregationExecutor.sol";
+import {ISwapRouter} from "../interfaces/ISwapRouter.sol";
 
-import "./libraries/RevertReasonParser.sol";
+import "../libraries/RevertReasonParser.sol";
 
 /// @title system to swap synths to/from many erc20 tokens
 /// @dev IAggregationRouterV4 relies on calldata generated off-chain
