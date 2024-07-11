@@ -10,26 +10,26 @@ import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-import {IFeePool} from "../src/interfaces/IFeePool.sol";
 import {ISynDex} from "../src/interfaces/ISynDex.sol";
+import {IFeePool} from "../src/interfaces/IFeePool.sol";
+import {ISwapRouter} from "../src/interfaces/ISwapRouter.sol";
 import {IMixinResolver} from "../src/interfaces/IMixinResolver.sol";
-import {ISwapRouter} from "../src/contracts/SMX/interfaces/ISwapRouter.sol";
-import {IAggregationRouterV4} from "../src/contracts/SMX/interfaces/IAggregationRouterV4.sol";
+import {IAggregationRouterV4} from "../src/interfaces/IAggregationRouterV4.sol";
 
-import {SMX} from "../src/contracts/SMX/SMX.sol";
 import {Depot} from "../src/contracts/Depot.sol";
 import {Proxy} from "../src/contracts/Proxy.sol";
 import {Issuer} from "../src/contracts/Issuer.sol";
 import {FeePool} from "../src/contracts/FeePool.sol";
+import {Token} from "../src/contracts/test/Token.sol";
 import {Proxyable} from "../src/contracts/Proxyable.sol";
 import {SynDex} from "../src/contracts/SynDex.sol";
 import {DebtCache} from "../src/contracts/DebtCache.sol";
 import {Exchanger} from "../src/contracts/Exchanger.sol";
 import {SynthUtil} from "../src/contracts/SynthUtil.sol";
+import {SynthSwap} from "../src/contracts/Synthswap.sol";
 import {ProxyERC20} from "../src/contracts/ProxyERC20.sol";
 import {Liquidator} from "../src/contracts/Liquidator.sol";
 import {TokenState} from "../src/contracts/TokenState.sol";
-import {SynthSwap} from "../src/contracts/SMX/Synthswap.sol";
 import {EtherWrapper} from "../src/contracts/EtherWrapper.sol";
 import {RewardEscrow} from "../src/contracts/RewardEscrow.sol";
 import {SystemStatus} from "../src/contracts/SystemStatus.sol";
@@ -53,7 +53,6 @@ import {LegacyTokenState} from "../src/contracts/LegacyTokenState.sol";
 import {DelegateApprovals} from "../src/contracts/DelegateApprovals.sol";
 import {CollateralManager} from "../src/contracts/CollateralManager.sol";
 import {LiquidatorRewards} from "../src/contracts/LiquidatorRewards.sol";
-import {DappMaintenance} from "../src/contracts/SMX/DappMaintenance.sol";
 import {SynDexDebtShare} from "../src/contracts/SynDexDebtShare.sol";
 import {RewardsDistribution} from "../src/contracts/RewardsDistribution.sol";
 import {AggregatorDebtRatio} from "../src/contracts/AggregatorDebtRatio.sol";
@@ -96,8 +95,8 @@ contract Setup is Test, Utils {
     bytes32[] public names;
     address[] public addresses;
 
-    SMX public smx;
     Depot public depot;
+    Token public token;
     Issuer public issuer;
     FeePool public feePool;
     Proxy public proxyFeePool;
@@ -130,7 +129,6 @@ contract Setup is Test, Utils {
     LegacyTokenState public tokenStateSFCX;
     MultiCollateralSynth public synthcfUSD;
     MultiCollateralSynth public synthcfETH;
-    DappMaintenance public dappMaintenance;
     FlexibleStorage public flexibleStorage;
     AddressResolver public addressResolver;
     CollateralErc20 public collateralErc20;
@@ -174,10 +172,9 @@ contract Setup is Test, Utils {
         // DEPLOYMENTS ---
         // // ------------------------------
 
-        dappMaintenance = new DappMaintenance(owner);
         addressResolver = new AddressResolver(owner);
 
-        smx = new SMX("SMX", "SMX", owner, 100_000_000 ether);
+        token = new Token("My Token", "TKN", owner, 100_000_000 ether);
         synthUtil = new SynthUtil(address(addressResolver));
         collateralUtil = new CollateralUtil(address(addressResolver));
         collateralManagerState = new CollateralManagerState(owner, owner);
@@ -205,7 +202,7 @@ contract Setup is Test, Utils {
             "SMX",
             1.5 ether, // 100 / 150, 150%
             0.1 ether,
-            address(smx),
+            address(token),
             18
         );
 
@@ -556,19 +553,6 @@ contract Setup is Test, Utils {
         // systemSettings.updateSnxLiquidationPenalty(0.5 ether); // 50%
         // systemSettings.updateLiquidationDelay(28800); // 8 hours
         // systemSettings.updateRateStalePeriod(86400); // 1 day
-
-        factory.createPair(address(smx), WETH);
-        address pair = factory.getPair(address(smx), WETH);
-
-        smx.setExcludeFromFee(address(smx), true);
-        smx.transfer(reserveAddr, 200000 ether);
-        smx.setRewardAddress(address(WETH));
-        smx.setReserveAddress(reserveAddr);
-        smx.setRouter(address(router));
-        smx.setFeeTaker(user2, 100);
-        smx.setPool(pair, true);
-        smx.setDeploy(true);
-        smx.setTrade(true);
 
         factory.createPair(address(proxySFCX), WETH);
         address pairSFCXWETH = factory.getPair(address(proxySFCX), WETH);

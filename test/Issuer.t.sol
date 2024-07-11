@@ -9,8 +9,8 @@ contract IssuerTest is Setup {
         super.setUp();
 
         vm.startPrank(owner);
-        smx.transfer(user1, 1 ether);
-        smx.transfer(user2, 1 ether);
+        token.transfer(user1, 1 ether);
+        token.transfer(user2, 1 ether);
         vm.stopPrank();
     }
 
@@ -43,10 +43,7 @@ contract IssuerTest is Setup {
         vm.stopPrank();
 
         // calculateTotalSupplyForPeriod
-        assertEq(
-            syndexDebtShare.calculateTotalSupplyForPeriod(1),
-            2.2 ether
-        );
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 2.2 ether);
         // accountBalance
         assertEq(syndexDebtShare.balanceOf(user1), 1.2 ether);
         assertEq(syndexDebtShare.balanceOf(user2), 1 ether);
@@ -176,7 +173,7 @@ contract IssuerTest is Setup {
 
         syndex.createSynths(1 ether);
 
-        smx.approve(address(collateralErc20), 50 ether);
+        token.approve(address(collateralErc20), 50 ether);
         collateralErc20.open(0.15 ether, 0.1 ether, "cfUSD");
 
         vm.stopPrank();
@@ -189,7 +186,7 @@ contract IssuerTest is Setup {
 
         console.log("ISSUE");
         syndex.createSynths(1 ether);
-        smx.approve(address(collateralErc20), 50 ether);
+        token.approve(address(collateralErc20), 50 ether);
         uint256 id = collateralErc20.open(0.15 ether, 0.1 ether, "cfUSD");
         vm.stopPrank();
 
@@ -199,7 +196,7 @@ contract IssuerTest is Setup {
 
         console.log("ISSUE");
         syndex.createSynths(1 ether);
-        smx.approve(address(collateralErc20), 50 ether);
+        token.approve(address(collateralErc20), 50 ether);
         collateralErc20.open(0.15 ether, 0.1 ether, "cfUSD");
         vm.stopPrank();
 
@@ -215,7 +212,7 @@ contract IssuerTest is Setup {
         vm.startPrank(user1);
         console.log("ISSUE");
         syndex.createSynths(1 ether);
-        smx.approve(address(collateralErc20), 50 ether);
+        token.approve(address(collateralErc20), 50 ether);
         uint256 id = collateralErc20.open(0.15 ether, 0.1 ether, "cfUSD");
         vm.stopPrank();
 
