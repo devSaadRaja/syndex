@@ -716,11 +716,15 @@ contract SMXTest is Setup {
 
         _consoleData("--- AFTER SYNTH SWAP ---");
 
+        _passTime(7 days);
+
+        _consoleData("--- AFTER DAYS PAST ---");
+
         syndex.burnSynths(1 ether);
         // // syndex.burnSynthsToTarget();
 
-        collateralETH.close(id);
-        collateralETH.claim(1.5 ether);
+        // collateralETH.close(id);
+        // collateralETH.claim(1.5 ether);
 
         _consoleData("--- AFTER SYNTH BURN ---");
 

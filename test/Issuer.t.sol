@@ -43,9 +43,9 @@ contract IssuerTest is Setup {
         vm.stopPrank();
 
         // calculateTotalSupplyForPeriod
-        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 2.2 ether);
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 2.98 ether);
         // accountBalance
-        assertEq(syndexDebtShare.balanceOf(user1), 1.2 ether);
+        assertEq(syndexDebtShare.balanceOf(user1), 1.98 ether);
         assertEq(syndexDebtShare.balanceOf(user2), 1 ether);
     }
 

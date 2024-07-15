@@ -516,9 +516,12 @@ contract Setup is Test, Utils {
         // 600000000000000000, 0.6   = 60% / 100
         // 500000000000000000, 0.5   = 50% / 100
 
-        systemSettings.setIssuanceRatio(0.2 ether);
+        // 200000000000000000, 0.33   = 100 / 300%
+        // 625000000000000000, 0.66 = 100 / 150%
+
+        systemSettings.setIssuanceRatio(0.33 ether);
         // systemSettings.setIssuanceRatio(0.8 ether); // 125%
-        systemSettings.setLiquidationRatio(0.625 ether);
+        systemSettings.setLiquidationRatio(0.66 ether);
         // systemSettings.setLiquidationPenalty(100000000000000000);
         systemSettings.updateSnxLiquidationPenalty(0.6 ether); // forced
         systemSettings.updateSelfLiquidationPenalty(0.5 ether);
@@ -534,6 +537,7 @@ contract Setup is Test, Utils {
         systemSettings.updateExchangeDynamicFeeWeightDecay(0.95 ether);
         systemSettings.toggleTradingRewards(true);
         systemSettings.setFeePeriodDuration(7 days);
+        systemSettings.setMinimumStakeTime(7 days);
 
         bytes32[] memory synthKeys = new bytes32[](2);
         uint256[] memory exchangeFeeRates = new uint256[](2);
