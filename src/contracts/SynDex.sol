@@ -24,7 +24,7 @@ contract SynDex is AccessControl, BaseSynDex {
     address public reserveAddr;
     uint256 burnAmount = 100000 ether;
 
-    uint256 public constant MAX_SUPPLY = 1_000_000_000 ether;
+    uint256 public constant MAX_SUPPLY = 318_000_000 ether;
 
     // ========== ADDRESS RESOLVER CONFIGURATION ==========
     bytes32 private constant CONTRACT_REWARD_ESCROW = "RewardEscrow";

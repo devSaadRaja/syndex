@@ -149,9 +149,7 @@ contract FeePool is
 
     function syndexDebtShare() internal view returns (ISynDexDebtShare) {
         return
-            ISynDexDebtShare(
-                requireAndGetAddress(CONTRACT_SYNTHETIXDEBTSHARE)
-            );
+            ISynDexDebtShare(requireAndGetAddress(CONTRACT_SYNTHETIXDEBTSHARE));
     }
 
     function feePoolEternalStorage()
@@ -362,27 +360,30 @@ contract FeePool is
     }
 
     function closeSecondary(
-        uint allNetworksSnxBackedDebt,
-        uint allNetworksDebtSharesSupply
+        uint _allNetworksSnxBackedDebt,
+        uint _allNetworksDebtSharesSupply
     ) external onlyRelayer {
-        _closeSecondary(allNetworksSnxBackedDebt, allNetworksDebtSharesSupply);
+        _closeSecondary(
+            _allNetworksSnxBackedDebt,
+            _allNetworksDebtSharesSupply
+        );
     }
 
     /**
      * @notice Close the current fee period and start a new one.
      */
     function _closeSecondary(
-        uint allNetworksSnxBackedDebt,
-        uint allNetworksDebtSharesSupply
+        uint _allNetworksSnxBackedDebt,
+        uint _allNetworksDebtSharesSupply
     ) internal {
         etherWrapper().distributeFees();
         wrapperFactory().distributeFees();
 
         // before closing the current fee period, set the recorded sfcxBackedDebt and debtSharesSupply
         _recentFeePeriodsStorage(0)
-            .allNetworksDebtSharesSupply = allNetworksDebtSharesSupply;
+            .allNetworksDebtSharesSupply = _allNetworksDebtSharesSupply;
         _recentFeePeriodsStorage(0)
-            .allNetworksSnxBackedDebt = allNetworksSnxBackedDebt;
+            .allNetworksSnxBackedDebt = _allNetworksSnxBackedDebt;
 
         // Note:  periodClosing is the current period & periodToRollover is the last open claimable period
         FeePeriod storage periodClosing = _recentFeePeriodsStorage(0);
@@ -597,7 +598,11 @@ contract FeePool is
 
         // Record vesting entry for claiming address and amount
         // SFCX already minted to rewardEscrow balance
-        rewardEscrowV2().appendVestingEntry(account, sfcxAmount, escrowDuration);
+        rewardEscrowV2().appendVestingEntry(
+            account,
+            sfcxAmount,
+            escrowDuration
+        );
     }
 
     /**

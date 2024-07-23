@@ -11,6 +11,7 @@ import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import {Token} from "../src/contracts/test/Token.sol";
 import {SynthSwap} from "../src/contracts/Synthswap.sol";
 
+import {IFeePool} from "../src/interfaces/IFeePool.sol";
 import {ISwapRouter} from "../src/interfaces/ISwapRouter.sol";
 import {IUniswapV3Pool} from "../src/interfaces/IUniswapV3Pool.sol";
 import {IUniswapV3Factory} from "../src/interfaces/IUniswapV3Factory.sol";
@@ -134,6 +135,13 @@ contract SMXTest is Setup {
         nonfungiblePositionManager.mint(params);
 
         vm.stopPrank();
+
+        // (uint amountReceived, , ) = exchanger.getAmountsForExchange(
+        //     1 ether,
+        //     "cfUSD",
+        //     "cfETH"
+        // );
+        // console.log(amountReceived, "<<< amountReceived");
     }
 
     function testRouterV4() public {
@@ -379,78 +387,97 @@ contract SMXTest is Setup {
         syndex.executeExchange("cfUSD", 50 ether, "cfETH");
         vm.stopPrank();
 
+        // console.log(
+        //     feePool.isFeesClaimable(user8),
+        //     "--- feePool.isFeesClaimable(user8)"
+        // );
+
+        console.log();
         console.log(
-            feePool.isFeesClaimable(user8),
-            "<-- feePool.isFeesClaimable(user8)"
+            IERC20(address(proxycfUSD)).balanceOf(FEE_ADDRESS),
+            "--- proxycfUSD balanceOf(FEE_ADDRESS)"
+        );
+        console.log(
+            IERC20(address(proxycfUSD)).balanceOf(address(user7)),
+            "--- proxycfUSD balanceOf user7"
+        );
+        console.log(
+            syndexDebtShare.balanceOf(address(user7)),
+            "--- syndexDebtShare balanceOf(address(user7))"
         );
 
         _passTime(7 days);
 
         vm.startPrank(owner);
-        feePool.closeCurrentFeePeriod();
+        // debtCache.takeDebtSnapshot();
+
+        // syndexDebtShare.addAuthorizedToSnapshot(owner);
+        // syndexDebtShare.takeSnapshot(2);
+
+        (bool close, ) = payable(proxyFeePool).call(
+            abi.encodeWithSignature("closeCurrentFeePeriod()")
+        );
+        require(close, "Transaction Failed!");
         vm.stopPrank();
 
-        console.log(
-            IERC20(address(proxycfUSD)).balanceOf(address(user7)),
-            "<-- proxycfUSD balanceOf(address(user7))"
-        );
-        console.log(
-            IERC20(address(proxycfETH)).balanceOf(address(user7)),
-            "<-- proxycfETH balanceOf(address(user7))"
-        );
-
-        // vm.startPrank(user7);
-        // feePool.claimFees();
-        // vm.stopPrank();
-
-        console.log(
-            IERC20(address(proxycfUSD)).balanceOf(address(user7)),
-            "<-- proxycfUSD balanceOf(address(user7))"
-        );
-        console.log(
-            IERC20(address(proxycfETH)).balanceOf(address(user7)),
-            "<-- proxycfETH balanceOf(address(user7))"
-        );
+        console.log();
+        console.log("<<< CLOSING >>>");
 
         console.log();
-        console.log("AFTER CLOSING");
         console.log(
-            feePool.totalFeesAvailable(),
-            "<-- feePool.totalFeesAvailable()"
+            IERC20(address(proxycfUSD)).balanceOf(FEE_ADDRESS),
+            "--- proxycfUSD balanceOf(FEE_ADDRESS)"
         );
         console.log(
-            feePool.totalRewardsAvailable(),
-            "<-- feePool.totalRewardsAvailable()"
+            IERC20(address(proxycfUSD)).balanceOf(address(user7)),
+            "--- proxycfUSD balanceOf user7"
+        );
+        console.log(
+            syndexDebtShare.balanceOf(address(user7)),
+            "--- syndexDebtShare balanceOf(address(user7))"
         );
 
         console.log();
         uint[2][2] memory results = feePool.feesByPeriod(user7);
-        console.log(results[0][0], "<-- feesFromPeriod user7");
-        console.log(results[0][1], "<-- rewardsFromPeriod user7");
+        console.log(results[0][0], "--- feesFromPeriod 0 user7");
+        console.log(results[1][0], "--- feesFromPeriod 1 user7");
 
         console.log();
-        (uint256 totalFees, uint256 totalRewards) = feePool.feesAvailable(
-            user7
+        (uint256 totalFees, ) = feePool.feesAvailable(user7);
+        console.log(totalFees, "--- totalFees user7");
+        (totalFees, ) = feePool.feesAvailable(user8);
+        console.log(totalFees, "--- totalFees user8");
+
+        vm.startPrank(user7);
+
+        console.log();
+        console.log("<<< CLAIMING user7 >>>");
+        (bool claim, ) = payable(proxyFeePool).call(
+            abi.encodeWithSignature("claimFees()")
         );
-        console.log(totalFees, "<-- totalFees user7");
-        console.log(totalRewards, "<-- totalRewards user7");
-        (totalFees, totalRewards) = feePool.feesAvailable(user8);
-        console.log(totalFees, "<-- totalFees user8");
-        console.log(totalRewards, "<-- totalRewards user8");
+        require(claim, "Transaction Failed!");
+
+        console.log();
+        console.log("<<< CREATING SYNTHS user7 >>>");
+        syndex.createMaxSynths();
+
+        vm.stopPrank();
 
         console.log();
         console.log(
-            IERC20(address(proxycfUSD)).balanceOf(address(feePool)),
-            "<-- proxycfUSD balanceOf(address(feePool))"
+            IERC20(address(proxycfUSD)).balanceOf(address(user7)),
+            "--- proxycfUSD balanceOf user7"
         );
         console.log(
-            IERC20(address(proxycfUSD)).balanceOf(address(tradingRewards)),
-            "<-- proxycfUSD balanceOf(address(tradingRewards))"
+            syndexDebtShare.balanceOf(address(user7)),
+            "--- syndexDebtShare balanceOf(address(user7))"
         );
-        console.log(
-            IERC20(address(proxycfUSD)).balanceOf(FEE_ADDRESS),
-            "<-- proxycfUSD balanceOf(FEE_ADDRESS)"
-        );
+
+        console.log();
+        (totalFees, ) = feePool.feesAvailable(user7);
+        console.log(totalFees, "--- totalFees user7");
+        (totalFees, ) = feePool.feesAvailable(user8);
+        console.log(totalFees, "--- totalFees user8");
     }
 
     function testTradersTradeFee() public {
