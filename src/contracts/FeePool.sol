@@ -72,7 +72,7 @@ contract FeePool is
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
     bytes32 private constant CONTRACT_SYSTEMSTATUS = "SystemStatus";
-    bytes32 private constant CONTRACT_SYNTHETIXDEBTSHARE = "SynDexDebtShare";
+    bytes32 private constant CONTRACT_SYNDEXDEBTSHARE = "SynDexDebtShare";
     bytes32 private constant CONTRACT_FEEPOOLETERNALSTORAGE =
         "FeePoolEternalStorage";
     bytes32 private constant CONTRACT_EXCHANGER = "Exchanger";
@@ -87,9 +87,9 @@ contract FeePool is
         "FuturesMarketManager";
     bytes32 private constant CONTRACT_WRAPPER_FACTORY = "WrapperFactory";
 
-    bytes32 private constant CONTRACT_SYNTHETIX_BRIDGE_TO_OPTIMISM =
+    bytes32 private constant CONTRACT_SYNDEX_BRIDGE_TO_OPTIMISM =
         "SynDexBridgeToOptimism";
-    bytes32 private constant CONTRACT_SYNTHETIX_BRIDGE_TO_BASE =
+    bytes32 private constant CONTRACT_SYNDEX_BRIDGE_TO_BASE =
         "SynDexBridgeToBase";
 
     bytes32 private constant CONTRACT_EXT_AGGREGATOR_ISSUED_SYNTHS =
@@ -127,7 +127,7 @@ contract FeePool is
             .resolverAddressesRequired();
         bytes32[] memory newAddresses = new bytes32[](14);
         newAddresses[0] = CONTRACT_SYSTEMSTATUS;
-        newAddresses[1] = CONTRACT_SYNTHETIXDEBTSHARE;
+        newAddresses[1] = CONTRACT_SYNDEXDEBTSHARE;
         newAddresses[2] = CONTRACT_FEEPOOLETERNALSTORAGE;
         newAddresses[3] = CONTRACT_EXCHANGER;
         newAddresses[4] = CONTRACT_ISSUER;
@@ -149,7 +149,7 @@ contract FeePool is
 
     function syndexDebtShare() internal view returns (ISynDexDebtShare) {
         return
-            ISynDexDebtShare(requireAndGetAddress(CONTRACT_SYNTHETIXDEBTSHARE));
+            ISynDexDebtShare(requireAndGetAddress(CONTRACT_SYNDEXDEBTSHARE));
     }
 
     function feePoolEternalStorage()
@@ -353,7 +353,7 @@ contract FeePool is
         // // inform other chain of the chosen values
         // ISynDexBridgeToOptimism(
         //     resolver.requireAndGetAddress(
-        //         CONTRACT_SYNTHETIX_BRIDGE_TO_OPTIMISM,
+        //         CONTRACT_SYNDEX_BRIDGE_TO_OPTIMISM,
         //         "Missing contract: SynDexBridgeToOptimism"
         //     )
         // ).closeFeePeriod(sfcxBackedDebt, debtSharesSupply);
@@ -890,7 +890,7 @@ contract FeePool is
         require(
             msg.sender == address(this) ||
                 msg.sender ==
-                resolver.getAddress(CONTRACT_SYNTHETIX_BRIDGE_TO_BASE),
+                resolver.getAddress(CONTRACT_SYNDEX_BRIDGE_TO_BASE),
             "Only valid relayer can call"
         );
         _;

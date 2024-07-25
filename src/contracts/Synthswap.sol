@@ -25,7 +25,7 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
     address immutable treasury;
 
     address constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    bytes32 private constant CONTRACT_SYNTHETIX = "SynDex";
+    bytes32 private constant CONTRACT_SYNDEX = "SynDex";
     bytes32 private constant cfUSD_CURRENCY_KEY = "cfUSD";
     bytes32 private constant TRACKING_CODE = "SFCX";
 
@@ -260,7 +260,7 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
         return
             ISynDex(
                 addressResolver.requireAndGetAddress(
-                    CONTRACT_SYNTHETIX,
+                    CONTRACT_SYNDEX,
                     "Could not get SynDex"
                 )
             );

@@ -21,7 +21,7 @@ contract RewardEscrowV2Frozen is BaseRewardEscrowV2Frozen {
     uint public migrateEntriesThresholdAmount = (10 ** 18) * 1000; // Default 1000 SFCX
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
-    bytes32 private constant CONTRACT_SYNTHETIX_BRIDGE_OPTIMISM =
+    bytes32 private constant CONTRACT_SYNDEX_BRIDGE_OPTIMISM =
         "SynDexBridgeToOptimism";
     bytes32 private constant CONTRACT_REWARD_ESCROW = "RewardEscrow";
     bytes32 private constant CONTRACT_SYSTEMSTATUS = "SystemStatus";
@@ -44,14 +44,14 @@ contract RewardEscrowV2Frozen is BaseRewardEscrowV2Frozen {
         bytes32[] memory existingAddresses = BaseRewardEscrowV2Frozen
             .resolverAddressesRequired();
         bytes32[] memory newAddresses = new bytes32[](3);
-        newAddresses[0] = CONTRACT_SYNTHETIX_BRIDGE_OPTIMISM;
+        newAddresses[0] = CONTRACT_SYNDEX_BRIDGE_OPTIMISM;
         newAddresses[1] = CONTRACT_REWARD_ESCROW;
         newAddresses[2] = CONTRACT_SYSTEMSTATUS;
         return combineArrays(existingAddresses, newAddresses);
     }
 
     function syndexBridgeToOptimism() internal view returns (address) {
-        return requireAndGetAddress(CONTRACT_SYNTHETIX_BRIDGE_OPTIMISM);
+        return requireAndGetAddress(CONTRACT_SYNDEX_BRIDGE_OPTIMISM);
     }
 
     function oldRewardEscrow() internal view returns (IRewardEscrow) {

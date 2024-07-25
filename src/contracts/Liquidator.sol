@@ -30,10 +30,10 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
     bytes32 private constant CONTRACT_SYSTEMSTATUS = "SystemStatus";
-    bytes32 private constant CONTRACT_SYNTHETIX = "SynDex";
+    bytes32 private constant CONTRACT_SYNDEX = "SynDex";
     bytes32 private constant CONTRACT_ISSUER = "Issuer";
     bytes32 private constant CONTRACT_EXRATES = "ExchangeRates";
-    bytes32 private constant CONTRACT_SYNTHETIXESCROW = "SynDexEscrow";
+    bytes32 private constant CONTRACT_SYNDEXESCROW = "SynDexEscrow";
     bytes32 private constant CONTRACT_V3_LEGACYMARKET = "LegacyMarket";
 
     /* ========== CONSTANTS ========== */
@@ -60,14 +60,14 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
             .resolverAddressesRequired();
         bytes32[] memory newAddresses = new bytes32[](4);
         newAddresses[0] = CONTRACT_SYSTEMSTATUS;
-        newAddresses[1] = CONTRACT_SYNTHETIX;
+        newAddresses[1] = CONTRACT_SYNDEX;
         newAddresses[2] = CONTRACT_ISSUER;
         newAddresses[3] = CONTRACT_EXRATES;
         addresses = combineArrays(existingAddresses, newAddresses);
     }
 
     function syndex() internal view returns (ISynDex) {
-        return ISynDex(requireAndGetAddress(CONTRACT_SYNTHETIX));
+        return ISynDex(requireAndGetAddress(CONTRACT_SYNDEX));
     }
 
     function systemStatus() internal view returns (ISystemStatus) {

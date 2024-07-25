@@ -10,7 +10,7 @@ import "../interfaces/IAddressResolver.sol";
 contract SynthUtil {
     IAddressResolver public addressResolver;
 
-    bytes32 internal constant CONTRACT_SYNTHETIX = "SynDex";
+    bytes32 internal constant CONTRACT_SYNDEX = "SynDex";
     bytes32 internal constant CONTRACT_EXRATES = "ExchangeRates";
     bytes32 internal constant SUSD = "cfUSD";
 
@@ -22,7 +22,7 @@ contract SynthUtil {
         return
             ISynDex(
                 addressResolver.requireAndGetAddress(
-                    CONTRACT_SYNTHETIX,
+                    CONTRACT_SYNDEX,
                     "Missing SynDex address"
                 )
             );

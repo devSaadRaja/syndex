@@ -72,7 +72,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
 
     bytes32 private constant CONTRACT_SYNTHSUSD = "SynthcfUSD";
     bytes32 private constant CONTRACT_EXRATES = "ExchangeRates";
-    bytes32 private constant CONTRACT_SYNTHETIX = "SynDex";
+    bytes32 private constant CONTRACT_SYNDEX = "SynDex";
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -536,7 +536,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
         addresses = new bytes32[](3);
         addresses[0] = CONTRACT_SYNTHSUSD;
         addresses[1] = CONTRACT_EXRATES;
-        addresses[2] = CONTRACT_SYNTHETIX;
+        addresses[2] = CONTRACT_SYNDEX;
     }
 
     /**
@@ -583,7 +583,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
     }
 
     function syndex() internal view returns (IERC20) {
-        return IERC20(requireAndGetAddress(CONTRACT_SYNTHETIX));
+        return IERC20(requireAndGetAddress(CONTRACT_SYNDEX));
     }
 
     function exchangeRates() internal view returns (IExchangeRates) {

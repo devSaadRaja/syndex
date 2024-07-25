@@ -75,11 +75,11 @@ contract Issuer is Ownable, MixinSystemSettings {
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
-    bytes32 private constant CONTRACT_SYNTHETIX = "SynDex";
+    bytes32 private constant CONTRACT_SYNDEX = "SynDex";
     bytes32 private constant CONTRACT_EXCHANGER = "Exchanger";
     bytes32 private constant CONTRACT_EXRATES = "ExchangeRates";
     bytes32 private constant CONTRACT_CIRCUIT_BREAKER = "CircuitBreaker";
-    bytes32 private constant CONTRACT_SYNTHETIXDEBTSHARE = "SynDexDebtShare";
+    bytes32 private constant CONTRACT_SYNDEXDEBTSHARE = "SynDexDebtShare";
     bytes32 private constant CONTRACT_FEEPOOL = "FeePool";
     bytes32 private constant CONTRACT_DELEGATEAPPROVALS = "DelegateApprovals";
     bytes32 private constant CONTRACT_REWARDESCROW_V2 = "RewardEscrowV2";
@@ -87,9 +87,9 @@ contract Issuer is Ownable, MixinSystemSettings {
     bytes32 private constant CONTRACT_LIQUIDATOR_REWARDS = "LiquidatorRewards";
     bytes32 private constant CONTRACT_DEBTCACHE = "DebtCache";
     bytes32 private constant CONTRACT_SYNTHREDEEMER = "SynthRedeemer";
-    bytes32 private constant CONTRACT_SYNTHETIXBRIDGETOOPTIMISM =
+    bytes32 private constant CONTRACT_SYNDEXBRIDGETOOPTIMISM =
         "SynDexBridgeToOptimism";
-    bytes32 private constant CONTRACT_SYNTHETIXBRIDGETOBASE =
+    bytes32 private constant CONTRACT_SYNDEXBRIDGETOBASE =
         "SynDexBridgeToBase";
     bytes32 private constant CONTRACT_DEBT_MIGRATOR_ON_ETHEREUM =
         "DebtMigratorOnEthereum";
@@ -116,11 +116,11 @@ contract Issuer is Ownable, MixinSystemSettings {
         bytes32[] memory existingAddresses = MixinSystemSettings
             .resolverAddressesRequired();
         bytes32[] memory newAddresses = new bytes32[](14);
-        newAddresses[0] = CONTRACT_SYNTHETIX;
+        newAddresses[0] = CONTRACT_SYNDEX;
         newAddresses[1] = CONTRACT_EXCHANGER;
         newAddresses[2] = CONTRACT_EXRATES;
         newAddresses[3] = CONTRACT_CIRCUIT_BREAKER;
-        newAddresses[4] = CONTRACT_SYNTHETIXDEBTSHARE;
+        newAddresses[4] = CONTRACT_SYNDEXDEBTSHARE;
         newAddresses[5] = CONTRACT_FEEPOOL;
         newAddresses[6] = CONTRACT_DELEGATEAPPROVALS;
         newAddresses[7] = CONTRACT_REWARDESCROW_V2;
@@ -134,7 +134,7 @@ contract Issuer is Ownable, MixinSystemSettings {
     }
 
     function syndexERC20() internal view returns (IERC20) {
-        return IERC20(requireAndGetAddress(CONTRACT_SYNTHETIX));
+        return IERC20(requireAndGetAddress(CONTRACT_SYNDEX));
     }
 
     function exchanger() internal view returns (IExchanger) {
@@ -152,7 +152,7 @@ contract Issuer is Ownable, MixinSystemSettings {
     function syndexDebtShare() internal view returns (ISynDexDebtShare) {
         return
             ISynDexDebtShare(
-                requireAndGetAddress(CONTRACT_SYNTHETIXDEBTSHARE)
+                requireAndGetAddress(CONTRACT_SYNDEXDEBTSHARE)
             );
     }
 
@@ -1251,9 +1251,9 @@ contract Issuer is Ownable, MixinSystemSettings {
 
     modifier onlyTrustedMinters() {
         address bridgeL1 = resolver.getAddress(
-            CONTRACT_SYNTHETIXBRIDGETOOPTIMISM
+            CONTRACT_SYNDEXBRIDGETOOPTIMISM
         );
-        address bridgeL2 = resolver.getAddress(CONTRACT_SYNTHETIXBRIDGETOBASE);
+        address bridgeL2 = resolver.getAddress(CONTRACT_SYNDEXBRIDGETOBASE);
         address feePool = resolver.getAddress(CONTRACT_FEEPOOL);
         require(
             msg.sender == bridgeL1 ||

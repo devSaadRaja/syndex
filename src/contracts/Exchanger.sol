@@ -31,7 +31,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
     bytes32 private constant CONTRACT_SYSTEMSTATUS = "SystemStatus";
     bytes32 private constant CONTRACT_EXCHANGESTATE = "ExchangeState";
     bytes32 private constant CONTRACT_EXRATES = "ExchangeRates";
-    bytes32 private constant CONTRACT_SYNTHETIX = "SynDex";
+    bytes32 private constant CONTRACT_SYNDEX = "SynDex";
     bytes32 private constant CONTRACT_FEEPOOL = "FeePool";
     bytes32 private constant CONTRACT_TRADING_REWARDS = "TradingRewards";
     bytes32 private constant CONTRACT_DELEGATEAPPROVALS = "DelegateApprovals";
@@ -60,7 +60,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         newAddresses[0] = CONTRACT_SYSTEMSTATUS;
         newAddresses[1] = CONTRACT_EXCHANGESTATE;
         newAddresses[2] = CONTRACT_EXRATES;
-        newAddresses[3] = CONTRACT_SYNTHETIX;
+        newAddresses[3] = CONTRACT_SYNDEX;
         newAddresses[4] = CONTRACT_FEEPOOL;
         newAddresses[5] = CONTRACT_TRADING_REWARDS;
         newAddresses[6] = CONTRACT_DELEGATEAPPROVALS;
@@ -88,7 +88,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
     }
 
     function syndex() internal view returns (ISynDex) {
-        return ISynDex(requireAndGetAddress(CONTRACT_SYNTHETIX));
+        return ISynDex(requireAndGetAddress(CONTRACT_SYNDEX));
     }
 
     function feePool() internal view returns (IFeePool) {

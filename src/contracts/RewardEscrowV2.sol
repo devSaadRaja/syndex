@@ -8,7 +8,7 @@ contract RewardEscrowV2 is BaseRewardEscrowV2 {
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
-    bytes32 private constant CONTRACT_SYNTHETIX_BRIDGE_OPTIMISM =
+    bytes32 private constant CONTRACT_SYNDEX_BRIDGE_OPTIMISM =
         "SynDexBridgeToOptimism";
 
     /* ========== CONSTRUCTOR ========== */
@@ -29,12 +29,12 @@ contract RewardEscrowV2 is BaseRewardEscrowV2 {
         bytes32[] memory existingAddresses = BaseRewardEscrowV2
             .resolverAddressesRequired();
         bytes32[] memory newAddresses = new bytes32[](1);
-        newAddresses[0] = CONTRACT_SYNTHETIX_BRIDGE_OPTIMISM;
+        newAddresses[0] = CONTRACT_SYNDEX_BRIDGE_OPTIMISM;
         return combineArrays(existingAddresses, newAddresses);
     }
 
     function syndexBridgeToOptimism() internal view returns (address) {
-        return requireAndGetAddress(CONTRACT_SYNTHETIX_BRIDGE_OPTIMISM);
+        return requireAndGetAddress(CONTRACT_SYNDEX_BRIDGE_OPTIMISM);
     }
 
     /* ========== L2 MIGRATION ========== */

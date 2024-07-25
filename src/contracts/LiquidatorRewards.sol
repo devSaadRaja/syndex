@@ -37,10 +37,10 @@ contract LiquidatorRewards is Ownable, MixinSystemSettings, ReentrancyGuard {
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
-    bytes32 private constant CONTRACT_SYNTHETIXDEBTSHARE = "SynDexDebtShare";
+    bytes32 private constant CONTRACT_SYNDEXDEBTSHARE = "SynDexDebtShare";
     bytes32 private constant CONTRACT_ISSUER = "Issuer";
     bytes32 private constant CONTRACT_REWARDESCROW_V2 = "RewardEscrowV2";
-    bytes32 private constant CONTRACT_SYNTHETIX = "SynDex";
+    bytes32 private constant CONTRACT_SYNDEX = "SynDex";
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -60,17 +60,17 @@ contract LiquidatorRewards is Ownable, MixinSystemSettings, ReentrancyGuard {
         bytes32[] memory existingAddresses = MixinSystemSettings
             .resolverAddressesRequired();
         bytes32[] memory newAddresses = new bytes32[](4);
-        newAddresses[0] = CONTRACT_SYNTHETIXDEBTSHARE;
+        newAddresses[0] = CONTRACT_SYNDEXDEBTSHARE;
         newAddresses[1] = CONTRACT_ISSUER;
         newAddresses[2] = CONTRACT_REWARDESCROW_V2;
-        newAddresses[3] = CONTRACT_SYNTHETIX;
+        newAddresses[3] = CONTRACT_SYNDEX;
         return combineArrays(existingAddresses, newAddresses);
     }
 
     function syndexDebtShare() internal view returns (ISynDexDebtShare) {
         return
             ISynDexDebtShare(
-                requireAndGetAddress(CONTRACT_SYNTHETIXDEBTSHARE)
+                requireAndGetAddress(CONTRACT_SYNDEXDEBTSHARE)
             );
     }
 
@@ -83,7 +83,7 @@ contract LiquidatorRewards is Ownable, MixinSystemSettings, ReentrancyGuard {
     }
 
     function syndex() internal view returns (IERC20) {
-        return IERC20(requireAndGetAddress(CONTRACT_SYNTHETIX));
+        return IERC20(requireAndGetAddress(CONTRACT_SYNDEX));
     }
 
     function earned(address account) public view returns (uint256) {

@@ -30,6 +30,7 @@ import {SynthSwap} from "../src/contracts/Synthswap.sol";
 import {ProxyERC20} from "../src/contracts/ProxyERC20.sol";
 import {Liquidator} from "../src/contracts/Liquidator.sol";
 import {TokenState} from "../src/contracts/TokenState.sol";
+import {FeePoolState} from "../src/contracts/FeePoolState.sol";
 import {EtherWrapper} from "../src/contracts/EtherWrapper.sol";
 import {RewardEscrow} from "../src/contracts/RewardEscrow.sol";
 import {SystemStatus} from "../src/contracts/SystemStatus.sol";
@@ -98,10 +99,10 @@ contract Setup is Test, Utils {
     Depot public depot;
     Token public token;
     Issuer public issuer;
+    SynDex public syndex;
     FeePool public feePool;
     Proxy public proxyFeePool;
     DebtCache public debtCache;
-    SynDex public syndex;
     Exchanger public exchanger;
     SynthSwap public synthSwap;
     ProxyERC20 public proxySFCX;
@@ -109,6 +110,7 @@ contract Setup is Test, Utils {
     ProxyERC20 public proxycfUSD;
     ProxyERC20 public proxycfETH;
     Liquidator public liquidator;
+    FeePoolState public feePoolState;
     EtherWrapper public etherWrapper;
     RewardEscrow public rewardEscrow;
     TokenState public tokenStatecfUSD;
@@ -257,10 +259,7 @@ contract Setup is Test, Utils {
             owner,
             address(addressResolver)
         );
-        syndexDebtShare = new SynDexDebtShare(
-            owner,
-            address(addressResolver)
-        );
+        syndexDebtShare = new SynDexDebtShare(owner, address(addressResolver));
         syndex = new SynDex(
             payable(address(proxySFCX)),
             address(tokenStateSFCX),
@@ -288,6 +287,7 @@ contract Setup is Test, Utils {
             0,
             address(addressResolver)
         );
+        feePoolState = new FeePoolState(owner, address(feePool));
         rewardEscrowV2 = new RewardEscrowV2(owner, address(addressResolver));
         rewardEscrowV2Storage = new RewardEscrowV2Storage(
             owner,

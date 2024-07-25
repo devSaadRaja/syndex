@@ -5,8 +5,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./LimitedSetup.sol";
 
-import "../interfaces/IFeePool.sol";
-
 import "../libraries/SafeDecimalMath.sol";
 
 contract FeePoolState is Ownable, LimitedSetup {
@@ -31,9 +29,9 @@ contract FeePoolState is Ownable, LimitedSetup {
 
     constructor(
         address _owner,
-        IFeePool _feePool
+        address _feePool
     ) Ownable(_owner) LimitedSetup(6 weeks) {
-        feePool = address(_feePool);
+        feePool = _feePool;
     }
 
     /* ========== SETTERS ========== */
@@ -43,8 +41,8 @@ contract FeePoolState is Ownable, LimitedSetup {
      * appendAccountIssuanceRecord with the onlyFeePool modifer
      * @dev Must be set by owner when FeePool logic is upgraded
      */
-    function setFeePool(IFeePool _feePool) external onlyOwner {
-        feePool = address(_feePool);
+    function setFeePool(address _feePool) external onlyOwner {
+        feePool = _feePool;
     }
 
     /* ========== VIEWS ========== */
@@ -97,9 +95,9 @@ contract FeePoolState is Ownable, LimitedSetup {
      * @notice Logs an accounts issuance data in the current fee period which is then stored historically
      * @param account Message.Senders account address
      * @param debtRatio Debt of this account as a percentage of the global debt.
-     * @param debtEntryIndex The index in the global debt ledger. synthetix.synthetixState().issuanceData(account)
+     * @param debtEntryIndex The index in the global debt ledger. syndex.syndexState().issuanceData(account)
      * @param currentPeriodStartDebtIndex The startingDebtIndex of the current fee period
-     * @dev onlyFeePool to call me on synthetix.issue() & synthetix.burn() calls to store the locked SNX
+     * @dev onlyFeePool to call me on syndex.issue() & syndex.burn() calls to store the locked SNX
      * per fee period so we know to allocate the correct proportions of fees and rewards per period
       accountIssuanceLedger[account][0] has the latest locked amount for the current period. This can be update as many time
       accountIssuanceLedger[account][1-2] has the last locked amount for a previous period they minted or burned
@@ -140,7 +138,7 @@ contract FeePoolState is Ownable, LimitedSetup {
     }
 
     /**
-     * @notice Import issuer data from synthetixState.issuerData on FeePeriodClose() block #
+     * @notice Import issuer data from syndexState.issuerData on FeePeriodClose() block #
      * @dev Only callable by the contract owner, and only for 6 weeks after deployment.
      * @param accounts Array of issuing addresses
      * @param ratios Array of debt ratios
@@ -175,7 +173,7 @@ contract FeePoolState is Ownable, LimitedSetup {
 
     modifier onlyFeePool() {
         require(
-            msg.sender == address(feePool),
+            msg.sender == feePool,
             "Only the FeePool contract can perform this action"
         );
         _;

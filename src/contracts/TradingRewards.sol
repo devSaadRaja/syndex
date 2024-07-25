@@ -45,7 +45,7 @@ contract TradingRewards is
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
     bytes32 private constant CONTRACT_EXCHANGER = "Exchanger";
-    bytes32 private constant CONTRACT_SYNTHETIX = "ProxySFCX"; // ProxySFCX, SynDex
+    bytes32 private constant CONTRACT_SYNDEX = "ProxySFCX"; // ProxySFCX, SynDex
 
     /* ========== CONSTRUCTOR ========== */
 
@@ -69,11 +69,11 @@ contract TradingRewards is
     {
         addresses = new bytes32[](2);
         addresses[0] = CONTRACT_EXCHANGER;
-        addresses[1] = CONTRACT_SYNTHETIX;
+        addresses[1] = CONTRACT_SYNDEX;
     }
 
     function syndex() internal view returns (IERC20) {
-        return IERC20(requireAndGetAddress(CONTRACT_SYNTHETIX));
+        return IERC20(requireAndGetAddress(CONTRACT_SYNDEX));
     }
 
     function exchanger() internal view returns (IExchanger) {

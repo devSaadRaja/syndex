@@ -41,7 +41,7 @@ contract BaseRewardEscrowV2 is
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
-    bytes32 private constant CONTRACT_SYNTHETIX = "SynDex";
+    bytes32 private constant CONTRACT_SYNDEX = "SynDex";
     bytes32 private constant CONTRACT_ISSUER = "Issuer";
     bytes32 private constant CONTRACT_FEEPOOL = "FeePool";
     bytes32 private constant CONTRACT_REWARDESCROWV2STORAGE =
@@ -61,7 +61,7 @@ contract BaseRewardEscrowV2 is
     }
 
     function syndexERC20() internal view returns (IERC20) {
-        return IERC20(requireAndGetAddress(CONTRACT_SYNTHETIX));
+        return IERC20(requireAndGetAddress(CONTRACT_SYNDEX));
     }
 
     function issuer() internal view returns (IIssuer) {
@@ -90,7 +90,7 @@ contract BaseRewardEscrowV2 is
         returns (bytes32[] memory addresses)
     {
         addresses = new bytes32[](4);
-        addresses[0] = CONTRACT_SYNTHETIX;
+        addresses[0] = CONTRACT_SYNDEX;
         addresses[1] = CONTRACT_FEEPOOL;
         addresses[2] = CONTRACT_ISSUER;
         addresses[3] = CONTRACT_REWARDESCROWV2STORAGE;

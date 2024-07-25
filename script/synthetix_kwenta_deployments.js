@@ -292,6 +292,18 @@ async function main() {
   //   deployments["AddressResolver"],
   // ]);
   // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
+  // const FeePoolState = await contractDeploy("FeePoolState", [
+  //   deployments["ProxycfUSD"],
+  //   deployer,
+  //   deployments["AddressResolver"],
+  // ]);
+  // deployments["FeePoolState"] = FeePoolState.address;
+  // await verify(FeePoolState.address, [
+  //   deployments["ProxycfUSD"],
+  //   deployer,
+  //   deployments["AddressResolver"],
+  // ]);
+  // writeFileSync(outputFilePath, JSON.stringify(deployments, null, 2));
   // const FeePoolEternalStorage = await contractDeploy("FeePoolEternalStorage", [
   //   deployer,
   //   deployments["FeePool"],

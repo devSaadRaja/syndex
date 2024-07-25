@@ -61,7 +61,7 @@ contract BaseRewardEscrowV2Frozen is
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
-    bytes32 private constant CONTRACT_SYNTHETIX = "SynDex";
+    bytes32 private constant CONTRACT_SYNDEX = "SynDex";
     bytes32 private constant CONTRACT_ISSUER = "Issuer";
     bytes32 private constant CONTRACT_FEEPOOL = "FeePool";
 
@@ -81,7 +81,7 @@ contract BaseRewardEscrowV2Frozen is
     }
 
     function syndex() internal view returns (ISynDex) {
-        return ISynDex(requireAndGetAddress(CONTRACT_SYNTHETIX));
+        return ISynDex(requireAndGetAddress(CONTRACT_SYNDEX));
     }
 
     function issuer() internal view returns (IIssuer) {
@@ -103,7 +103,7 @@ contract BaseRewardEscrowV2Frozen is
         returns (bytes32[] memory addresses)
     {
         addresses = new bytes32[](3);
-        addresses[0] = CONTRACT_SYNTHETIX;
+        addresses[0] = CONTRACT_SYNDEX;
         addresses[1] = CONTRACT_FEEPOOL;
         addresses[2] = CONTRACT_ISSUER;
     }
