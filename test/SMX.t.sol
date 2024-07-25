@@ -370,10 +370,6 @@ contract SMXTest is Setup {
     }
 
     function testStakersTradeFee() public {
-        // vm.startPrank(user7);
-        // IERC20(address(proxycfUSD)).transfer(address(feePool), 10 ether);
-        // vm.stopPrank();
-
         vm.startPrank(user7);
         proxycfUSD.transfer(user6, 100 ether);
         syndex.executeExchange("cfUSD", 50 ether, "cfETH");
@@ -387,32 +383,22 @@ contract SMXTest is Setup {
         syndex.executeExchange("cfUSD", 50 ether, "cfETH");
         vm.stopPrank();
 
-        // console.log(
-        //     feePool.isFeesClaimable(user8),
-        //     "--- feePool.isFeesClaimable(user8)"
-        // );
+        // feePool.isFeesClaimable(user8),
 
-        console.log();
-        console.log(
-            IERC20(address(proxycfUSD)).balanceOf(FEE_ADDRESS),
-            "--- proxycfUSD balanceOf(FEE_ADDRESS)"
-        );
-        console.log(
+        assertEq(IERC20(address(proxycfUSD)).balanceOf(FEE_ADDRESS), 0.3 ether);
+        assertEq(
             IERC20(address(proxycfUSD)).balanceOf(address(user7)),
-            "--- proxycfUSD balanceOf user7"
+            1450 ether
         );
-        console.log(
-            syndexDebtShare.balanceOf(address(user7)),
-            "--- syndexDebtShare balanceOf(address(user7))"
-        );
+        assertEq(syndexDebtShare.balanceOf(address(user7)), 1650 ether);
 
         _passTime(7 days);
 
         vm.startPrank(owner);
-        // debtCache.takeDebtSnapshot();
+        debtCache.takeDebtSnapshot();
 
-        // syndexDebtShare.addAuthorizedToSnapshot(owner);
-        // syndexDebtShare.takeSnapshot(2);
+        syndexDebtShare.addAuthorizedToSnapshot(owner);
+        syndexDebtShare.takeSnapshot(2);
 
         (bool close, ) = payable(proxyFeePool).call(
             abi.encodeWithSignature("closeCurrentFeePeriod()")
@@ -420,110 +406,54 @@ contract SMXTest is Setup {
         require(close, "Transaction Failed!");
         vm.stopPrank();
 
-        console.log();
         console.log("<<< CLOSING >>>");
 
-        console.log();
-        console.log(
-            IERC20(address(proxycfUSD)).balanceOf(FEE_ADDRESS),
-            "--- proxycfUSD balanceOf(FEE_ADDRESS)"
-        );
-        console.log(
+        assertEq(IERC20(address(proxycfUSD)).balanceOf(FEE_ADDRESS), 0);
+        assertEq(
             IERC20(address(proxycfUSD)).balanceOf(address(user7)),
-            "--- proxycfUSD balanceOf user7"
+            1450 ether
         );
-        console.log(
-            syndexDebtShare.balanceOf(address(user7)),
-            "--- syndexDebtShare balanceOf(address(user7))"
-        );
+        assertEq(syndexDebtShare.balanceOf(address(user7)), 1650 ether);
 
-        console.log();
         uint[2][2] memory results = feePool.feesByPeriod(user7);
-        console.log(results[0][0], "--- feesFromPeriod 0 user7");
-        console.log(results[1][0], "--- feesFromPeriod 1 user7");
+        assertEq(results[0][0], 0);
+        assertEq(results[1][0], 0.15 ether);
 
-        console.log();
         (uint256 totalFees, ) = feePool.feesAvailable(user7);
-        console.log(totalFees, "--- totalFees user7");
+        assertEq(totalFees, 0.15 ether);
         (totalFees, ) = feePool.feesAvailable(user8);
-        console.log(totalFees, "--- totalFees user8");
+        assertEq(totalFees, 0.15 ether);
 
         vm.startPrank(user7);
-
-        console.log();
         console.log("<<< CLAIMING user7 >>>");
         (bool claim, ) = payable(proxyFeePool).call(
             abi.encodeWithSignature("claimFees()")
         );
         require(claim, "Transaction Failed!");
 
-        console.log();
         console.log("<<< CREATING SYNTHS user7 >>>");
         syndex.createMaxSynths();
-
         vm.stopPrank();
 
         console.log();
-        console.log(
+        assertEq(
             IERC20(address(proxycfUSD)).balanceOf(address(user7)),
-            "--- proxycfUSD balanceOf user7"
+            1450.15 ether
         );
-        console.log(
+        assertEq(
             syndexDebtShare.balanceOf(address(user7)),
-            "--- syndexDebtShare balanceOf(address(user7))"
+            1650150013637603418493
         );
 
-        console.log();
         (totalFees, ) = feePool.feesAvailable(user7);
-        console.log(totalFees, "--- totalFees user7");
+        assertEq(totalFees, 0);
         (totalFees, ) = feePool.feesAvailable(user8);
-        console.log(totalFees, "--- totalFees user8");
+        assertEq(totalFees, 0.15 ether);
     }
 
     function testTradersTradeFee() public {
-        // vm.startPrank(user4);
-        // IERC20(address(proxySFCX)).transfer(address(tradingRewards), 250 ether);
-        // IERC20(address(proxySFCX)).transfer(
-        //     address(rewardsDistribution),
-        //     250 ether
-        // );
-        // vm.stopPrank();
-
-        console.log("----------");
-        console.log(
-            IERC20(address(proxycfUSD)).balanceOf(address(user6)),
-            "<-- proxycfUSD balanceOf(address(user6))"
-        );
-        console.log(
-            IERC20(address(proxycfUSD)).balanceOf(address(user7)),
-            "<-- proxycfUSD balanceOf(address(user7))"
-        );
-        console.log(
-            IERC20(address(proxycfUSD)).balanceOf(address(user8)),
-            "<-- proxycfUSD balanceOf(address(user8))"
-        );
-
-        vm.startPrank(user7);
-        proxycfUSD.transfer(user6, 100 ether);
-        vm.stopPrank();
-
-        console.log("----------");
-        console.log(
-            IERC20(address(proxycfUSD)).balanceOf(address(user6)),
-            "<-- proxycfUSD balanceOf(address(user6))"
-        );
-        console.log(
-            IERC20(address(proxycfUSD)).balanceOf(address(user7)),
-            "<-- proxycfUSD balanceOf(address(user7))"
-        );
-        console.log(
-            IERC20(address(proxycfUSD)).balanceOf(address(user8)),
-            "<-- proxycfUSD balanceOf(address(user8))"
-        );
-        console.log();
-
-        vm.startPrank(user6);
-        syndex.executeExchange("cfUSD", 50 ether, "cfETH");
+        vm.startPrank(owner);
+        IERC20(address(proxySFCX)).transfer(address(tradingRewards), 250 ether);
         vm.stopPrank();
 
         vm.startPrank(user7);
@@ -534,125 +464,71 @@ contract SMXTest is Setup {
         syndex.executeExchange("cfUSD", 50 ether, "cfETH");
         vm.stopPrank();
 
-        console.log(
-            feePool.isFeesClaimable(user8),
-            "<-- feePool.isFeesClaimable(user8)"
+        assertEq(IERC20(address(proxycfUSD)).balanceOf(FEE_ADDRESS), 0.2 ether);
+        assertEq(
+            IERC20(address(proxycfUSD)).balanceOf(address(user7)),
+            1550 ether
+        );
+        assertEq(syndexDebtShare.balanceOf(address(user7)), 1650 ether);
+
+        assertEq(IERC20(address(proxycfUSD)).balanceOf(FEE_ADDRESS), 0.2 ether);
+        assertEq(
+            IERC20(address(proxycfUSD)).balanceOf(address(user7)),
+            1550 ether
+        );
+        assertEq(syndexDebtShare.balanceOf(address(user7)), 1650 ether);
+
+        assertEq(
+            IERC20(address(proxycfUSD)).balanceOf(address(user7)),
+            1550 ether
+        );
+        assertEq(syndexDebtShare.balanceOf(address(user7)), 1650 ether);
+
+        console.log("<<< CLOSING >>>");
+
+        vm.startPrank(user5);
+        tradingRewards.closeCurrentPeriodWithRewards(
+            tradingRewards.getPeriodRecordedFees(0)
+        );
+        vm.stopPrank();
+
+        assertEq(tradingRewards.isPeriodClaimable(0), true);
+        assertEq(tradingRewards.getAvailableRewards(), 0.2 ether);
+        assertEq(tradingRewards.getPeriodRecordedFees(0), 0.2 ether);
+        assertEq(tradingRewards.getPeriodAvailableRewards(0), 0.2 ether);
+        assertEq(
+            tradingRewards.getAvailableRewardsForAccountForPeriod(user7, 0),
+            0.1 ether
         );
 
-        _passTime(7 days);
-
-        vm.startPrank(owner);
-        feePool.closeCurrentFeePeriod();
-        vm.stopPrank();
+        uint256 amountBefore = IERC20(address(proxySFCX)).balanceOf(user7);
+        uint256 rewardAmount = tradingRewards
+            .getAvailableRewardsForAccountForPeriod(user7, 0);
 
         vm.startPrank(user7);
-        feePool.claimFees();
+        console.log("<<< REDEEMING user7 >>>");
+        tradingRewards.redeemRewardsForPeriod(0);
         vm.stopPrank();
 
-        console.log();
-        console.log("AFTER CLOSING");
-        console.log(
-            feePool.totalFeesAvailable(),
-            "<-- feePool.totalFeesAvailable()"
-        );
-        console.log(
-            feePool.totalRewardsAvailable(),
-            "<-- feePool.totalRewardsAvailable()"
-        );
-        (uint256 totalFees, uint256 totalRewards) = feePool.feesAvailable(
-            user7
-        );
-        console.log(totalFees, "<-- totalFees user7");
-        console.log(totalRewards, "<-- totalRewards user7");
-        (totalFees, totalRewards) = feePool.feesAvailable(user8);
-        console.log(totalFees, "<-- totalFees user8");
-        console.log(totalRewards, "<-- totalRewards user8");
-
-        // vm.startPrank(user5);
-        // tradingRewards.closeCurrentPeriodWithRewards(
-        //     tradingRewards.getPeriodRecordedFees(0)
-        // );
-        // vm.stopPrank();
-
-        // assertEq(tradingRewards.getPeriodAvailableRewards(0), 1002);
-        // assertEq(tradingRewards.isPeriodClaimable(0), true);
-        // assertEq(tradingRewards.getPeriodRecordedFees(0), 1002);
-        // assertEq(tradingRewards.getAvailableRewards(), 1002);
-        // assertEq(
-        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user8, 0),
-        //     1002
-        // );
-
-        // uint256 amountBefore = IERC20(address(proxySFCX)).balanceOf(user8);
-        // uint256 rewardAmount = tradingRewards
-        //     .getAvailableRewardsForAccountForPeriod(user8, 0);
-
-        // tradingRewards.redeemRewardsForPeriod(0);
-
-        // assertEq(
-        //     IERC20(address(proxySFCX)).balanceOf(user8),
-        //     amountBefore + rewardAmount
-        // );
-
-        console.log();
-        console.log(
-            IERC20(address(proxycfUSD)).balanceOf(address(feePool)),
-            "<-- proxycfUSD balanceOf(address(feePool))"
-        );
-        console.log(
-            IERC20(address(proxycfUSD)).balanceOf(address(tradingRewards)),
-            "<-- proxycfUSD balanceOf(address(tradingRewards))"
-        );
-        console.log(
-            IERC20(address(proxycfUSD)).balanceOf(address(FEE_ADDRESS)),
-            "<-- proxycfUSD balanceOf(address(FEE_ADDRESS))"
+        assertEq(
+            IERC20(address(proxySFCX)).balanceOf(user7),
+            amountBefore + rewardAmount
         );
 
-        console.log();
-        // ! ---
-        // // "<-- tradingRewards.getPeriodRecordedFees(0)"
-        // // "<-- tradingRewards.isPeriodClaimable(0)"
-        // // "<-- getPeriodAvailableRewards(0)"
-        // console.log(
-        //     tradingRewards.getAvailableRewards(),
-        //     "<-- tradingRewards.getAvailableRewards()"
-        // );
-        // console.log();
-        // console.log(
-        //     tradingRewards.getAvailableRewardsForAccountForPeriod(owner, 0),
-        //     "<-- getAvailableRewardsForAccountForPeriod(owner, 0)"
-        // );
-        // console.log(
-        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user6, 0),
-        //     "<-- getAvailableRewardsForAccountForPeriod(user6, 0)"
-        // );
-        // console.log(
-        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user7, 0),
-        //     "<-- getAvailableRewardsForAccountForPeriod(user7, 0)"
-        // );
-        // console.log(
-        //     tradingRewards.getAvailableRewardsForAccountForPeriod(user8, 0),
-        //     "<-- getAvailableRewardsForAccountForPeriod(user8, 0)"
-        // );
-        // ! ---
-        console.log();
-        console.log(
-            syndexDebtShare.totalSupply(),
-            "<-- syndexDebtShare.totalSupply()"
+        assertEq(syndexDebtShare.totalSupply(), 3300 ether);
+        assertEq(syndexDebtShare.balanceOf(address(user7)), 1650 ether);
+        assertEq(syndexDebtShare.balanceOf(address(user8)), 1650 ether);
+
+        assertEq(tradingRewards.getAvailableRewards(), 0.1 ether);
+        assertEq(tradingRewards.getPeriodRecordedFees(0), 0.2 ether);
+        assertEq(tradingRewards.getPeriodAvailableRewards(0), 0.1 ether);
+        assertEq(
+            tradingRewards.getAvailableRewardsForAccountForPeriod(user7, 0),
+            0
         );
-        console.log();
-        // "<-- syndexDebtShare.calculateTotalSupplyForPeriod(1)"
-        console.log(
-            syndexDebtShare.balanceOf(user6),
-            "<-- syndexDebtShare.balanceOf(user6)"
-        );
-        console.log(
-            syndexDebtShare.balanceOf(user7),
-            "<-- syndexDebtShare.balanceOf(user7)"
-        );
-        console.log(
-            syndexDebtShare.balanceOf(user8),
-            "<-- syndexDebtShare.balanceOf(user8)"
+        assertEq(
+            tradingRewards.getAvailableRewardsForAccountForPeriod(user8, 0),
+            0.1 ether
         );
     }
 
