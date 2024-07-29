@@ -67,10 +67,7 @@ contract SFCXToken is Test, Utils {
         systemStatus = new SystemStatus(owner);
         issuer = new Issuer(owner, address(addressResolver));
         tokenStateSFCX = new LegacyTokenState(owner, address(syndex));
-        syndexDebtShare = new SynDexDebtShare(
-            owner,
-            address(addressResolver)
-        );
+        syndexDebtShare = new SynDexDebtShare(owner, address(addressResolver));
         syndex = new SynDex(
             payable(address(proxySFCX)),
             address(tokenStateSFCX),
@@ -176,14 +173,14 @@ contract SFCXToken is Test, Utils {
         vm.startPrank(user4);
         proxySFCX.transferFrom(owner, user4, 10 ether);
         vm.stopPrank();
-
-        console.log(proxySFCX.balanceOf(owner), "<<< balanceOf(owner)");
-        console.log(proxySFCX.balanceOf(user4), "<<< balanceOf(user4)");
-
-        console.log(proxySFCX.totalSupply(), "<<< totalSupply");
     }
 
     function testTrade() public {
+        assertEq(proxySFCX.totalSupply(), 1000000 ether);
+        
+        assertEq(proxySFCX.balanceOf(owner), 796990 ether);
+        assertEq(proxySFCX.balanceOf(user4), 10 ether);
+
         vm.startPrank(owner);
         proxySFCX.approve(address(router), 50 ether);
         IERC20(WETH).approve(address(router), 50 ether);
@@ -201,24 +198,14 @@ contract SFCXToken is Test, Utils {
 
         vm.startPrank(user1);
 
-        console.log();
-        console.log("BEFORE SWAP");
-        console.log(
-            proxySFCX.balanceOf(user1),
-            "<-- proxySFCX balanceOf user1"
-        );
-        console.log(IERC20(WETH).balanceOf(user1), "<-- WETH balanceOf user1");
+        assertEq(proxySFCX.balanceOf(user1), 1000 ether);
+        assertEq(IERC20(WETH).balanceOf(user1), 100 ether);
 
         _swap(WETH, address(proxySFCX), 10 ether, user1); // * BUY
         _swap(address(proxySFCX), WETH, 8 ether, user1); // * SELL
 
-        console.log();
-        console.log("AFTER SWAP");
-        console.log(
-            proxySFCX.balanceOf(user1),
-            "<-- proxySFCX balanceOf user1"
-        );
-        console.log(IERC20(WETH).balanceOf(user1), "<-- WETH balanceOf user1");
+        assertGt(proxySFCX.balanceOf(user1), 1000 ether);
+        assertLt(IERC20(WETH).balanceOf(user1), 100 ether);
 
         vm.stopPrank();
     }

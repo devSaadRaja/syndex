@@ -15,215 +15,419 @@ contract IssuerTest is Setup {
     }
 
     function testSFCXIssueSynths() public {
-        console.log();
-        console.log("---USER 1---");
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxySFCX.balanceOf(user2), 10 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 0);
+        assertEq(proxycfUSD.balanceOf(user2), 0);
+
         vm.startPrank(user1);
 
-        console.log("FIRST ISSUE");
         syndex.createMaxSynths();
 
-        console.log("SECOND ISSUE");
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 1.65 ether);
+
         syndex.createMaxSynths();
 
-        // over-collateralized
-        aggregatorCollateral.setPrice(1.2 ether);
+        aggregatorCollateral.setPrice(1.2 ether); // over-collateralized
 
-        console.log("THIRD ISSUE");
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 1.65 ether);
+        assertEq(syndexDebtShare.balanceOf(user1), 1.65 ether);
+        assertEq(syndexDebtShare.balanceOf(user2), 0);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxySFCX.balanceOf(user2), 10 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 1.65 ether);
+        assertEq(proxycfUSD.balanceOf(user2), 0);
+
         syndex.createMaxSynths();
 
         vm.stopPrank();
 
-        console.log();
-        console.log("---USER 2---");
         vm.startPrank(user2);
-
-        console.log("FIRST ISSUE");
-        syndex.createSynths(1 ether);
-
+        syndex.createMaxSynths();
         vm.stopPrank();
 
-        // calculateTotalSupplyForPeriod
-        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 2.98 ether);
-        // accountBalance
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 5.94 ether);
         assertEq(syndexDebtShare.balanceOf(user1), 1.98 ether);
-        assertEq(syndexDebtShare.balanceOf(user2), 1 ether);
+        assertEq(syndexDebtShare.balanceOf(user2), 3.96 ether);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxySFCX.balanceOf(user2), 10 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 1.98 ether);
+        assertEq(proxycfUSD.balanceOf(user2), 3.96 ether);
     }
 
     function testSFCXBurnSynths() public {
-        console.log();
-        console.log("---ISSUE USER 1---");
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxySFCX.balanceOf(user2), 10 ether);
+        assertEq(proxySFCX.balanceOf(user3), 15 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 0);
+        assertEq(proxycfUSD.balanceOf(user2), 0);
+        assertEq(proxycfUSD.balanceOf(user3), 0);
+
         vm.startPrank(user1);
         syndex.createSynths(1 ether);
         vm.stopPrank();
 
-        console.log();
-        console.log("---ISSUE USER 2---");
         vm.startPrank(user2);
         syndex.createSynths(1 ether);
         vm.stopPrank();
 
-        console.log();
-        console.log("---ISSUE USER 3---");
         vm.startPrank(user3);
         syndex.createSynths(1 ether);
         vm.stopPrank();
 
-        // under-collateralized
-        aggregatorCollateral.setPrice(0.5 ether);
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 3 ether);
+        assertEq(syndexDebtShare.balanceOf(user1), 1 ether);
+        assertEq(syndexDebtShare.balanceOf(user2), 1 ether);
+        assertEq(syndexDebtShare.balanceOf(user3), 1 ether);
 
-        console.log();
-        console.log("---BURN USER 1---");
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxySFCX.balanceOf(user2), 10 ether);
+        assertEq(proxySFCX.balanceOf(user3), 15 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 1 ether);
+        assertEq(proxycfUSD.balanceOf(user2), 1 ether);
+        assertEq(proxycfUSD.balanceOf(user3), 1 ether);
+
+        aggregatorCollateral.setPrice(0.5 ether); // under-collateralized
+
         vm.startPrank(user1);
         // syndex.burnSynths(1 ether);
         syndex.burnSynthsToTarget();
         vm.stopPrank();
+
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 2.825 ether);
+        assertEq(syndexDebtShare.balanceOf(user1), 0.825 ether);
+        assertEq(syndexDebtShare.balanceOf(user2), 1 ether);
+        assertEq(syndexDebtShare.balanceOf(user3), 1 ether);
+
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxySFCX.balanceOf(user2), 10 ether);
+        assertEq(proxySFCX.balanceOf(user3), 15 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 0.825 ether);
+        assertEq(proxycfUSD.balanceOf(user2), 1 ether);
+        assertEq(proxycfUSD.balanceOf(user3), 1 ether);
     }
 
     function testSFCXLiquidateSelf() public {
-        vm.startPrank(user1);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 0);
 
-        console.log("ISSUE");
+        vm.startPrank(user1);
         syndex.createSynths(1 ether);
 
-        // under-collateralized
-        aggregatorCollateral.setPrice(0.5 ether);
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 1 ether);
+        assertEq(syndexDebtShare.balanceOf(user1), 1 ether);
 
-        console.log("LIQUIDATE");
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 1 ether);
+
+        aggregatorCollateral.setPrice(0.5 ether); // under-collateralized
+
         syndex.liquidateSelf();
-
         vm.stopPrank();
+
+        assertLt(syndexDebtShare.calculateTotalSupplyForPeriod(1), 1 ether);
+        assertLt(syndexDebtShare.balanceOf(user1), 1 ether);
+
+        assertLt(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 1 ether);
     }
 
     function testSFCXForceLiquidate() public {
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 0);
+
         vm.startPrank(user1);
-        console.log("ISSUE");
         syndex.createSynths(1 ether);
         vm.stopPrank();
 
-        // under-collateralized
-        aggregatorCollateral.setPrice(0.25 ether);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 1 ether);
 
-        console.log("FLAG FOR LIQUIDATION");
+        aggregatorCollateral.setPrice(0.25 ether); // under-collateralized
+
         liquidator.flagAccountForLiquidation(user1);
 
         _passTime(28810);
 
-        console.log("LIQUIDATE");
         syndex.liquidateDelinquentAccount(user1);
+
+        assertEq(proxySFCX.balanceOf(user1), 0);
+        assertEq(proxycfUSD.balanceOf(user1), 1 ether);
     }
 
     function testEthIssueSynths() public {
-        vm.startPrank(user1);
-        console.log("ISSUE");
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 0);
+        assertEq(syndexDebtShare.balanceOf(user1), 0);
+        assertEq(address(user1).balance, 100 ether);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 0);
 
+        vm.startPrank(user1);
         syndex.createSynths(1 ether);
         collateralETH.open{value: 0.15 ether}(0.1 ether, "cfUSD");
-
         vm.stopPrank();
+
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 1 ether);
+        assertEq(syndexDebtShare.balanceOf(user1), 1 ether);
+        assertEq(address(user1).balance, 99.85 ether);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 1.1 ether);
+
+        assertEq(collateralManager.state().totalLoans(), 1);
+        (uint long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 0.1 ether);
+        (uint susdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(susdValue, 0.1 ether);
     }
 
     function testEthBurnSynths() public {
-        console.log();
-        console.log("---USER 1---");
-        vm.startPrank(user1);
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 0);
 
-        console.log("ISSUE");
+        assertEq(syndexDebtShare.balanceOf(user1), 0);
+        assertEq(address(user1).balance, 100 ether);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 0);
+
+        assertEq(syndexDebtShare.balanceOf(user2), 0);
+        assertEq(address(user2).balance, 100 ether);
+        assertEq(proxySFCX.balanceOf(user2), 10 ether);
+        assertEq(proxycfUSD.balanceOf(user2), 0);
+
+        assertEq(collateralManager.state().totalLoans(), 0);
+        (uint long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 0);
+        (uint susdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(susdValue, 0);
+
+        vm.startPrank(user1);
         syndex.createSynths(1 ether);
         uint256 id = collateralETH.open{value: 0.15 ether}(0.1 ether, "cfUSD");
         vm.stopPrank();
 
-        console.log();
-        console.log("---USER 2---");
         vm.startPrank(user2);
-
-        console.log("ISSUE");
         syndex.createSynths(1 ether);
         collateralETH.open{value: 0.15 ether}(0.1 ether, "cfUSD");
         vm.stopPrank();
 
-        console.log();
-        console.log("---USER 1---");
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 2 ether);
+
+        assertEq(syndexDebtShare.balanceOf(user1), 1 ether);
+        assertEq(address(user1).balance, 99.85 ether);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 1.1 ether);
+
+        assertEq(syndexDebtShare.balanceOf(user2), 1 ether);
+        assertEq(address(user2).balance, 99.85 ether);
+        assertEq(proxySFCX.balanceOf(user2), 10 ether);
+        assertEq(proxycfUSD.balanceOf(user2), 1.1 ether);
+
+        assertEq(collateralManager.state().totalLoans(), 2);
+        (long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 0.2 ether);
+        (susdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(susdValue, 0.2 ether);
+
         vm.startPrank(user1);
-        console.log("BURN / CLOSE");
         collateralETH.close(id);
+        collateralETH.claim(0.15 ether);
         vm.stopPrank();
+
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 2 ether);
+
+        assertEq(syndexDebtShare.balanceOf(user1), 1 ether);
+        assertEq(address(user1).balance, 100 ether);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 1 ether);
+
+        assertEq(syndexDebtShare.balanceOf(user2), 1 ether);
+        assertEq(address(user2).balance, 99.85 ether);
+        assertEq(proxySFCX.balanceOf(user2), 10 ether);
+        assertEq(proxycfUSD.balanceOf(user2), 1.1 ether);
+
+        assertEq(collateralManager.state().totalLoans(), 2);
+        (long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 0.1 ether);
+        (susdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(susdValue, 0.1 ether);
     }
 
     function testEthLiquidate() public {
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 0);
+        assertEq(syndexDebtShare.balanceOf(user1), 0);
+        assertEq(address(user1).balance, 100 ether);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 0);
+
+        assertEq(collateralManager.state().totalLoans(), 0);
+        (uint long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 0);
+        (uint susdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(susdValue, 0);
+
         vm.startPrank(user1);
-        console.log("ISSUE");
         syndex.createSynths(1 ether);
         uint256 id = collateralETH.open{value: 0.15 ether}(0.1 ether, "cfUSD");
         vm.stopPrank();
 
         vm.startPrank(owner);
-        // under-collateralized
-        aggregatorSynth.setPrice(0.8 * 10 ** 8);
+        aggregatorSynth.setPrice(0.8 * 10 ** 8); // under-collateralized
         vm.stopPrank();
 
         vm.startPrank(user1);
-        console.log("LIQUIDATE");
-        collateralETH.liquidate(user1, id, 0.1 ether);
+        collateralETH.liquidate(user1, id, 0.15 ether);
+        collateralETH.claim(0.07 ether);
         vm.stopPrank();
+
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 1 ether);
+        assertEq(syndexDebtShare.balanceOf(user1), 1 ether);
+        assertEq(address(user1).balance, 99.92 ether);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 1.04 ether + 1);
+
+        assertEq(collateralManager.state().totalLoans(), 1);
+        (long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 0.04 ether + 1);
+        (susdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(susdValue, 0.04 ether + 1);
     }
 
     function testErc20IssueSynths() public {
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 0);
+        assertEq(syndexDebtShare.balanceOf(user1), 0);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 0);
+        assertEq(token.balanceOf(user1), 1 ether);
+
         vm.startPrank(user1);
-        console.log("ISSUE");
-
         syndex.createSynths(1 ether);
-
-        token.approve(address(collateralErc20), 50 ether);
+        token.approve(address(collateralErc20), 1 ether);
         collateralErc20.open(0.15 ether, 0.1 ether, "cfUSD");
-
         vm.stopPrank();
+
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 1 ether);
+        assertEq(syndexDebtShare.balanceOf(user1), 1 ether);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 1.1 ether);
+        assertEq(token.balanceOf(user1), 0.85 ether);
+
+        assertEq(collateralManager.state().totalLoans(), 1);
+        (uint long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 0.1 ether);
+        (uint susdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(susdValue, 0.1 ether);
     }
 
     function testErc20BurnSynths() public {
-        console.log();
-        console.log("---USER 1---");
-        vm.startPrank(user1);
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 0);
 
-        console.log("ISSUE");
+        assertEq(syndexDebtShare.balanceOf(user1), 0);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 0);
+        assertEq(token.balanceOf(user1), 1 ether);
+
+        assertEq(syndexDebtShare.balanceOf(user2), 0);
+        assertEq(proxySFCX.balanceOf(user2), 10 ether);
+        assertEq(proxycfUSD.balanceOf(user2), 0);
+        assertEq(token.balanceOf(user2), 1 ether);
+
+        assertEq(collateralManager.state().totalLoans(), 0);
+        (uint long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 0);
+        (uint susdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(susdValue, 0);
+
+        vm.startPrank(user1);
         syndex.createSynths(1 ether);
-        token.approve(address(collateralErc20), 50 ether);
+        token.approve(address(collateralErc20), 1 ether);
         uint256 id = collateralErc20.open(0.15 ether, 0.1 ether, "cfUSD");
         vm.stopPrank();
 
-        console.log();
-        console.log("---USER 2---");
         vm.startPrank(user2);
-
-        console.log("ISSUE");
         syndex.createSynths(1 ether);
-        token.approve(address(collateralErc20), 50 ether);
+        token.approve(address(collateralErc20), 1 ether);
         collateralErc20.open(0.15 ether, 0.1 ether, "cfUSD");
         vm.stopPrank();
 
-        console.log();
-        console.log("---USER 1---");
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 2 ether);
+
+        assertEq(syndexDebtShare.balanceOf(user1), 1 ether);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 1.1 ether);
+        assertEq(token.balanceOf(user1), 0.85 ether);
+
+        assertEq(syndexDebtShare.balanceOf(user2), 1 ether);
+        assertEq(proxySFCX.balanceOf(user2), 10 ether);
+        assertEq(proxycfUSD.balanceOf(user2), 1.1 ether);
+        assertEq(token.balanceOf(user2), 0.85 ether);
+
+        assertEq(collateralManager.state().totalLoans(), 2);
+        (long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 0.2 ether);
+        (susdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(susdValue, 0.2 ether);
+
         vm.startPrank(user1);
-        console.log("BURN / CLOSE");
         collateralErc20.close(id);
         vm.stopPrank();
+
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 2 ether);
+
+        assertEq(syndexDebtShare.balanceOf(user1), 1 ether);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 1 ether);
+        assertEq(token.balanceOf(user1), 1 ether);
+
+        assertEq(syndexDebtShare.balanceOf(user2), 1 ether);
+        assertEq(proxySFCX.balanceOf(user2), 10 ether);
+        assertEq(proxycfUSD.balanceOf(user2), 1.1 ether);
+        assertEq(token.balanceOf(user2), 0.85 ether);
+
+        assertEq(collateralManager.state().totalLoans(), 2);
+        (long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 0.1 ether);
+        (susdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(susdValue, 0.1 ether);
     }
 
     function testErc20Liquidate() public {
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 0);
+        assertEq(syndexDebtShare.balanceOf(user1), 0);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 0);
+        assertEq(token.balanceOf(user1), 1 ether);
+
+        assertEq(collateralManager.state().totalLoans(), 0);
+        (uint long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 0);
+        (uint susdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(susdValue, 0);
+
         vm.startPrank(user1);
-        console.log("ISSUE");
         syndex.createSynths(1 ether);
-        token.approve(address(collateralErc20), 50 ether);
+        token.approve(address(collateralErc20), 1 ether);
         uint256 id = collateralErc20.open(0.15 ether, 0.1 ether, "cfUSD");
         vm.stopPrank();
 
         vm.startPrank(owner);
-        // under-collateralized
-        aggregatorSynth.setPrice(0.8 * 10 ** 8);
+        aggregatorSynth.setPrice(0.8 * 10 ** 8); // under-collateralized
         vm.stopPrank();
 
         vm.startPrank(user1);
-        console.log("LIQUIDATE");
-        collateralErc20.liquidate(user1, id, 0.1 ether);
+        // uint256 liquidationAmount = collateralErc20.liquidationAmount(id);
+        collateralErc20.liquidate(user1, id, 0.05 ether);
         vm.stopPrank();
+
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 1 ether);
+        assertEq(syndexDebtShare.balanceOf(user1), 1 ether);
+        assertEq(proxySFCX.balanceOf(user1), 5 ether);
+        assertEq(proxycfUSD.balanceOf(user1), 1.05 ether);
+        assertEq(token.balanceOf(user1), 0.9125 ether);
+
+        assertEq(collateralManager.state().totalLoans(), 1);
+        (long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 0.05 ether);
+        (susdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(susdValue, 0.05 ether);
     }
 }
