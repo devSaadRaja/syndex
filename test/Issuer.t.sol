@@ -177,8 +177,8 @@ contract IssuerTest is Setup {
         assertEq(collateralManager.state().totalLoans(), 1);
         (uint long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
         assertEq(long, 0.1 ether);
-        (uint susdValue, ) = collateralManager.totalLongAndShort();
-        assertEq(susdValue, 0.1 ether);
+        (uint cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 0.1 ether);
     }
 
     function testEthBurnSynths() public {
@@ -197,8 +197,8 @@ contract IssuerTest is Setup {
         assertEq(collateralManager.state().totalLoans(), 0);
         (uint long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
         assertEq(long, 0);
-        (uint susdValue, ) = collateralManager.totalLongAndShort();
-        assertEq(susdValue, 0);
+        (uint cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 0);
 
         vm.startPrank(user1);
         syndex.createSynths(1 ether);
@@ -225,8 +225,8 @@ contract IssuerTest is Setup {
         assertEq(collateralManager.state().totalLoans(), 2);
         (long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
         assertEq(long, 0.2 ether);
-        (susdValue, ) = collateralManager.totalLongAndShort();
-        assertEq(susdValue, 0.2 ether);
+        (cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 0.2 ether);
 
         vm.startPrank(user1);
         collateralETH.close(id);
@@ -248,8 +248,8 @@ contract IssuerTest is Setup {
         assertEq(collateralManager.state().totalLoans(), 2);
         (long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
         assertEq(long, 0.1 ether);
-        (susdValue, ) = collateralManager.totalLongAndShort();
-        assertEq(susdValue, 0.1 ether);
+        (cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 0.1 ether);
     }
 
     function testEthLiquidate() public {
@@ -262,8 +262,8 @@ contract IssuerTest is Setup {
         assertEq(collateralManager.state().totalLoans(), 0);
         (uint long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
         assertEq(long, 0);
-        (uint susdValue, ) = collateralManager.totalLongAndShort();
-        assertEq(susdValue, 0);
+        (uint cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 0);
 
         vm.startPrank(user1);
         syndex.createSynths(1 ether);
@@ -288,8 +288,8 @@ contract IssuerTest is Setup {
         assertEq(collateralManager.state().totalLoans(), 1);
         (long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
         assertEq(long, 0.04 ether + 1);
-        (susdValue, ) = collateralManager.totalLongAndShort();
-        assertEq(susdValue, 0.04 ether + 1);
+        (cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 0.04 ether + 1);
     }
 
     function testErc20IssueSynths() public {
@@ -314,8 +314,8 @@ contract IssuerTest is Setup {
         assertEq(collateralManager.state().totalLoans(), 1);
         (uint long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
         assertEq(long, 0.1 ether);
-        (uint susdValue, ) = collateralManager.totalLongAndShort();
-        assertEq(susdValue, 0.1 ether);
+        (uint cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 0.1 ether);
     }
 
     function testErc20BurnSynths() public {
@@ -334,8 +334,8 @@ contract IssuerTest is Setup {
         assertEq(collateralManager.state().totalLoans(), 0);
         (uint long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
         assertEq(long, 0);
-        (uint susdValue, ) = collateralManager.totalLongAndShort();
-        assertEq(susdValue, 0);
+        (uint cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 0);
 
         vm.startPrank(user1);
         syndex.createSynths(1 ether);
@@ -364,8 +364,8 @@ contract IssuerTest is Setup {
         assertEq(collateralManager.state().totalLoans(), 2);
         (long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
         assertEq(long, 0.2 ether);
-        (susdValue, ) = collateralManager.totalLongAndShort();
-        assertEq(susdValue, 0.2 ether);
+        (cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 0.2 ether);
 
         vm.startPrank(user1);
         collateralErc20.close(id);
@@ -386,8 +386,8 @@ contract IssuerTest is Setup {
         assertEq(collateralManager.state().totalLoans(), 2);
         (long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
         assertEq(long, 0.1 ether);
-        (susdValue, ) = collateralManager.totalLongAndShort();
-        assertEq(susdValue, 0.1 ether);
+        (cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 0.1 ether);
     }
 
     function testErc20Liquidate() public {
@@ -400,8 +400,8 @@ contract IssuerTest is Setup {
         assertEq(collateralManager.state().totalLoans(), 0);
         (uint long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
         assertEq(long, 0);
-        (uint susdValue, ) = collateralManager.totalLongAndShort();
-        assertEq(susdValue, 0);
+        (uint cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 0);
 
         vm.startPrank(user1);
         syndex.createSynths(1 ether);
@@ -427,7 +427,7 @@ contract IssuerTest is Setup {
         assertEq(collateralManager.state().totalLoans(), 1);
         (long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
         assertEq(long, 0.05 ether);
-        (susdValue, ) = collateralManager.totalLongAndShort();
-        assertEq(susdValue, 0.05 ether);
+        (cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 0.05 ether);
     }
 }

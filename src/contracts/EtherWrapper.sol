@@ -32,7 +32,7 @@ contract EtherWrapper is Ownable, Pausable, MixinSystemSettings, IEtherWrapper {
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
     bytes32 private constant CONTRACT_SYNTHSETH = "SynthcfETH";
-    bytes32 private constant CONTRACT_SYNTHSUSD = "SynthcfUSD";
+    bytes32 private constant CONTRACT_SYNTHCFUSD = "SynthcfUSD";
     bytes32 private constant CONTRACT_ISSUER = "Issuer";
     bytes32 private constant CONTRACT_EXRATES = "ExchangeRates";
     bytes32 private constant CONTRACT_FEEPOOL = "FeePool";
@@ -63,7 +63,7 @@ contract EtherWrapper is Ownable, Pausable, MixinSystemSettings, IEtherWrapper {
             .resolverAddressesRequired();
         bytes32[] memory newAddresses = new bytes32[](5);
         newAddresses[0] = CONTRACT_SYNTHSETH;
-        newAddresses[1] = CONTRACT_SYNTHSUSD;
+        newAddresses[1] = CONTRACT_SYNTHCFUSD;
         newAddresses[2] = CONTRACT_EXRATES;
         newAddresses[3] = CONTRACT_ISSUER;
         newAddresses[4] = CONTRACT_FEEPOOL;
@@ -73,7 +73,7 @@ contract EtherWrapper is Ownable, Pausable, MixinSystemSettings, IEtherWrapper {
 
     /* ========== INTERNAL VIEWS ========== */
     function synthcfUSD() internal view returns (ISynth) {
-        return ISynth(requireAndGetAddress(CONTRACT_SYNTHSUSD));
+        return ISynth(requireAndGetAddress(CONTRACT_SYNTHCFUSD));
     }
 
     function synthcfETH() internal view returns (ISynth) {
@@ -194,7 +194,7 @@ contract EtherWrapper is Ownable, Pausable, MixinSystemSettings, IEtherWrapper {
             !exchangeRates().rateIsInvalid(cfETH),
             "Currency rate is invalid"
         );
-        uint amountSUSD = exchangeRates().effectiveValue(
+        uint amountCFUSD = exchangeRates().effectiveValue(
             cfETH,
             feesEscrowed,
             cfUSD
@@ -208,11 +208,11 @@ contract EtherWrapper is Ownable, Pausable, MixinSystemSettings, IEtherWrapper {
             : cfETHIssued.sub(feesEscrowed);
 
         // Issue cfUSD to the fee pool
-        issuer().synths(cfUSD).issue(feePool().FEE_ADDRESS(), amountSUSD);
-        cfUSDIssued = cfUSDIssued.add(amountSUSD);
+        issuer().synths(cfUSD).issue(feePool().FEE_ADDRESS(), amountCFUSD);
+        cfUSDIssued = cfUSDIssued.add(amountCFUSD);
 
         // Tell the fee pool about this
-        feePool().recordFeePaid(amountSUSD);
+        feePool().recordFeePaid(amountCFUSD);
 
         feesEscrowed = 0;
     }

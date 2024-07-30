@@ -15,12 +15,12 @@ interface ICollateralManager {
     function totalLong()
         external
         view
-        returns (uint susdValue, bool anyRateIsInvalid);
+        returns (uint cfusdValue, bool anyRateIsInvalid);
 
     function totalShort()
         external
         view
-        returns (uint susdValue, bool anyRateIsInvalid);
+        returns (uint cfusdValue, bool anyRateIsInvalid);
 
     function getBorrowRate()
         external

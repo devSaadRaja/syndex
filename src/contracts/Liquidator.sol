@@ -99,10 +99,10 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
     }
 
     function liquidationPenalty() external view returns (uint) {
-        // SIP-251: use getSnxLiquidationPenalty instead of getLiquidationPenalty
+        // SIP-251: use getSfcxLiquidationPenalty instead of getLiquidationPenalty
         // which is used for loans / shorts (collateral contracts).
         // Keeping the view name because it makes sense in the context of this contract.
-        return getSnxLiquidationPenalty();
+        return getSfcxLiquidationPenalty();
     }
 
     function selfLiquidationPenalty() external view returns (uint) {
@@ -172,7 +172,7 @@ contract Liquidator is Ownable, MixinSystemSettings, ILiquidator {
             uint unit = SafeDecimalMath.unit();
             if (
                 accountCollateralisationRatio >
-                (unit.divideDecimal(unit.add(getSnxLiquidationPenalty())))
+                (unit.divideDecimal(unit.add(getSfcxLiquidationPenalty())))
             ) {
                 return false;
             }

@@ -87,7 +87,7 @@ contract SystemSettings is Ownable, MixinSystemSettings {
     // SIP-251 Differentiate Liquidation Penalties
     // penalty taken away from currentTarget of SFCX liquidation (with 18 decimals). E.g. 30% is 0.3e18
     function sfcxLiquidationPenalty() external view returns (uint) {
-        return getSnxLiquidationPenalty();
+        return getSfcxLiquidationPenalty();
     }
 
     /* ========== SIP-148: Upgrade Liquidation Mechanism ========== */
@@ -361,7 +361,7 @@ contract SystemSettings is Ownable, MixinSystemSettings {
         flexibleStorage().setLiquidationRatio(
             SETTING_LIQUIDATION_RATIO,
             _liquidationRatio,
-            getSnxLiquidationPenalty(),
+            getSfcxLiquidationPenalty(),
             getIssuanceRatio()
         );
         emit LiquidationRatioUpdated(_liquidationRatio);
@@ -376,12 +376,12 @@ contract SystemSettings is Ownable, MixinSystemSettings {
         emit LiquidationEscrowDurationUpdated(duration);
     }
 
-    function updateSnxLiquidationPenalty(uint penalty) external onlyOwner {
-        flexibleStorage().updateSnxLiquidationPenalty(
+    function updateSfcxLiquidationPenalty(uint penalty) external onlyOwner {
+        flexibleStorage().updateSfcxLiquidationPenalty(
             SETTING_SFCX_LIQUIDATION_PENALTY,
             penalty
         );
-        emit SnxLiquidationPenaltyUpdated(penalty);
+        emit SfcxLiquidationPenaltyUpdated(penalty);
     }
 
     function setLiquidationPenalty(uint penalty) external onlyOwner {
@@ -706,7 +706,7 @@ contract SystemSettings is Ownable, MixinSystemSettings {
     event LiquidationRatioUpdated(uint newRatio);
     event LiquidationEscrowDurationUpdated(uint newDuration);
     event LiquidationPenaltyUpdated(uint newPenalty);
-    event SnxLiquidationPenaltyUpdated(uint newPenalty);
+    event SfcxLiquidationPenaltyUpdated(uint newPenalty);
     event SelfLiquidationPenaltyUpdated(uint newPenalty);
     event FlagRewardUpdated(uint newReward);
     event LiquidateRewardUpdated(uint newReward);

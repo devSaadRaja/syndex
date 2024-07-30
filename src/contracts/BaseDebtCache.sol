@@ -185,8 +185,8 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
         uint[] memory values = _issuedSynthValues(currencyKeys, rates);
         (
             uint excludedDebt,
-            bool isAnyNonSnxDebtRateInvalid
-        ) = _totalNonSnxBackedDebt(currencyKeys, rates, isInvalid);
+            bool isAnyNonSfcxDebtRateInvalid
+        ) = _totalNonSfcxBackedDebt(currencyKeys, rates, isInvalid);
         (uint futuresDebt, bool futuresDebtIsInvalid) = futuresMarketManager()
             .totalDebt();
 
@@ -194,7 +194,7 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
             values,
             futuresDebt,
             excludedDebt,
-            isInvalid || futuresDebtIsInvalid || isAnyNonSnxDebtRateInvalid
+            isInvalid || futuresDebtIsInvalid || isAnyNonSfcxDebtRateInvalid
         );
     }
 
@@ -287,7 +287,7 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
     }
 
     // Returns the total cfUSD debt backed by non-SFCX collateral.
-    function totalNonSnxBackedDebt()
+    function totalNonSfcxBackedDebt()
         external
         view
         returns (uint excludedDebt, bool isInvalid)
@@ -296,10 +296,10 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
         (uint[] memory rates, bool ratesAreInvalid) = exchangeRates()
             .ratesAndInvalidForCurrencies(currencyKeys);
 
-        return _totalNonSnxBackedDebt(currencyKeys, rates, ratesAreInvalid);
+        return _totalNonSfcxBackedDebt(currencyKeys, rates, ratesAreInvalid);
     }
 
-    function _totalNonSnxBackedDebt(
+    function _totalNonSfcxBackedDebt(
         bytes32[] memory currencyKeys,
         uint[] memory rates,
         bool ratesAreInvalid
@@ -346,8 +346,8 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
         uint[] memory values = _issuedSynthValues(currencyKeys, rates);
         (
             uint excludedDebt,
-            bool isAnyNonSnxDebtRateInvalid
-        ) = _totalNonSnxBackedDebt(currencyKeys, rates, isInvalid);
+            bool isAnyNonSfcxDebtRateInvalid
+        ) = _totalNonSfcxBackedDebt(currencyKeys, rates, isInvalid);
 
         uint numValues = values.length;
         uint total;
@@ -365,7 +365,7 @@ contract BaseDebtCache is Ownable, MixinSystemSettings, IDebtCache {
 
         return (
             total,
-            isInvalid || futuresDebtIsInvalid || isAnyNonSnxDebtRateInvalid
+            isInvalid || futuresDebtIsInvalid || isAnyNonSfcxDebtRateInvalid
         );
     }
 

@@ -121,9 +121,9 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
     //     emit SwapOutOf(msg.sender, amountOut);
 
     //     // any remaining cfUSD in contract should be transferred to treasury
-    //     uint remainingBalanceSUSD = cfUSD.balanceOf(address(this));
-    //     if (remainingBalanceSUSD > 0) {
-    //         cfUSD.safeTransfer(treasury, remainingBalanceSUSD);
+    //     uint remainingBalanceCFUSD = cfUSD.balanceOf(address(this));
+    //     if (remainingBalanceCFUSD > 0) {
+    //         cfUSD.safeTransfer(treasury, remainingBalanceCFUSD);
     //     }
 
     //     return amountOut;
@@ -181,7 +181,7 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
         bytes32 _sourceSynthCurrencyKey,
         address _destTokenAddress,
         uint _amountOfSynth,
-        uint _expectedAmountOfSUSDFromSwap,
+        uint _expectedAmountOfCFUSDFromSwap,
         bytes calldata _data
     ) external override nonReentrant returns (uint) {
         // transfer synth to this contract
@@ -204,7 +204,7 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
         }
 
         // approve AggregationRouterV4 to spend cfUSD
-        cfUSD.approve(address(router), _expectedAmountOfSUSDFromSwap);
+        cfUSD.approve(address(router), _expectedAmountOfCFUSDFromSwap);
 
         // swap cfUSD for ETH or destination token
         (bool success, bytes memory result) = address(router).call(_data);
@@ -238,9 +238,9 @@ contract SynthSwap is ISynthSwap, Ownable, ReentrancyGuard {
         emit SwapOutOf(msg.sender, amountOut);
 
         // any remaining cfUSD in contract should be transferred to treasury
-        uint remainingBalanceSUSD = cfUSD.balanceOf(address(this));
-        if (remainingBalanceSUSD > 0) {
-            cfUSD.safeTransfer(treasury, remainingBalanceSUSD);
+        uint remainingBalanceCFUSD = cfUSD.balanceOf(address(this));
+        if (remainingBalanceCFUSD > 0) {
+            cfUSD.safeTransfer(treasury, remainingBalanceCFUSD);
         }
 
         return amountOut;

@@ -330,8 +330,8 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         bytes32[2] memory currencyKeys,
         uint[2] memory currencyRates
     ) internal {
-        bool includesSUSD = currencyKeys[0] == cfUSD || currencyKeys[1] == cfUSD;
-        uint numKeys = includesSUSD ? 2 : 3;
+        bool includesCFUSD = currencyKeys[0] == cfUSD || currencyKeys[1] == cfUSD;
+        uint numKeys = includesCFUSD ? 2 : 3;
 
         bytes32[] memory keys = new bytes32[](numKeys);
         keys[0] = currencyKeys[0];
@@ -341,7 +341,7 @@ contract Exchanger is Ownable, MixinSystemSettings, IExchanger {
         rates[0] = currencyRates[0];
         rates[1] = currencyRates[1];
 
-        if (!includesSUSD) {
+        if (!includesCFUSD) {
             keys[2] = cfUSD; // And we'll also update cfUSD to account for any fees if it wasn't one of the exchanged currencies
             rates[2] = SafeDecimalMath.unit();
         }

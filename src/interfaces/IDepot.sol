@@ -24,15 +24,15 @@ interface IDepot {
 
     function withdrawMyDepositedSynths() external;
 
-    // Note: On mainnet no SNX has been deposited. The following functions are kept alive for testnet SNX faucets.
-    function exchangeEtherForSNX() external payable returns (uint);
+    // Note: On mainnet no SFCX has been deposited. The following functions are kept alive for testnet SFCX faucets.
+    function exchangeEtherForSFCX() external payable returns (uint);
 
-    function exchangeEtherForSNXAtRate(
+    function exchangeEtherForSFCXAtRate(
         uint guaranteedRate,
         uint guaranteedSynDexRate
     ) external payable returns (uint);
 
-    function exchangeSynthsForSNX(uint synthAmount) external returns (uint);
+    function exchangeSynthsForSFCX(uint synthAmount) external returns (uint);
 
     function syndexReceivedForEther(
         uint amount

@@ -18,7 +18,13 @@ import {IUniswapV3Factory} from "../src/interfaces/IUniswapV3Factory.sol";
 import {IAggregationRouterV4} from "../src/interfaces/IAggregationRouterV4.sol";
 import {INonfungiblePositionManager} from "../src/interfaces/INonfungiblePositionManager.sol";
 
+import "../src/libraries/SafeCast.sol";
+import "../src/libraries/SafeDecimalMath.sol";
+
 contract SMXTest is Setup {
+    using SafeMath for uint;
+    using SafeDecimalMath for uint;
+
     address public constant FEE_ADDRESS =
         0xfeEFEEfeefEeFeefEEFEEfEeFeefEEFeeFEEFEeF;
 
@@ -142,6 +148,58 @@ contract SMXTest is Setup {
         //     "cfETH"
         // );
         // console.log(amountReceived, "<<< amountReceived");
+    }
+
+    function testCRatio() public {
+        vm.startPrank(user7);
+
+        console.log();
+        uint currentCollateralValue = syndex.collateral(user7);
+        console.log(currentCollateralValue, "<<< currentCollateralValue");
+        console.log();
+
+        // if (currentCollateralValue == 0) return 0;
+
+        // syndex.createSynths(1 ether);
+
+        uint currentDebt = syndex.debtBalanceOf(user7, "SFCX");
+        console.log(currentDebt, "<<< currentDebt");
+        console.log(
+            currentDebt.divideDecimalRound(currentCollateralValue),
+            "<<< calculated collateralisationRatio"
+        );
+        console.log(
+            300 ether / currentDebt.divideDecimalRound(currentCollateralValue),
+            "<<< currentDebt percentage"
+        );
+        uint oldCRatio = (
+            currentCollateralValue.divideDecimalRound(currentDebt)
+        ) * 100;
+        console.log(oldCRatio, "<<< oldCRatio");
+        // console.log(
+        //     syndex.collateralisationRatio(user7),
+        //     "<<< collateralisationRatio"
+        // );
+        console.log();
+
+        // uint newDebt = currentDebt;
+        uint newDebt = currentDebt + 1 ether;
+
+        console.log(newDebt, "<<< newDebt");
+        console.log(
+            newDebt.divideDecimalRound(currentCollateralValue),
+            "<<< new collateralisationRatio"
+        );
+        console.log(
+            300 ether / newDebt.divideDecimalRound(currentCollateralValue),
+            "<<< newDebt percentage"
+        );
+
+        uint newCRatio = (currentCollateralValue.divideDecimalRound(newDebt)) *
+            100;
+        console.log(newCRatio, "<<< newCRatio");
+
+        vm.stopPrank();
     }
 
     function testRouterV4() public {
@@ -583,8 +641,8 @@ contract SMXTest is Setup {
         console.log(long, "<-- totalIssuedSynths(cfUSD) long");
         console.log(short, "<-- totalIssuedSynths(cfUSD) short");
 
-        (uint susdValue, ) = collateralManager.totalLongAndShort();
-        console.log(susdValue, "<-- susdValue");
+        (uint cfusdValue, ) = collateralManager.totalLongAndShort();
+        console.log(cfusdValue, "<-- cfusdValue");
     }
 
     function testMultiCollateralReturns() public {

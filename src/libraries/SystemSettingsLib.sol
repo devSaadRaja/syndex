@@ -187,13 +187,13 @@ library SystemSettingsLib {
         IFlexibleStorage flexibleStorage,
         bytes32 settingName,
         uint _liquidationRatio,
-        uint getSnxLiquidationPenalty,
+        uint getSfcxLiquidationPenalty,
         uint getIssuanceRatio
     ) external {
         require(
             _liquidationRatio <=
                 MAX_LIQUIDATION_RATIO.divideDecimal(
-                    SafeDecimalMath.unit().add(getSnxLiquidationPenalty)
+                    SafeDecimalMath.unit().add(getSfcxLiquidationPenalty)
                 ),
             "liquidationRatio > MAX_LIQUIDATION_RATIO / (1 + penalty)"
         );
@@ -227,7 +227,7 @@ library SystemSettingsLib {
         );
     }
 
-    function updateSnxLiquidationPenalty(
+    function updateSfcxLiquidationPenalty(
         IFlexibleStorage flexibleStorage,
         bytes32 settingName,
         uint penalty

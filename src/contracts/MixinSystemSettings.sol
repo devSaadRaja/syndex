@@ -237,7 +237,7 @@ contract MixinSystemSettings is MixinResolver {
             );
     }
 
-    function getSnxLiquidationPenalty() internal view returns (uint) {
+    function getSfcxLiquidationPenalty() internal view returns (uint) {
         return
             flexibleStorage().getUIntValue(
                 SETTING_CONTRACT_NAME,

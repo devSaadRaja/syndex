@@ -62,8 +62,8 @@ contract FuturesMarketManager is Ownable, MixinResolver, IFuturesMarketManager {
 
     bytes32 public constant CONTRACT_NAME = "FuturesMarketManager";
 
-    bytes32 internal constant SUSD = "cfUSD";
-    bytes32 internal constant CONTRACT_SYNTHSUSD = "SynthcfUSD";
+    bytes32 internal constant CFUSD = "cfUSD";
+    bytes32 internal constant CONTRACT_SYNTHCFUSD = "SynthcfUSD";
     bytes32 internal constant CONTRACT_FEEPOOL = "FeePool";
     bytes32 internal constant CONTRACT_EXCHANGER = "Exchanger";
 
@@ -83,13 +83,13 @@ contract FuturesMarketManager is Ownable, MixinResolver, IFuturesMarketManager {
         returns (bytes32[] memory addresses)
     {
         addresses = new bytes32[](3);
-        addresses[0] = CONTRACT_SYNTHSUSD;
+        addresses[0] = CONTRACT_SYNTHCFUSD;
         addresses[1] = CONTRACT_FEEPOOL;
         addresses[2] = CONTRACT_EXCHANGER;
     }
 
     function _cfUSD() internal view returns (ISynth) {
-        return ISynth(requireAndGetAddress(CONTRACT_SYNTHSUSD));
+        return ISynth(requireAndGetAddress(CONTRACT_SYNTHCFUSD));
     }
 
     function _feePool() internal view returns (IFeePool) {
@@ -412,7 +412,7 @@ contract FuturesMarketManager is Ownable, MixinResolver, IFuturesMarketManager {
      * This function is not callable through the proxy, only underlying contracts interact;
      * it reverts if not called by a known market.
      */
-    function issueSUSD(
+    function issueCFUSD(
         address account,
         uint amount
     ) external onlyMarketImplementations {
@@ -425,7 +425,7 @@ contract FuturesMarketManager is Ownable, MixinResolver, IFuturesMarketManager {
      * This function is not callable through the proxy, only underlying contracts interact;
      * it reverts if not called by a known market.
      */
-    function burnSUSD(
+    function burnCFUSD(
         address account,
         uint amount
     ) external onlyMarketImplementations returns (uint postReclamationAmount) {
@@ -435,7 +435,7 @@ contract FuturesMarketManager is Ownable, MixinResolver, IFuturesMarketManager {
 
         // Exchanger.settle ensures synth is active
         ISynth cfUSD = _cfUSD();
-        (uint reclaimed, , ) = _exchanger().settle(account, SUSD);
+        (uint reclaimed, , ) = _exchanger().settle(account, CFUSD);
 
         uint balanceAfter = amount;
         if (0 < reclaimed) {

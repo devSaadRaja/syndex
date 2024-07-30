@@ -46,14 +46,14 @@ interface ISynthSwap {
     /// @dev supports Synth -> ETH conversions
     /// @param _sourceSynthCurrencyKey is the bytes32 representation of a SynDex currency key
     /// @param _amountOfSynth is the amount of sourceSynth to swap out of
-    /// @param _expectedAmountOfSUSDFromSwap is expected amount of cfUSD to be returned from 1inch portion of swap
+    /// @param _expectedAmountOfCFUSDFromSwap is expected amount of cfUSD to be returned from 1inch portion of swap
     /// @param _data is the transaction data returned by the 1inch API
     /// @return amount of destination asset received from swap
     function uniswapSwapOutOf(
         bytes32 _sourceSynthCurrencyKey,
         address _destTokenAddress,
         uint _amountOfSynth,
-        uint _expectedAmountOfSUSDFromSwap,
+        uint _expectedAmountOfCFUSDFromSwap,
         bytes calldata _data
     ) external returns (uint);
 }

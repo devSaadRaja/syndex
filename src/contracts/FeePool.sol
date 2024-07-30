@@ -51,7 +51,7 @@ contract FeePool is
     struct FeePeriod {
         uint64 feePeriodId;
         uint64 startTime;
-        uint allNetworksSnxBackedDebt;
+        uint allNetworksSfcxBackedDebt;
         uint allNetworksDebtSharesSupply;
         uint feesToDistribute;
         uint feesClaimed;
@@ -231,7 +231,7 @@ contract FeePool is
         return getTargetThreshold();
     }
 
-    function allNetworksSnxBackedDebt()
+    function allNetworksSfcxBackedDebt()
         public
         view
         returns (uint256 debt, uint256 updatedAt)
@@ -308,7 +308,7 @@ contract FeePool is
 
     /**
      * @notice The Exchanger contract informs us when fees are paid.
-     * @param amount susd amount in fees being paid.
+     * @param amount cfusd amount in fees being paid.
      */
     function recordFeePaid(uint amount) external onlyInternalContracts {
         // Keep track off fees in cfUSD in the open fee pool period.
@@ -344,7 +344,7 @@ contract FeePool is
         );
 
         // get current oracle values
-        (uint sfcxBackedDebt, ) = allNetworksSnxBackedDebt();
+        (uint sfcxBackedDebt, ) = allNetworksSfcxBackedDebt();
         (uint debtSharesSupply, ) = allNetworksDebtSharesSupply();
 
         // close on this chain
@@ -360,11 +360,11 @@ contract FeePool is
     }
 
     function closeSecondary(
-        uint _allNetworksSnxBackedDebt,
+        uint _allNetworksSfcxBackedDebt,
         uint _allNetworksDebtSharesSupply
     ) external onlyRelayer {
         _closeSecondary(
-            _allNetworksSnxBackedDebt,
+            _allNetworksSfcxBackedDebt,
             _allNetworksDebtSharesSupply
         );
     }
@@ -373,7 +373,7 @@ contract FeePool is
      * @notice Close the current fee period and start a new one.
      */
     function _closeSecondary(
-        uint _allNetworksSnxBackedDebt,
+        uint _allNetworksSfcxBackedDebt,
         uint _allNetworksDebtSharesSupply
     ) internal {
         etherWrapper().distributeFees();
@@ -383,7 +383,7 @@ contract FeePool is
         _recentFeePeriodsStorage(0)
             .allNetworksDebtSharesSupply = _allNetworksDebtSharesSupply;
         _recentFeePeriodsStorage(0)
-            .allNetworksSnxBackedDebt = _allNetworksSnxBackedDebt;
+            .allNetworksSfcxBackedDebt = _allNetworksSfcxBackedDebt;
 
         // Note:  periodClosing is the current period & periodToRollover is the last open claimable period
         FeePeriod storage periodClosing = _recentFeePeriodsStorage(0);
@@ -536,7 +536,7 @@ contract FeePool is
             feesClaimed: feesClaimed,
             rewardsToDistribute: rewardsToDistribute,
             rewardsClaimed: rewardsClaimed,
-            allNetworksSnxBackedDebt: 0,
+            allNetworksSfcxBackedDebt: 0,
             allNetworksDebtSharesSupply: 0
         });
 

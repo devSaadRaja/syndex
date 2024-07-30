@@ -68,7 +68,7 @@ contract Collateral is ICollateralLoan, Ownable, MixinSystemSettings {
     bytes32 private constant CONTRACT_EXRATES = "ExchangeRates";
     bytes32 private constant CONTRACT_EXCHANGER = "Exchanger";
     bytes32 private constant CONTRACT_FEEPOOL = "FeePool";
-    bytes32 private constant CONTRACT_SYNTHSUSD = "SynthcfUSD";
+    bytes32 private constant CONTRACT_SYNTHCFUSD = "SynthcfUSD";
     bytes32 private constant CONTRACT_COLLATERALUTIL = "CollateralUtil";
 
     /* ========== CONSTRUCTOR ========== */
@@ -102,7 +102,7 @@ contract Collateral is ICollateralLoan, Ownable, MixinSystemSettings {
         newAddresses[1] = CONTRACT_EXRATES;
         newAddresses[2] = CONTRACT_EXCHANGER;
         newAddresses[3] = CONTRACT_SYSTEMSTATUS;
-        newAddresses[4] = CONTRACT_SYNTHSUSD;
+        newAddresses[4] = CONTRACT_SYNTHCFUSD;
         newAddresses[5] = CONTRACT_COLLATERALUTIL;
 
         bytes32[] memory combined = combineArrays(
@@ -124,7 +124,7 @@ contract Collateral is ICollateralLoan, Ownable, MixinSystemSettings {
     }
 
     function _synthcfUSD() internal view returns (ISynth) {
-        return ISynth(requireAndGetAddress(CONTRACT_SYNTHSUSD));
+        return ISynth(requireAndGetAddress(CONTRACT_SYNTHCFUSD));
     }
 
     function _exchangeRates() internal view returns (IExchangeRates) {
