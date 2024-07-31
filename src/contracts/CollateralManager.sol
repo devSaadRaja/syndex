@@ -181,7 +181,7 @@ contract CollateralManager is Ownable, Pausable, MixinResolver {
     function totalLong()
         public
         view
-        returns (uint susdValue, bool anyRateIsInvalid)
+        returns (uint cfusdValue, bool anyRateIsInvalid)
     {
         bytes32[] memory synths = _currencyKeys.elements;
 
@@ -189,13 +189,13 @@ contract CollateralManager is Ownable, Pausable, MixinResolver {
             for (uint i = 0; i < synths.length; i++) {
                 bytes32 synth = synths[i];
                 if (synth == cfUSD) {
-                    susdValue = susdValue.add(state.long(synth));
+                    cfusdValue = cfusdValue.add(state.long(synth));
                 } else {
                     (uint rate, bool invalid) = _exchangeRates().rateAndInvalid(
                         synth
                     );
                     uint amount = state.long(synth).multiplyDecimal(rate);
-                    susdValue = susdValue.add(amount);
+                    cfusdValue = cfusdValue.add(amount);
                     if (invalid) {
                         anyRateIsInvalid = true;
                     }
@@ -207,7 +207,7 @@ contract CollateralManager is Ownable, Pausable, MixinResolver {
     function totalShort()
         public
         view
-        returns (uint susdValue, bool anyRateIsInvalid)
+        returns (uint cfusdValue, bool anyRateIsInvalid)
     {
         bytes32[] memory synths = _shortableSynths.elements;
 
@@ -218,7 +218,7 @@ contract CollateralManager is Ownable, Pausable, MixinResolver {
                     synth
                 );
                 uint amount = state.short(synth).multiplyDecimal(rate);
-                susdValue = susdValue.add(amount);
+                cfusdValue = cfusdValue.add(amount);
                 if (invalid) {
                     anyRateIsInvalid = true;
                 }
@@ -229,7 +229,7 @@ contract CollateralManager is Ownable, Pausable, MixinResolver {
     function totalLongAndShort()
         public
         view
-        returns (uint susdValue, bool anyRateIsInvalid)
+        returns (uint cfusdValue, bool anyRateIsInvalid)
     {
         bytes32[] memory currencyKeys = _currencyKeys.elements;
 
@@ -243,7 +243,7 @@ contract CollateralManager is Ownable, Pausable, MixinResolver {
                 uint shortAmount = state.short(currencyKeys[i]).multiplyDecimal(
                     rates[i]
                 );
-                susdValue = susdValue.add(longAmount).add(shortAmount);
+                cfusdValue = cfusdValue.add(longAmount).add(shortAmount);
                 if (invalid) {
                     anyRateIsInvalid = true;
                 }
@@ -260,13 +260,13 @@ contract CollateralManager is Ownable, Pausable, MixinResolver {
         uint sfcxDebt = _issuer().totalIssuedSynths(cfUSD, true);
 
         // now get the non sfcx backed debt.
-        (uint nonSnxDebt, bool ratesInvalid) = totalLong();
+        (uint nonSfcxDebt, bool ratesInvalid) = totalLong();
 
         // the total.
-        uint totalDebt = sfcxDebt.add(nonSnxDebt);
+        uint totalDebt = sfcxDebt.add(nonSfcxDebt);
 
         // now work out the utilisation ratio, and divide through to get a per second value.
-        uint utilisation = nonSnxDebt.divideDecimal(totalDebt).divideDecimal(
+        uint utilisation = nonSfcxDebt.divideDecimal(totalDebt).divideDecimal(
             SECONDS_IN_A_YEAR
         );
 

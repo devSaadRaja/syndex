@@ -18,7 +18,13 @@ import {IUniswapV3Factory} from "../src/interfaces/IUniswapV3Factory.sol";
 import {IAggregationRouterV4} from "../src/interfaces/IAggregationRouterV4.sol";
 import {INonfungiblePositionManager} from "../src/interfaces/INonfungiblePositionManager.sol";
 
+import "../src/libraries/SafeCast.sol";
+import "../src/libraries/SafeDecimalMath.sol";
+
 contract SMXTest is Setup {
+    using SafeMath for uint;
+    using SafeDecimalMath for uint;
+
     address public constant FEE_ADDRESS =
         0xfeEFEEfeefEeFeefEEFEEfEeFeefEEFeeFEEFEeF;
 
@@ -144,6 +150,42 @@ contract SMXTest is Setup {
         // console.log(amountReceived, "<<< amountReceived");
     }
 
+    function testCRatio() public {
+        vm.startPrank(user7);
+
+        uint collateral = syndex.collateral(user7);
+        assertEq(collateral, 5000 ether);
+
+        // if (collateral == 0) return 0;
+
+        uint currentDebt = syndex.debtBalanceOf(user7, "SFCX");
+        assertEq(currentDebt, 1650 ether);
+
+        // uint calculatedCRatio = currentDebt.divideDecimalRound(collateral);
+        // assertEq(calculatedCRatio, 0.33 ether);
+        // uint currentDebtCRatio = 300 ether / calculatedCRatio;
+        // assertEq(currentDebtCRatio, 909);
+
+        uint oldCRatio = (collateral.divideDecimalRound(currentDebt)) * 100;
+        assertGt(oldCRatio, 303 ether);
+
+        // uint syndexCRatio = syndex.collateralisationRatio(user7);
+        // assertEq(syndexCRatio, 0.33 ether);
+
+        uint newDebt = currentDebt + 1 ether;
+        assertEq(newDebt, 1651 ether);
+
+        // uint newCalculatedCRatio = newDebt.divideDecimalRound(collateral);
+        // assertEq(newCalculatedCRatio, 0.3302 ether);
+        // uint newDebtCRatio = 300 ether / newCalculatedCRatio;
+        // assertEq(newDebtCRatio, 908);
+
+        uint newCRatio = (collateral.divideDecimalRound(newDebt)) * 100;
+        assertLt(newCRatio, 303 ether);
+
+        vm.stopPrank();
+    }
+
     function testRouterV4() public {
         vm.startPrank(user7);
 
@@ -250,9 +292,6 @@ contract SMXTest is Setup {
             paramsss
         );
 
-        console.log();
-        console.log();
-
         console.log("BEFORE token\n", token.balanceOf(user7));
         console.log("BEFORE proxycfUSD\n", proxycfUSD.balanceOf(user7));
 
@@ -284,7 +323,7 @@ contract SMXTest is Setup {
             });
 
         uint256 amountOut = swapRouter.exactInputSingle(inputParams);
-        console.log("amountOut", amountOut);
+        assertLt(amountOut, 1 ether);
 
         IERC20(address(token)).approve(address(swapRouter), 10 ether);
         ISwapRouter.ExactOutputSingleParams memory outputParams = ISwapRouter
@@ -299,7 +338,7 @@ contract SMXTest is Setup {
                 sqrtPriceLimitX96: 0
             });
         uint256 amountIn = swapRouter.exactOutputSingle(outputParams);
-        console.log("amountIn", amountIn);
+        assertGt(amountIn, 1 ether);
 
         vm.stopPrank();
     }
@@ -311,8 +350,6 @@ contract SMXTest is Setup {
 
         assertEq(proxycfUSD.balanceOf(user6), 100 ether);
         assertEq(proxycfETH.balanceOf(user6), 0);
-        console.log(proxycfUSD.balanceOf(user6), "<<< cfUSD balanceOf user6");
-        console.log(proxycfETH.balanceOf(user6), "<<< cfETH balanceOf user6");
 
         vm.startPrank(user6);
         syndex.executeExchange("cfUSD", 50 ether, "cfETH");
@@ -320,8 +357,6 @@ contract SMXTest is Setup {
 
         assertEq(proxycfUSD.balanceOf(user6), 50 ether);
         assertEq(proxycfETH.balanceOf(user6), 49.9 ether);
-        console.log(proxycfUSD.balanceOf(user6), "<<< cfUSD balanceOf user6");
-        console.log(proxycfETH.balanceOf(user6), "<<< cfETH balanceOf user6");
     }
 
     function testClaimTimeEnded() public {
@@ -406,8 +441,6 @@ contract SMXTest is Setup {
         require(close, "Transaction Failed!");
         vm.stopPrank();
 
-        console.log("<<< CLOSING >>>");
-
         assertEq(IERC20(address(proxycfUSD)).balanceOf(FEE_ADDRESS), 0);
         assertEq(
             IERC20(address(proxycfUSD)).balanceOf(address(user7)),
@@ -425,17 +458,14 @@ contract SMXTest is Setup {
         assertEq(totalFees, 0.15 ether);
 
         vm.startPrank(user7);
-        console.log("<<< CLAIMING user7 >>>");
         (bool claim, ) = payable(proxyFeePool).call(
             abi.encodeWithSignature("claimFees()")
         );
         require(claim, "Transaction Failed!");
 
-        console.log("<<< CREATING SYNTHS user7 >>>");
         syndex.createMaxSynths();
         vm.stopPrank();
 
-        console.log();
         assertEq(
             IERC20(address(proxycfUSD)).balanceOf(address(user7)),
             1450.15 ether
@@ -484,8 +514,6 @@ contract SMXTest is Setup {
         );
         assertEq(syndexDebtShare.balanceOf(address(user7)), 1650 ether);
 
-        console.log("<<< CLOSING >>>");
-
         vm.startPrank(user5);
         tradingRewards.closeCurrentPeriodWithRewards(
             tradingRewards.getPeriodRecordedFees(0)
@@ -506,7 +534,6 @@ contract SMXTest is Setup {
             .getAvailableRewardsForAccountForPeriod(user7, 0);
 
         vm.startPrank(user7);
-        console.log("<<< REDEEMING user7 >>>");
         tradingRewards.redeemRewardsForPeriod(0);
         vm.stopPrank();
 
@@ -532,71 +559,54 @@ contract SMXTest is Setup {
         );
     }
 
-    function _consoleData(string memory str) internal view {
-        console.log();
-        console.log(str);
-        console.log(
-            IERC20(address(token)).balanceOf(user6),
-            "<-- token balanceOf(user6)"
-        );
-        console.log(
-            syndex.transferableSynDex(user6),
-            "<-- syndex transferableSynDex(user6)"
-        );
-        console.log(
-            IERC20(address(proxySFCX)).balanceOf(user6),
-            "<-- SFCX balanceOf(user6)"
-        );
-        console.log(
-            IERC20(address(proxycfUSD)).balanceOf(user6),
-            "<-- cfUSD balanceOf(user6)"
-        );
-        console.log(
-            IERC20(address(proxycfETH)).balanceOf(user6),
-            "<-- cfETH balanceOf(user6)"
-        );
-        console.log(address(user6).balance, "<-- ETH balance address(user6)");
-        console.log(
-            address(collateralETH).balance,
-            "<-- ETH balance address(collateralETH)"
-        );
-        console.log(
-            syndexDebtShare.totalSupply(),
-            "<-- syndexDebtShare.totalSupply()"
-        );
-        console.log(
-            syndexDebtShare.balanceOf(user6),
-            "<-- syndexDebtShare.balanceOf(user6)"
-        );
-        console.log(
-            syndexDebtShare.calculateTotalSupplyForPeriod(1),
-            "<-- syndexDebtShare.calculateTotalSupplyForPeriod(1)"
-        );
-        console.log(
-            collateralManager.state().totalLoans(),
-            "<-- collateralManager.state().totalLoans()"
-        );
-
-        (uint long, uint short) = collateralManager.state().totalIssuedSynths(
-            "cfUSD"
-        );
-        console.log(long, "<-- totalIssuedSynths(cfUSD) long");
-        console.log(short, "<-- totalIssuedSynths(cfUSD) short");
-
-        (uint susdValue, ) = collateralManager.totalLongAndShort();
-        console.log(susdValue, "<-- susdValue");
-    }
-
     function testMultiCollateralReturns() public {
         vm.startPrank(user6);
 
-        _consoleData("--- BEFORE ---");
+        // ! BEFORE !
+
+        assertEq(address(user6).balance, 100 ether);
+        assertEq(address(collateralETH).balance, 0);
+        assertEq(IERC20(address(token)).balanceOf(user6), 1000 ether);
+        assertEq(IERC20(address(proxySFCX)).balanceOf(user6), 1000 ether);
+        assertEq(IERC20(address(proxycfUSD)).balanceOf(user6), 0);
+        assertEq(IERC20(address(proxycfETH)).balanceOf(user6), 0);
+
+        assertEq(syndex.transferableSynDex(user6), 1000 ether);
+        assertEq(syndexDebtShare.totalSupply(), 3300 ether);
+        assertEq(syndexDebtShare.balanceOf(user6), 0);
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 3300 ether);
+
+        assertEq(collateralManager.state().totalLoans(), 0);
+        (uint long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 0);
+        (uint cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 0);
+
+        // ! CREATE SYNTHS !
 
         syndex.createSynths(1 ether);
 
         uint256 id = collateralETH.open{value: 1.5 ether}(1 ether, "cfUSD");
 
-        _consoleData("--- AFTER SWAP ---");
+        assertEq(address(user6).balance, 98.5 ether);
+        assertEq(address(collateralETH).balance, 1.5 ether);
+        assertEq(IERC20(address(token)).balanceOf(user6), 1000 ether);
+        assertEq(IERC20(address(proxySFCX)).balanceOf(user6), 1000 ether);
+        assertEq(IERC20(address(proxycfUSD)).balanceOf(user6), 2 ether);
+        assertEq(IERC20(address(proxycfETH)).balanceOf(user6), 0);
+
+        assertLt(syndex.transferableSynDex(user6), 1000 ether);
+        assertEq(syndexDebtShare.totalSupply(), 3301 ether);
+        assertEq(syndexDebtShare.balanceOf(user6), 1 ether);
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 3301 ether);
+
+        assertEq(collateralManager.state().totalLoans(), 1);
+        (long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 1 ether);
+        (cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 1 ether);
+
+        // ! SYNTH SWAP !
 
         ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
             .ExactInputSingleParams({
@@ -617,19 +627,74 @@ contract SMXTest is Setup {
         IERC20(address(token)).approve(address(synthSwap), 1 ether);
         synthSwap.uniswapSwapInto("cfETH", address(token), 1 ether, _data);
 
-        _consoleData("--- AFTER SYNTH SWAP ---");
+        assertEq(address(user6).balance, 98.5 ether);
+        assertEq(address(collateralETH).balance, 1.5 ether);
+        assertEq(IERC20(address(token)).balanceOf(user6), 999 ether);
+        assertEq(IERC20(address(proxySFCX)).balanceOf(user6), 1000 ether);
+        assertEq(IERC20(address(proxycfUSD)).balanceOf(user6), 2 ether);
+        assertGt(IERC20(address(proxycfETH)).balanceOf(user6), 0);
+
+        assertLt(syndex.transferableSynDex(user6), 1000 ether);
+        assertEq(syndexDebtShare.totalSupply(), 3301 ether);
+        assertEq(syndexDebtShare.balanceOf(user6), 1 ether);
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 3301 ether);
+
+        assertEq(collateralManager.state().totalLoans(), 1);
+        (long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 1 ether);
+        (cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 1 ether);
+
+        // ! AFTER DAYS PAST !
 
         _passTime(7 days);
 
-        _consoleData("--- AFTER DAYS PAST ---");
+        assertEq(address(user6).balance, 98.5 ether);
+        assertEq(address(collateralETH).balance, 1.5 ether);
+        assertEq(IERC20(address(token)).balanceOf(user6), 999 ether);
+        assertEq(IERC20(address(proxySFCX)).balanceOf(user6), 1000 ether);
+        assertEq(IERC20(address(proxycfUSD)).balanceOf(user6), 2 ether);
+        assertGt(IERC20(address(proxycfETH)).balanceOf(user6), 0);
+
+        assertLt(syndex.transferableSynDex(user6), 1000 ether);
+        assertEq(syndexDebtShare.totalSupply(), 3301 ether);
+        assertEq(syndexDebtShare.balanceOf(user6), 1 ether);
+        assertEq(syndexDebtShare.calculateTotalSupplyForPeriod(1), 3301 ether);
+
+        assertEq(collateralManager.state().totalLoans(), 1);
+        (long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 1 ether);
+        (cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 1 ether);
+
+        // ! AFTER SYNTH BURN !
 
         syndex.burnSynths(1 ether);
-        // // syndex.burnSynthsToTarget();
+        // syndex.burnSynthsToTarget();
 
         // collateralETH.close(id);
         // collateralETH.claim(1.5 ether);
 
-        _consoleData("--- AFTER SYNTH BURN ---");
+        assertEq(address(user6).balance, 98.5 ether);
+        assertEq(address(collateralETH).balance, 1.5 ether);
+        assertEq(IERC20(address(token)).balanceOf(user6), 999 ether);
+        assertEq(IERC20(address(proxySFCX)).balanceOf(user6), 1000 ether);
+        assertEq(IERC20(address(proxycfUSD)).balanceOf(user6), 1 ether);
+        assertGt(IERC20(address(proxycfETH)).balanceOf(user6), 0);
+
+        assertLt(syndex.transferableSynDex(user6), 1000 ether);
+        assertLt(syndexDebtShare.totalSupply(), 33000004 ether);
+        assertEq(syndexDebtShare.balanceOf(user6), 302846759539673);
+        assertLt(
+            syndexDebtShare.calculateTotalSupplyForPeriod(1),
+            33000004 ether
+        );
+
+        assertEq(collateralManager.state().totalLoans(), 1);
+        (long, ) = collateralManager.state().totalIssuedSynths("cfUSD");
+        assertEq(long, 1 ether);
+        (cfusdValue, ) = collateralManager.totalLongAndShort();
+        assertEq(cfusdValue, 1 ether);
 
         vm.stopPrank();
     }

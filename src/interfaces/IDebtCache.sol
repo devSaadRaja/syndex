@@ -34,7 +34,7 @@ interface IDebtCache {
         bytes32[] calldata currencyKeys
     ) external view returns (uint[] memory debtValues);
 
-    function totalNonSnxBackedDebt()
+    function totalNonSfcxBackedDebt()
         external
         view
         returns (uint excludedDebt, bool isInvalid);

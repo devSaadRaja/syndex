@@ -900,7 +900,7 @@ async function main() {
 
   // await systemSettings.setIssuanceRatio(parseEth(0.2));
   // await systemSettings.setLiquidationRatio(parseEth(0.625));
-  // await systemSettings.updateSnxLiquidationPenalty(parseEth(0.6)); // forced
+  // await systemSettings.updateSfcxLiquidationPenalty(parseEth(0.6)); // forced
   // await systemSettings.updateSelfLiquidationPenalty(parseEth(0.5));
   // await systemSettings.updateLiquidationDelay(28800);
   // await systemSettings.updateRateStalePeriod(86400);

@@ -12,7 +12,7 @@ contract SynthUtil {
 
     bytes32 internal constant CONTRACT_SYNDEX = "SynDex";
     bytes32 internal constant CONTRACT_EXRATES = "ExchangeRates";
-    bytes32 internal constant SUSD = "cfUSD";
+    bytes32 internal constant CFUSD = "cfUSD";
 
     constructor(address resolver) {
         addressResolver = IAddressResolver(resolver);
@@ -72,7 +72,7 @@ contract SynthUtil {
             cfUSDBalances[i] = exchangeRates.effectiveValue(
                 currencyKeys[i],
                 balances[i],
-                SUSD
+                CFUSD
             );
         }
         return (currencyKeys, balances, cfUSDBalances);
@@ -109,7 +109,7 @@ contract SynthUtil {
             cfUSDBalances[i] = exchangeRates.effectiveValue(
                 currencyKeys[i],
                 balances[i],
-                SUSD
+                CFUSD
             );
         }
         return (currencyKeys, balances, cfUSDBalances);

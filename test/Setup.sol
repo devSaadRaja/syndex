@@ -523,7 +523,7 @@ contract Setup is Test, Utils {
         // systemSettings.setIssuanceRatio(0.8 ether); // 125%
         systemSettings.setLiquidationRatio(0.66 ether);
         // systemSettings.setLiquidationPenalty(100000000000000000);
-        systemSettings.updateSnxLiquidationPenalty(0.6 ether); // forced
+        systemSettings.updateSfcxLiquidationPenalty(0.6 ether); // forced
         systemSettings.updateSelfLiquidationPenalty(0.5 ether);
         systemSettings.updateLiquidationDelay(28800);
         systemSettings.updateRateStalePeriod(86400);
@@ -554,7 +554,7 @@ contract Setup is Test, Utils {
         // // uint256 minCratio = 150;
         // systemSettings.setIssuanceRatio(0.66 ether); // 150%
         // systemSettings.setLiquidationRatio(0.8 ether);
-        // systemSettings.updateSnxLiquidationPenalty(0.5 ether); // 50%
+        // systemSettings.updateSfcxLiquidationPenalty(0.5 ether); // 50%
         // systemSettings.updateLiquidationDelay(28800); // 8 hours
         // systemSettings.updateRateStalePeriod(86400); // 1 day
 

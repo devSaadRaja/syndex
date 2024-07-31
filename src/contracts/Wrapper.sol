@@ -26,7 +26,7 @@ contract Wrapper is Ownable, Pausable, MixinSystemSettings, IWrapper {
     bytes32 internal constant cfUSD = "cfUSD";
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
-    bytes32 private constant CONTRACT_SYNTH_SUSD = "SynthcfUSD";
+    bytes32 private constant CONTRACT_SYNTH_CFUSD = "SynthcfUSD";
     bytes32 private constant CONTRACT_EXRATES = "ExchangeRates";
     bytes32 private constant CONTRACT_DEBTCACHE = "DebtCache";
     bytes32 private constant CONTRACT_SYSTEMSTATUS = "SystemStatus";
@@ -65,7 +65,7 @@ contract Wrapper is Ownable, Pausable, MixinSystemSettings, IWrapper {
         bytes32[] memory existingAddresses = MixinSystemSettings
             .resolverAddressesRequired();
         bytes32[] memory newAddresses = new bytes32[](6);
-        newAddresses[0] = CONTRACT_SYNTH_SUSD;
+        newAddresses[0] = CONTRACT_SYNTH_CFUSD;
         newAddresses[1] = synthContractName;
         newAddresses[2] = CONTRACT_EXRATES;
         newAddresses[3] = CONTRACT_DEBTCACHE;
@@ -77,7 +77,7 @@ contract Wrapper is Ownable, Pausable, MixinSystemSettings, IWrapper {
 
     /* ========== INTERNAL VIEWS ========== */
     function synthcfUSD() internal view returns (ISynth) {
-        return ISynth(requireAndGetAddress(CONTRACT_SYNTH_SUSD));
+        return ISynth(requireAndGetAddress(CONTRACT_SYNTH_CFUSD));
     }
 
     function synth() internal view returns (ISynth) {

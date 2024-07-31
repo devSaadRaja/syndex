@@ -40,7 +40,7 @@ interface IIssuerInternalDebtCache {
 
     function updateDebtCacheValidity(bool currentlyInvalid) external;
 
-    function totalNonSnxBackedDebt()
+    function totalNonSfcxBackedDebt()
         external
         view
         returns (uint excludedDebt, bool isInvalid);
@@ -295,9 +295,9 @@ contract Issuer is Ownable, MixinSystemSettings {
 
         // Add total issued synths from non sfcx collateral back into the total if not excluded
         if (!excludeCollateral) {
-            (uint nonSnxDebt, bool invalid) = debtCache()
-                .totalNonSnxBackedDebt();
-            debt = debt.add(nonSnxDebt);
+            (uint nonSfcxDebt, bool invalid) = debtCache()
+                .totalNonSfcxBackedDebt();
+            debt = debt.add(nonSfcxDebt);
             anyRateIsInvalid = anyRateIsInvalid || invalid;
         }
 
@@ -389,7 +389,7 @@ contract Issuer is Ownable, MixinSystemSettings {
         return amount.multiplyDecimalRound(sfcxRate);
     }
 
-    function _usdToSnx(uint amount, uint sfcxRate) internal pure returns (uint) {
+    function _usdToSfcx(uint amount, uint sfcxRate) internal pure returns (uint) {
         return amount.divideDecimalRound(sfcxRate);
     }
 
@@ -933,7 +933,7 @@ contract Issuer is Ownable, MixinSystemSettings {
 
             // Get the minimum values for both totalRedeemed and debtToRemove
             totalRedeemed = _getMinValue(
-                _usdToSnx(debtToRemove, sfcxRate).multiplyDecimal(
+                _usdToSfcx(debtToRemove, sfcxRate).multiplyDecimal(
                     SafeDecimalMath.unit().add(penalty)
                 ),
                 _sfcxBalanceOf(account)
@@ -950,7 +950,7 @@ contract Issuer is Ownable, MixinSystemSettings {
         } else {
             // In the case of forced Liquidation
             // Get the forced liquidation penalty and sum of the flag and liquidate rewards.
-            penalty = getSnxLiquidationPenalty();
+            penalty = getSfcxLiquidationPenalty();
             uint rewardsSum = getLiquidateReward().add(getFlagReward());
 
             // Get the total USD value of their SFCX collateral (including escrow and rewards minus the flag and liquidate rewards)
@@ -965,7 +965,7 @@ contract Issuer is Ownable, MixinSystemSettings {
                 collateralForAccountUSD,
                 penalty
             );
-            uint redeemTarget = _usdToSnx(debtToRemove, sfcxRate)
+            uint redeemTarget = _usdToSfcx(debtToRemove, sfcxRate)
                 .multiplyDecimal(SafeDecimalMath.unit().add(penalty));
 
             if (redeemTarget.add(rewardsSum) >= _collateral(account)) {

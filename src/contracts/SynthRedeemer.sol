@@ -17,7 +17,7 @@ contract SynthRedeemer is ISynthRedeemer, MixinResolver {
     mapping(address => uint) public redemptions;
 
     bytes32 private constant CONTRACT_ISSUER = "Issuer";
-    bytes32 private constant CONTRACT_SYNTHSUSD = "SynthcfUSD";
+    bytes32 private constant CONTRACT_SYNTHCFUSD = "SynthcfUSD";
 
     constructor(address _resolver) MixinResolver(_resolver) {}
 
@@ -29,7 +29,7 @@ contract SynthRedeemer is ISynthRedeemer, MixinResolver {
     {
         addresses = new bytes32[](2);
         addresses[0] = CONTRACT_ISSUER;
-        addresses[1] = CONTRACT_SYNTHSUSD;
+        addresses[1] = CONTRACT_SYNTHCFUSD;
     }
 
     function issuer() internal view returns (IIssuer) {
@@ -37,7 +37,7 @@ contract SynthRedeemer is ISynthRedeemer, MixinResolver {
     }
 
     function cfUSD() internal view returns (IERC20) {
-        return IERC20(requireAndGetAddress(CONTRACT_SYNTHSUSD));
+        return IERC20(requireAndGetAddress(CONTRACT_SYNTHCFUSD));
     }
 
     function totalSupply(

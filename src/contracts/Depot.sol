@@ -17,12 +17,12 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
     using SafeMath for uint;
     using SafeDecimalMath for uint;
 
-    bytes32 internal constant SNX = "SNX";
+    bytes32 internal constant SFCX = "SFCX";
     bytes32 internal constant ETH = "ETH";
 
     /* ========== STATE VARIABLES ========== */
 
-    // Address where the ether and Synths raised for selling SNX is transfered to
+    // Address where the ether and Synths raised for selling SFCX is transfered to
     // Any ether raised for selling Synths gets sent back to whoever deposited the Synths,
     // and doesn't have anything to do with this address.
     address payable public fundsWallet;
@@ -70,7 +70,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
 
     /* ========== ADDRESS RESOLVER CONFIGURATION ========== */
 
-    bytes32 private constant CONTRACT_SYNTHSUSD = "SynthcfUSD";
+    bytes32 private constant CONTRACT_SYNTHCFUSD = "SynthcfUSD";
     bytes32 private constant CONTRACT_EXRATES = "ExchangeRates";
     bytes32 private constant CONTRACT_SYNDEX = "SynDex";
 
@@ -315,54 +315,54 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
         return _exchangeEtherForSynths();
     }
 
-    function _exchangeEtherForSNX() internal returns (uint) {
-        // How many SNX are they going to be receiving?
+    function _exchangeEtherForSFCX() internal returns (uint) {
+        // How many SFCX are they going to be receiving?
         uint syndexToSend = syndexReceivedForEther(msg.value);
 
         // Store the ETH in our funds wallet
         fundsWallet.transfer(msg.value);
 
-        // And send them the SNX.
+        // And send them the SFCX.
         syndex().transfer(msg.sender, syndexToSend);
 
-        emit Exchange("ETH", msg.value, "SNX", syndexToSend);
+        emit Exchange("ETH", msg.value, "SFCX", syndexToSend);
 
         return syndexToSend;
     }
 
     /**
-     * @notice Exchange ETH to SNX.
+     * @notice Exchange ETH to SFCX.
      */
-    function exchangeEtherForSNX()
+    function exchangeEtherForSFCX()
         external
         payable
-        rateNotInvalid(SNX)
+        rateNotInvalid(SFCX)
         rateNotInvalid(ETH)
         whenNotPaused
         returns (
-            uint // Returns the number of SNX received
+            uint // Returns the number of SFCX received
         )
     {
-        return _exchangeEtherForSNX();
+        return _exchangeEtherForSFCX();
     }
 
     /**
-     * @notice Exchange ETH to SNX while insisting on a particular set of rates. This allows a user to
+     * @notice Exchange ETH to SFCX while insisting on a particular set of rates. This allows a user to
      *         exchange while protecting against frontrunning by the contract owner on the exchange rates.
      * @param guaranteedEtherRate The ether exchange rate which must be honored or the call will revert.
      * @param guaranteedSynDexRate The syndex exchange rate which must be honored or the call will revert.
      */
-    function exchangeEtherForSNXAtRate(
+    function exchangeEtherForSFCXAtRate(
         uint guaranteedEtherRate,
         uint guaranteedSynDexRate
     )
         external
         payable
-        rateNotInvalid(SNX)
+        rateNotInvalid(SFCX)
         rateNotInvalid(ETH)
         whenNotPaused
         returns (
-            uint // Returns the number of SNX received
+            uint // Returns the number of SFCX received
         )
     {
         require(
@@ -370,15 +370,15 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
             "Guaranteed ether rate would not be received"
         );
         require(
-            guaranteedSynDexRate == exchangeRates().rateForCurrency(SNX),
+            guaranteedSynDexRate == exchangeRates().rateForCurrency(SFCX),
             "Guaranteed syndex rate would not be received"
         );
 
-        return _exchangeEtherForSNX();
+        return _exchangeEtherForSFCX();
     }
 
-    function _exchangeSynthsForSNX(uint synthAmount) internal returns (uint) {
-        // How many SNX are they going to be receiving?
+    function _exchangeSynthsForSFCX(uint synthAmount) internal returns (uint) {
+        // How many SFCX are they going to be receiving?
         uint syndexToSend = syndexReceivedForSynths(synthAmount);
 
         // Ok, transfer the Synths to our funds wallet.
@@ -386,59 +386,59 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
         // they're sent back in from the funds wallet.
         synthcfUSD().transferFrom(msg.sender, fundsWallet, synthAmount);
 
-        // And send them the SNX.
+        // And send them the SFCX.
         syndex().transfer(msg.sender, syndexToSend);
 
-        emit Exchange("cfUSD", synthAmount, "SNX", syndexToSend);
+        emit Exchange("cfUSD", synthAmount, "SFCX", syndexToSend);
 
         return syndexToSend;
     }
 
     /**
-     * @notice Exchange cfUSD for SNX
+     * @notice Exchange cfUSD for SFCX
      * @param synthAmount The amount of synths the user wishes to exchange.
      */
-    function exchangeSynthsForSNX(
+    function exchangeSynthsForSFCX(
         uint synthAmount
     )
         external
-        rateNotInvalid(SNX)
+        rateNotInvalid(SFCX)
         whenNotPaused
         returns (
-            uint // Returns the number of SNX received
+            uint // Returns the number of SFCX received
         )
     {
-        return _exchangeSynthsForSNX(synthAmount);
+        return _exchangeSynthsForSFCX(synthAmount);
     }
 
     /**
-     * @notice Exchange cfUSD for SNX while insisting on a particular rate. This allows a user to
+     * @notice Exchange cfUSD for SFCX while insisting on a particular rate. This allows a user to
      *         exchange while protecting against frontrunning by the contract owner on the exchange rate.
      * @param synthAmount The amount of synths the user wishes to exchange.
      * @param guaranteedRate A rate (syndex price) the caller wishes to insist upon.
      */
-    function exchangeSynthsForSNXAtRate(
+    function exchangeSynthsForSFCXAtRate(
         uint synthAmount,
         uint guaranteedRate
     )
         external
-        rateNotInvalid(SNX)
+        rateNotInvalid(SFCX)
         whenNotPaused
         returns (
-            uint // Returns the number of SNX received
+            uint // Returns the number of SFCX received
         )
     {
         require(
-            guaranteedRate == exchangeRates().rateForCurrency(SNX),
+            guaranteedRate == exchangeRates().rateForCurrency(SFCX),
             "Guaranteed rate would not be received"
         );
 
-        return _exchangeSynthsForSNX(synthAmount);
+        return _exchangeSynthsForSFCX(synthAmount);
     }
 
     /**
-     * @notice Allows the owner to withdraw SNX from this contract if needed.
-     * @param amount The amount of SNX to attempt to withdraw (in 18 decimal places).
+     * @notice Allows the owner to withdraw SFCX from this contract if needed.
+     * @param amount The amount of SFCX to attempt to withdraw (in 18 decimal places).
      */
     function withdrawSynDex(uint amount) external onlyOwner {
         syndex().transfer(owner(), amount);
@@ -534,25 +534,25 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
         returns (bytes32[] memory addresses)
     {
         addresses = new bytes32[](3);
-        addresses[0] = CONTRACT_SYNTHSUSD;
+        addresses[0] = CONTRACT_SYNTHCFUSD;
         addresses[1] = CONTRACT_EXRATES;
         addresses[2] = CONTRACT_SYNDEX;
     }
 
     /**
-     * @notice Calculate how many SNX you will receive if you transfer
+     * @notice Calculate how many SFCX you will receive if you transfer
      *         an amount of synths.
      * @param amount The amount of synths (in 18 decimal places) you want to ask about
      */
     function syndexReceivedForSynths(
         uint amount
     ) public view returns (uint) {
-        // And what would that be worth in SNX based on the current price?
-        return amount.divideDecimal(exchangeRates().rateForCurrency(SNX));
+        // And what would that be worth in SFCX based on the current price?
+        return amount.divideDecimal(exchangeRates().rateForCurrency(SFCX));
     }
 
     /**
-     * @notice Calculate how many SNX you will receive if you transfer
+     * @notice Calculate how many SFCX you will receive if you transfer
      *         an amount of ether.
      * @param amount The amount of ether (in wei) you want to ask about
      */
@@ -562,7 +562,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
             exchangeRates().rateForCurrency(ETH)
         );
 
-        // Now, how many SNX will that USD amount buy?
+        // Now, how many SFCX will that USD amount buy?
         return syndexReceivedForSynths(valueSentInSynths);
     }
 
@@ -579,7 +579,7 @@ contract Depot is Ownable, Pausable, ReentrancyGuard, MixinResolver, IDepot {
     /* ========== INTERNAL VIEWS ========== */
 
     function synthcfUSD() internal view returns (IERC20) {
-        return IERC20(requireAndGetAddress(CONTRACT_SYNTHSUSD));
+        return IERC20(requireAndGetAddress(CONTRACT_SYNTHCFUSD));
     }
 
     function syndex() internal view returns (IERC20) {
