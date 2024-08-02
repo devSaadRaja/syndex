@@ -1,19 +1,29 @@
-## Foundry
+# Syndex
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+Trade Synthetic perpetuals.
 
-Foundry consists of:
+Gain exposure to an entirely new class of assets with up to 100x leverage, deep liquidity and near zero slippage.
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+# 
 
-## Documentation
+To get started we need to install the foundry package which requires rust. Here are the commands for linux, mac, and windows.
 
-https://book.getfoundry.sh/
+### Linux/Mac:
 
-## Usage
+```shell
+$ curl -L https://foundry.paradigm.xyz | bash;
+$ foundryup
+```
+
+### Windows: (Requires Rust, install from https://rustup.rs/)
+
+```shell
+$ cargo install --git https://github.com/foundry-rs/foundry --bins --locked
+```
+
+# 
+
+## Start the project
 
 ### Install
 
@@ -54,7 +64,7 @@ $ anvil
 ### Mainnet Test
 
 ```shell
-$ forge test --fork-url "<your_rpc_url>" --match-path test/Counter.t.sol -vv
+$ forge test --fork-url "<your_rpc_url>" --match-path test/SMX.t.sol -vv
 ```
 
 ### Deploy
@@ -62,7 +72,7 @@ $ forge test --fork-url "<your_rpc_url>" --match-path test/Counter.t.sol -vv
 ```shell
 $ forge create --rpc-url "<your_rpc_url>" --private-key "<your_private_key>" <filePath> --constructor-args <> --etherscan-api-key <> --verify
 or
-$ forge script script/Counter.s.sol:CounterScript --rpc-url "<your_rpc_url>" --private-key "<your_private_key>"
+$ forge script script/Deploy.s.sol:DeployScript --rpc-url "<your_rpc_url>" --private-key "<your_private_key>"
 ```
 
 ### Cast

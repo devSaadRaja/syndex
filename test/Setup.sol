@@ -386,9 +386,6 @@ contract Setup is Test, Utils {
         names.push("SynDexBridgeToOptimism");
         addresses.push(owner);
         count++;
-        // names.push("LegacyMarket");
-        // addresses.push(owner); // address(legacyMarket)
-        // count++;
         // ---
         names.push("Depot");
         addresses.push(address(depot));
@@ -446,12 +443,6 @@ contract Setup is Test, Utils {
             IMixinResolver(addresses[i]).refreshCache();
         }
 
-        // for (uint i = 0; i < addresses.length; i++) {
-        //     // console.logBytes32(names[i]);
-        //     // console.log(addresses[i]);
-        //     console.log(string(abi.encodePacked(names[i])), addresses[i]);
-        // }
-
         // // ---------------------------------------------------------------------
         // // ---------------------------------------------------------------------
         // // ---------------------------------------------------------------------
@@ -492,37 +483,15 @@ contract Setup is Test, Utils {
         exchangeRates.addAggregator("SMX", address(aggregatorSynth));
         exchangeRates.addAggregator("cfETH", address(aggregatorSynth));
         exchangeRates.addAggregator("SFCX", address(aggregatorCollateral));
-        // exchangeRates.addAggregator(
-        //     "ext:AggregatorDebtRatio",
-        //     address(aggregatorDebtRatio)
-        // );
-        // exchangeRates.addAggregator(
-        //     "ext:AggregatorIssuedSynths",
-        //     address(aggregatorIssuedSynths)
-        // );
 
-        // console.log(
-        //     "address(aggregatorCollateral)",
-        //     address(aggregatorCollateral)
-        // );
-        // console.log(
-        //     "address(aggregatorDebtRatio)",
-        //     address(aggregatorDebtRatio)
-        // );
-
-        // 200000000000000000, 0.2   = 100 / 500%
-        // 625000000000000000, 0.625 = 100 / 160%
+        // 200000000000000000, 0.33  = 100 / 300%
+        // 625000000000000000, 0.66  = 100 / 150%
         // 100000000000000000, 0.1   = 10% / 100
         // 600000000000000000, 0.6   = 60% / 100
         // 500000000000000000, 0.5   = 50% / 100
 
-        // 200000000000000000, 0.33   = 100 / 300%
-        // 625000000000000000, 0.66 = 100 / 150%
-
         systemSettings.setIssuanceRatio(0.33 ether);
-        // systemSettings.setIssuanceRatio(0.8 ether); // 125%
         systemSettings.setLiquidationRatio(0.66 ether);
-        // systemSettings.setLiquidationPenalty(100000000000000000);
         systemSettings.updateSfcxLiquidationPenalty(0.6 ether); // forced
         systemSettings.updateSelfLiquidationPenalty(0.5 ether);
         systemSettings.updateLiquidationDelay(28800);
@@ -549,14 +518,6 @@ contract Setup is Test, Utils {
             synthKeys,
             exchangeFeeRates
         );
-
-        // // uint256 val = 100;
-        // // uint256 minCratio = 150;
-        // systemSettings.setIssuanceRatio(0.66 ether); // 150%
-        // systemSettings.setLiquidationRatio(0.8 ether);
-        // systemSettings.updateSfcxLiquidationPenalty(0.5 ether); // 50%
-        // systemSettings.updateLiquidationDelay(28800); // 8 hours
-        // systemSettings.updateRateStalePeriod(86400); // 1 day
 
         factory.createPair(address(proxySFCX), WETH);
         address pairSFCXWETH = factory.getPair(address(proxySFCX), WETH);

@@ -9,7 +9,6 @@ import "@uniswap/core/contracts/interfaces/IUniswapV2Factory.sol";
 import "@uniswap/periphery/contracts/interfaces/IUniswapV2Router02.sol";
 
 import {Token} from "../src/contracts/test/Token.sol";
-import {SynthSwap} from "../src/contracts/Synthswap.sol";
 
 import {IFeePool} from "../src/interfaces/IFeePool.sol";
 import {ISwapRouter} from "../src/interfaces/ISwapRouter.sol";
@@ -35,8 +34,6 @@ contract SMXTest is Setup {
 
     IUniswapV3Pool v3Pool;
 
-    SynthSwap public synthSwap2;
-
     function setUp() public override {
         super.setUp();
 
@@ -51,13 +48,6 @@ contract SMXTest is Setup {
         vm.startPrank(user7);
 
         token = new Token("Token", "TKN", user7, 1_000_000 ether);
-        synthSwap2 = new SynthSwap(
-            address(proxycfUSD),
-            address(swapRouter), // routerV4, aggregationRouterV4
-            address(addressResolver),
-            user7,
-            treasury
-        );
 
         token.transfer(user5, 1000 ether);
         token.transfer(user6, 1000 ether);
@@ -86,35 +76,7 @@ contract SMXTest is Setup {
             50 ether
         );
 
-        // int24 tickSpacing = v3Pool.tickSpacing();
-        // uint128 liquidity = v3Pool.liquidity();
         uint24 fee = v3Pool.fee();
-        // (
-        //     uint160 sqrtPriceX96,
-        //     int24 tick,
-        //     uint16 observationIndex,
-        //     uint16 observationCardinality,
-        //     uint16 observationCardinalityNext,
-        //     uint8 feeProtocol,
-        //     bool unlocked
-        // ) = v3Pool.slot0();
-
-        // console.log("liquidity BEFORE", liquidity);
-        // console.log("tickSpacing", uint24(tickSpacing));
-        // console.log("fee", fee);
-        // console.log("sqrtPriceX96", sqrtPriceX96);
-        // console.log("tick", uint24(tick));
-        // console.log("observationIndex", uint16(observationIndex));
-        // console.log("observationCardinality", uint16(observationCardinality));
-        // console.log(
-        //     "observationCardinalityNext",
-        //     uint16(observationCardinalityNext)
-        // );
-        // console.log("feeProtocol", uint16(feeProtocol));
-        // console.log("unlocked", unlocked);
-
-        // tickLower = nearestUsableTick(tick, tickSpacing) - tickSpacing * 2;
-        // tickUpper = nearestUsableTick(tick, tickSpacing) + tickSpacing * 2;
 
         address token0 = address(token) < address(proxycfUSD)
             ? address(token)
@@ -141,13 +103,6 @@ contract SMXTest is Setup {
         nonfungiblePositionManager.mint(params);
 
         vm.stopPrank();
-
-        // (uint amountReceived, , ) = exchanger.getAmountsForExchange(
-        //     1 ether,
-        //     "cfUSD",
-        //     "cfETH"
-        // );
-        // console.log(amountReceived, "<<< amountReceived");
     }
 
     function testCRatio() public {
@@ -156,150 +111,17 @@ contract SMXTest is Setup {
         uint collateral = syndex.collateral(user7);
         assertEq(collateral, 5000 ether);
 
-        // if (collateral == 0) return 0;
-
         uint currentDebt = syndex.debtBalanceOf(user7, "SFCX");
         assertEq(currentDebt, 1650 ether);
-
-        // uint calculatedCRatio = currentDebt.divideDecimalRound(collateral);
-        // assertEq(calculatedCRatio, 0.33 ether);
-        // uint currentDebtCRatio = 300 ether / calculatedCRatio;
-        // assertEq(currentDebtCRatio, 909);
 
         uint oldCRatio = (collateral.divideDecimalRound(currentDebt)) * 100;
         assertGt(oldCRatio, 303 ether);
 
-        // uint syndexCRatio = syndex.collateralisationRatio(user7);
-        // assertEq(syndexCRatio, 0.33 ether);
-
         uint newDebt = currentDebt + 1 ether;
         assertEq(newDebt, 1651 ether);
 
-        // uint newCalculatedCRatio = newDebt.divideDecimalRound(collateral);
-        // assertEq(newCalculatedCRatio, 0.3302 ether);
-        // uint newDebtCRatio = 300 ether / newCalculatedCRatio;
-        // assertEq(newDebtCRatio, 908);
-
         uint newCRatio = (collateral.divideDecimalRound(newDebt)) * 100;
         assertLt(newCRatio, 303 ether);
-
-        vm.stopPrank();
-    }
-
-    function testRouterV4() public {
-        vm.startPrank(user7);
-
-        // ! SWAP ---
-
-        // ? uniswapSwapInto
-
-        ISwapRouter.ExactInputSingleParams memory inputParams = ISwapRouter
-            .ExactInputSingleParams({
-                tokenIn: address(token),
-                tokenOut: address(proxycfUSD),
-                fee: v3Pool.fee(),
-                recipient: address(synthSwap2),
-                deadline: block.timestamp + 10 minutes,
-                amountIn: 1 ether,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
-            });
-        bytes memory _data = abi.encodeWithSelector(
-            ISwapRouter.exactInputSingle.selector,
-            inputParams
-        );
-
-        // IAggregationRouterV4.SwapDescription memory desc = IAggregationRouterV4
-        //     .SwapDescription({
-        //         srcToken: address(proxycfUSD),
-        //         dstToken: address(token),
-        //         srcReceiver: payable(user7),
-        //         dstReceiver: payable(user7),
-        //         amount: 1 ether,
-        //         minReturnAmount: 0.01 ether,
-        //         flags: 1,
-        //         permit: new bytes(0)
-        //     });
-
-        // bytes memory data = abi.encodeWithSelector(
-        //     IAggregationRouterV4.swap.selector,
-        //     // IAggregationExecutor(address(swapRouter)),
-        //     swapRouter,
-        //     desc,
-        //     _data
-        // );
-
-        console.log("BEFORE token\n", token.balanceOf(user7));
-        console.log("BEFORE proxycfETH\n", proxycfETH.balanceOf(user7));
-
-        IERC20(address(token)).approve(address(synthSwap2), 2 ether);
-        synthSwap2.uniswapSwapInto("cfETH", address(token), 1 ether, _data);
-        // // IERC20(address(proxycfUSD)).approve(address(synthSwap2), 10 ether);
-        // // synthSwap2.uniswapSwapInto("cfETH", address(proxycfUSD), 10 ether, data);
-
-        console.log("AFTER uniswapSwapInto token\n", token.balanceOf(user7));
-        console.log(
-            "AFTER uniswapSwapInto proxycfETH\n",
-            proxycfETH.balanceOf(user7)
-        );
-
-        // ? uniswapSwapOutOf
-
-        ISwapRouter.ExactInputSingleParams memory outParams = ISwapRouter
-            .ExactInputSingleParams({
-                tokenIn: address(proxycfUSD),
-                tokenOut: address(token),
-                fee: v3Pool.fee(),
-                recipient: address(synthSwap2),
-                deadline: block.timestamp + 10 minutes,
-                amountIn: 0.5 ether,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
-            });
-        bytes memory _dataOut = abi.encodeWithSelector(
-            ISwapRouter.exactInputSingle.selector,
-            outParams
-        );
-
-        IERC20(address(proxycfETH)).approve(address(synthSwap2), 2 ether);
-        synthSwap2.uniswapSwapOutOf(
-            "cfETH",
-            address(token),
-            0.8 ether,
-            2 ether,
-            _dataOut
-        );
-
-        console.log("AFTER uniswapSwapOutOf token\n", token.balanceOf(user7));
-        console.log(
-            "AFTER uniswapSwapOutOf proxycfETH\n",
-            proxycfETH.balanceOf(user7)
-        );
-
-        ISwapRouter.ExactInputSingleParams memory paramsss = ISwapRouter
-            .ExactInputSingleParams({
-                tokenIn: address(token),
-                tokenOut: address(proxycfUSD),
-                fee: v3Pool.fee(),
-                recipient: address(synthSwap2),
-                deadline: block.timestamp + 10 minutes,
-                amountIn: 1 ether,
-                amountOutMinimum: 0,
-                sqrtPriceLimitX96: 0
-            });
-        bytes memory _dataaa = abi.encodeWithSelector(
-            ISwapRouter.exactInputSingle.selector,
-            paramsss
-        );
-
-        console.log("BEFORE token\n", token.balanceOf(user7));
-        console.log("BEFORE proxycfUSD\n", proxycfUSD.balanceOf(user7));
-
-        IERC20(address(token)).approve(address(synthSwap2), 2 ether);
-        synthSwap2.uniswapSwapInto("cfUSD", address(token), 1 ether, _dataaa);
-
-        console.log("AFTER token\n", token.balanceOf(user7));
-        console.log("AFTER proxycfUSD\n", proxycfUSD.balanceOf(user7));
 
         vm.stopPrank();
     }
